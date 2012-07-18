@@ -52,6 +52,19 @@ Class Game1Screen Extends Screen
 	
 	Method New()
 		name = "Game 1 Screen"
+		
+		Local gameid:Int = 1
+		
+		GameList[gameid - 1] = New miniGame
+		GameList[gameid - 1].id = (gameid - 1)
+		GameList[gameid - 1].name = "Invader"
+		GameList[gameid - 1].iconname = "game" + gameid + "_icon"
+		GameList[gameid - 1].thumbnail = "game" + gameid + "_thumb"
+		GameList[gameid - 1].author = "Paul Grayston"
+		GameList[gameid - 1].authorurl = "dev.cruel-gaming.com"
+		GameList[gameid - 1].info = "Aliens are planning to take over the world it's your job to save us all "
+		'Print "GameList " + GameList[0].name
+		
 	End
 	#Rem
 	summary:Start Screen
