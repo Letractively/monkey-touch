@@ -9248,8 +9248,8 @@
     </DocUserOptions>
     <DocUserOptions Filename=".\main.monkey" Open="true" SplitView="false" SplitIsVertical="false" SplitSize="155">
       <CursorPos>
-        <X>26</X>
-        <Y>152</Y>
+        <X>17</X>
+        <Y>4</Y>
       </CursorPos>
       <OutLiningSerialization>
         <Folding_Nodes_Collection>
@@ -9530,8 +9530,8 @@
     </DocUserOptions>
     <DocUserOptions Filename=".\title_screen.monkey" Open="true" SplitView="false" SplitIsVertical="false" SplitSize="155">
       <CursorPos>
-        <X>2</X>
-        <Y>40</Y>
+        <X>0</X>
+        <Y>3</Y>
       </CursorPos>
       <OutLiningSerialization>
         <Folding_Nodes_Collection>
