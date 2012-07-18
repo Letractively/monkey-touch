@@ -3,35 +3,12 @@ header:
 [quote]
 
 [b]File Name :[/b] Game1Screen
-[b]Author    :[/b] firstname "alias" lastname
+[b]Author    :[/b] Paul "Taiphoz" Grayston
 [b]About     :[/b]
-what it is..
+Space Invaders with little glowing ships, keeping this nice and 
+basic, endless levels of ever increasing speed and a hail of bullets
+to test the players reflex's
 [/quote]
-#end
-
-#rem
-'image pool
-game1_alienbullet_green
-game1_alien2_red
-game1_alien2_blue
-game1_alien2_yellow
-game1_alienbullet_red
-game1_alienbullet_yellow
-game1_shield
-game1_alien2_green
-game1_icon
-game1_alien1_blue
-game1_alien1_red
-game1_thumb
-game1_player_bullet
-game1_alien3_blue
-game1_alienbullet_blue
-game1_player
-game1_alien1_yellow
-game1_alien3_green
-game1_alien1_green
-game1_alien3_red
-game1_alien3_yellow
 #end
 
 Import main
@@ -49,7 +26,10 @@ Class Game1Screen Extends Screen
 	Field background:Image
 	
 	
-	
+	#Rem
+	summary: New
+	New method to create a new instance of this screen class.
+	#End
 	Method New()
 		name = "Game 1 Screen"
 		
@@ -66,6 +46,7 @@ Class Game1Screen Extends Screen
 		'Print "GameList " + GameList[0].name
 		
 	End
+	
 	#Rem
 	summary:Start Screen
 	Start the Title Screen.
@@ -109,7 +90,7 @@ Class Game1Screen Extends Screen
 	End
 
 	#Rem
-	sumary:Update Title Screen
+	summary:Update Title Screen
 	Will update all screen objects, handles mouse, keys
 	and all use input.
 	#End
@@ -152,9 +133,9 @@ End
 
 
 #Rem
-	'summary: Tai_Player
-	Player class used to control and manage the players space ship.
-#END
+summary: Tai_Player
+Class Created to manage the Player charcter
+#End
 Class Tai_Player
 	Field sprite:GameImage
 	Field x:Int
@@ -169,6 +150,10 @@ Class Tai_Player
 	
 	Field gunopen:Int
 	
+	#Rem
+		summary: new
+		Create a new Player and provided _x position with the provided _life
+	#END
 	Method new(_x:Int, _life = 3)
 	
 		self.sprite = game.images.Find("game1_player")
@@ -185,6 +170,10 @@ Class Tai_Player
 		
 	End
 	
+	#Rem
+		summary: update
+		Update the player , tic through it's timer and handle controls and bound checking
+	#END
 	Method update()
 		
 		if Millisecs() - Self.bullettime > Self.bulletstall
@@ -212,14 +201,17 @@ Class Tai_Player
 		
 	End
 	
-	Method MoveLeft()
+	'summary:Move Player Left
+	Method MoveLeft:void()
 		Self.x -= 4
 	End
 	
-	Method MoveRight()
+	'summary:Move Player Right
+	Method MoveRight:void()
 		Self.x += 4
 	End
 	
+	'summary:If the player's gun is not reloading then fire off a round.
 	Method Shoot()
 		'
 		if Self.gunopen = 1
@@ -233,6 +225,7 @@ Class Tai_Player
 		
 	End
 	
+	'summary:Draw the player if it's visible (self.state=1) or dont if its not visible (self.state=0).
 	Method render()
 		select self.state
 			Case 1
@@ -246,7 +239,14 @@ End
 
 Global Taiwave:int = 2
 
+'summary:Alien List, holds all alien objects once created, used when updating all aliens.
 Global TaiAlienList:List<Tai_Alien> = new List<Tai_Alien>
+
+#Rem
+	summary:Tai_Alien
+	Alien class used to manage and control all alien ships, this class gets instanced and fills up the alienlist.
+#END
+
 Class Tai_Alien
 	Field sprite:GameImage
 	Field x:float
@@ -259,6 +259,7 @@ Class Tai_Alien
 	'color : 1=red 2=green 3=blue 4=yellow
 	'ship 1,2,3,4
 	
+	'summary:Update aliens.
 	Method update()
 		
 		Select Self.dir
@@ -278,21 +279,27 @@ Class Tai_Alien
 		End if
 	End
 	
+	'summary:Move alien left
 	Method MoveLeft()
 		Self.x -= Self.speed
 	End
 	
+	'summary:Move alien Right
 	Method MoveRight()
 		Self.x += Self.speed
 	End
 
-	
+	'summary:Draw the alien.
 	Method render()
 		
 		DrawImage(Self.sprite.image, Self.x, Self.y)
 	End
 	
-		
+	#Rem
+		summary: new
+		Create's a new alien at _x,_y with _life of colour _color and ship type _ship at speed _speed .
+		And then adds this new alien to the TaiAlienList
+	#END
 	Method new(_x:Int, _y:Int, _life:Int, _color:int = 1, _ship:int, _speed:int)
 	
 		Self.x = _x
@@ -346,6 +353,7 @@ Class Tai_Alien
 	End
 End
 
+'summary:Shunts down every alien alive if any alien reaches the side of the screen.
 	Function ShuntDown()
 		For Local t:Tai_Alien = eachin TaiAlienList
 			t.y += 10
@@ -358,10 +366,12 @@ End
 		Next
 	End
 
+	
+'summary:Bullet list to manage all the bullets that get fired.
 Global TaiBulletList:List<Tai_Bullet> = new List<Tai_Bullet>
 #Rem
-	'summary: Tai_Bullet
-	Bullet class.
+	summary: Tai_Bullet
+	Bullet class used to manage all bullets, will probably make this manage alien and player bullets
 #END
 Class Tai_Bullet
 	Field x:Int
@@ -370,6 +380,7 @@ Class Tai_Bullet
 	Field life:Int
 	Field dir:Int
 	
+	'summary:Create a new bullet at _x,_y traveling in _dir direction (1=down 0=up)
 	Method new(_x:Int, _y:Int, _dir:Int = 1)
 		Self.sprite = game.images.Find("game1_player_bullet")
 		Self.x = _x
@@ -379,6 +390,7 @@ Class Tai_Bullet
 		TaiBulletList.AddLast(self)
 	End
 	
+	'summary:update bullets, moved them in the appropriate direction based on self.dir
 	Method update()
 	
 		Select Self.dir
@@ -398,13 +410,19 @@ Class Tai_Bullet
 		
 	End
 	
+	'summary:Draw bullets.
 	Method render()
 		DrawImage(Self.sprite.image, Self.x, Self.y)
 	End
 End
 
 
-
+#Rem
+	summary: Check if the player is touching the ship.
+	Once the player grabs the ship , match the ships x position to the players finger x, or mouse x.
+	paramaters take are x,y,width,height,handle.
+	Handle can be 1 - left or 2 - mid.
+#END
 Function Tai_Touching:Bool(_x:Int, _y:Int, _w:Int, _h:int, _handle:Int = 1)
 	Local result:Bool = false
 	
@@ -427,6 +445,11 @@ End
 Global TaiWave:Int = 1
 Global TaiBaseSpeed:Float = 0
 
+#Rem
+	summary: Creates alien waves.
+	waves are created based on current level, and current base speed, which increases a little each new level
+	making the ships travel faster the further you progress.
+#END
 Function CreateWave()
 	Local ta:Tai_Alien
 	
