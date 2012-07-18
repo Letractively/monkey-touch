@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<JiProj xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" EntryPoint=".\main.monkey" Name="MonkeyTouch" OriginalLocation="D:\Dropbox\monkeytouch\">
+<JiProj xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" EntryPoint=".\main.monkey" Name="MonkeyTouch" OriginalLocation="D:\Source\Monkey\MonkyTouch\">
   <Files>
     <Document Filename=".\game1.monkey" Open="false" SplitView="false" SplitIsVertical="false" SplitSize="150">
       <DocGUID />

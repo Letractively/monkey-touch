@@ -36,13 +36,8 @@ Class TitleScreen Extends Screen
 		background = game.images.Find("title")
 		game.screenFade.Start(50, False)
 		
-		For Local init:Int = 0 to 19
-			GameList[init] = New miniGame
-		next
-		
 		selected = 0
-		
-		LoadGames()
+		LoadGameIcons()
 		
 	End
 	
@@ -195,39 +190,20 @@ Class TitleScreen Extends Screen
 	'summary: LoadGames
 	loads the games from a text file, which should make it easier to add new games.
 	#END
-	method LoadGames:Void()
-		Local input:string = LoadString("gamelist.txt")
-		Local count:Int = 0
-		
-		For Local cutter:String = eachin input.Split(";")
-			Local inner:String[] = cutter.Split(",")
-			
-			if count <= 19
-				
-				GameList[count].id = int(inner[0])
-				GameList[count].name = inner[1]
-				GameList[count].iconname = inner[2]
-				GameList[count].thumbnail = inner[3]
-				GameList[count].author = inner[4]
-				GameList[count].authorurl = inner[5]
-				GameList[count].info = inner[6]
-				
-				Self.Icons[count] = game.images.Find("game" + (count + 1) + "_icon")
-				Self.Thumbs[count] = game.images.Find("game" + (count + 1) + "_thumb")
-			End if
-			
-			count += 1
-			
+	method LoadGameIcons:Void()
+		For Local count:Int = 0 to 19
+			Self.Icons[count] = game.images.Find("game" + (count + 1) + "_icon")
+			Self.Thumbs[count] = game.images.Find("game" + (count + 1) + "_thumb")
 		Next
-				
 	End method
 
 	
 End
 
 
-Global GameList:miniGame[20]
 
+
+Global GameList:miniGame[20]
 #Rem
 	'summary: miniGame
 	Class used to just help oganise the game list a litte
@@ -240,7 +216,6 @@ Class miniGame
 	Field author:String
 	Field authorurl:String
 	Field info:String
-	
 End
 
 

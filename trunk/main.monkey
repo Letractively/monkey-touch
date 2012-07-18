@@ -79,6 +79,7 @@ Global HighlightFont:BitmapFont
 
 'summary:Launch Point
 Function Main:Int()
+	
 	game = New MyGame()
 	game.debugKeyOn = True
 	game.drawFPSOn = True
@@ -109,6 +110,8 @@ Global Game17Scr:Screen = New Game17Screen()		'Game Screen
 Global Game18Scr:Screen = New Game18Screen()		'Game Screen
 Global Game19Scr:Screen = New Game19Screen()		'Game Screen
 Global Game20Scr:Screen = New Game20Screen()		'Game Screen
+
+
 
 
 'summary:MyGame main game class.
@@ -161,6 +164,8 @@ Class MyGame Extends DiddyApp
 	End Method
 	
 End
+
+
 
 
 #Rem
