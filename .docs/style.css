@@ -1,0 +1,207 @@
+﻿body {
+	margin: 5px 50px 5px 5px;
+	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif,"Century Gothic";
+	font-size: small;
+	vertical-align: top;
+}
+table {
+	box-shadow: 0px 0px 5px 0px;
+	border-radius: 5px;
+	line-height: normal;
+	border: 1px solid #C0C0C0;
+	vertical-align: top;
+	margin-bottom: 30px;
+	margin-left:40px;
+}
+
+td table {
+	box-shadow: 0px 0px 5px 0px;
+	border-radius: 5px;
+	line-height: normal;
+	border: 1px solid #C0C0C0;
+	vertical-align: top;
+	margin-bottom: 30px;
+	margin-left:0px;
+}
+
+tbody {
+}
+.tablehead {
+	background-color: #333;
+	background-image: url('style/class_head.png');
+	color: white;
+	line-height: 26px;
+	font-weight: bold;
+}
+
+.navhead {
+	background-color: #333;
+	background-image: url('style/nav_head.png');
+	color: white;
+	line-height: 26px;
+	font-weight: bold;
+}
+
+.navlinks {
+	background-color: #ECE0C5;
+	background-image: url('style/nav_link.png');
+	color: white;
+	line-height: 26px; 
+	font-weight: bold;
+}
+
+.navlinks ul {
+	list-style: none;
+	padding-left: 0px;
+}
+
+.navlinks ul li{
+	list-style: none;
+	padding-left: 3px;
+	background-image: url(style/link.png) !important;
+	background-repeat: repeat-x;
+}
+
+.navlinks ul li:hover{
+	list-style: none;
+	padding-left: 3px;
+	background-image: url(style/link2.png) !important;
+	background-repeat: repeat-x;
+}
+
+.navtable{
+width: 200px;
+padding-left: 0px;
+margin-left: 10px;
+}
+.navlinks ul{
+list-style: none;
+padding-left: 0px;
+margin-left: -15px;
+margin-right: -25px;
+}
+
+.subtablehead {
+	background-color: #D7E7FF;
+	color: #C0FAFF;
+	line-height: 26px;
+	font-weight: bold;
+	background-image: url('style/method_head.png');
+}
+
+blockquote {
+	border-radius: 10px;
+	padding: 0px 5px 5px 5px;
+	border: 1px solid #E8E8E8;
+	font-style: italic;
+	color: #333;
+	background-color: #ECE0C5;
+	box-shadow: 0px 0px 0px 0px;
+	margin-right: -40px;
+	margin-left: 20px;
+}
+
+blockquote ul{
+	border-radius: 10px;
+	padding: 5px 0px 5px 5px;
+	font-style: italic;
+	color: #030303;
+	background-color: #FFF4DB;
+	box-shadow: 0px 0px 0px 0px;
+	margin-right: 0px;
+	margin-left: 0px;
+}
+
+li{
+	list-style: none;
+	padding-left: 20px;
+	background-image: url(style/li.png);
+	background-repeat: no-repeat;
+	background-position: 0px 0px 15px;
+}
+
+a:active {
+	color: #ff0801 ;
+	text-decoration: none ;
+	font-weight: bold;
+	font-family: "verdana";
+	font-size: 12px;
+}
+a:hover {
+	color: #fff ;
+	text-decoration: none ;
+	font-weight: bold;
+	font-family: "verdana";
+	font-size: 12px;
+}
+
+a:link {
+	color: #5C0801 ;
+	text-decoration: none ;
+	font-weight: bold;
+	font-family: "verdana";
+	font-size: 12px;
+}
+a:visited {
+	color: #000 ;
+	text-decoration: none ;
+	font-weight: bold;
+	font-family: "verdana";
+	font-size: 12px;
+}
+a {
+	color: #5C0801 ;
+}
+
+li a:hover {
+	color: #f00 ;
+	text-decoration: none ;
+	font-weight: bold;
+	font-family: "verdana";
+	font-size: 12px;
+}
+
+pre {
+	border-radius: 5px;
+	padding: 15px;
+	font-family: "Consolas", "Courier New", Courier, monospace;
+	color: #FFFFFF;
+	background-color: #000033;
+	font-size: 13px;
+}
+.subtable {
+	border: 1px solid #C0C0C0;
+	border-radius: 0px;
+	box-shadow: 0px 0px 0px 0px;
+
+/*	margin: 5px 5px 5px 55px;*/
+}
+td {
+	padding: 3px 25px 3px 15px;
+	vertical-align: top;
+}
+.junglefooter {
+	display:none;
+	font-size: x-small;
+	text-align: center;
+	color: #333333;
+}
+h3{
+	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif,"Century Gothic";
+	font-size: 24px;
+	text-align: center;
+	text-decoration: none;
+	font-weight: bold;
+	text-transform: uppercase;
+	padding-bottom: 0px;
+}
+
+h2{
+	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif,"Century Gothic";
+	font-size: 24px;
+	text-align: center;
+	text-decoration: none;
+	font-weight: bold;
+	text-transform: uppercase;
+	padding-bottom: 0px;
+}

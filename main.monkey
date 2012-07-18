@@ -2,7 +2,7 @@
 header:
 [quote]
 
-[b]Project[/b]
+[b]-Main Project-[/b]
 [list]
 [*] Project : Monkey Touch - Community Project
 [*] Author	: Monkey Community
