@@ -164,7 +164,7 @@ Class Tai_Player
 		Self.held = 0
 		
 		self.bullettime = Millisecs()
-		Self.bulletstall = 300
+		Self.bulletstall = 100
 		
 		Self.gunopen = 0
 		
@@ -277,9 +277,9 @@ Class Tai_Alien
 		
 		
 		For Local bb:Tai_Bullet = eachin TaiBulletList
-			if RectsOverlap(Self.x, Self.y, 40, 40, bb.x, bb.y, 10, 10)
+			if RectsOverlap(Self.x - 20, Self.y - 20, 40, 40, bb.x, bb.y, 10, 10)
 				bb.life = 0
-				Self.life = 0
+				Self.life -= 1
 			EndIf
 		Next
 		
@@ -398,7 +398,7 @@ Class Tai_Bullet
 		Self.x = _x
 		Self.y = _y
 		Self.dir = _dir
-		Self.life = 3
+		Self.life = 1
 		TaiBulletList.AddLast(self)
 	End
 	
@@ -407,9 +407,9 @@ Class Tai_Bullet
 	
 		Select Self.dir
 			Case 0 ' down
-				Self.y += 4
+				Self.y += 8
 			Case 1 ' up
-				Self.y -= 4
+				Self.y -= 8
 		End
 		
 		if Self.y < 0 or Self.y > 480
@@ -488,24 +488,24 @@ Function CreateWave()
 			
 	Select _taiwave
 		Case 1
-			_speed = 12 + TaiBaseSpeed
+			_speed = 2 + TaiBaseSpeed
 			_ship = 1
 			_color = 1
 			
 		Case 2
-			_speed = 12.5 + TaiBaseSpeed
+			_speed = 2.5 + TaiBaseSpeed
 			_ship = 2
 			_color = 2
 		Case 3
-			_speed = 13 + TaiBaseSpeed
+			_speed = 3 + TaiBaseSpeed
 			_ship = 3
 			_color = 3
 		Case 4
-			_speed = 13.5 + TaiBaseSpeed
+			_speed = 3.5 + TaiBaseSpeed
 			_ship = 3
 			_color = 4
 		Default
-			_speed = 13.5 + TaiBaseSpeed
+			_speed = 3.5 + TaiBaseSpeed
 			_ship = 3
 			_color = Rnd(1,4)
 		
