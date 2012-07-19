@@ -318,7 +318,7 @@ Class Tai_Alien
 			Select True
 				Case pup > 8
 					'change this to drop new powerups
-					Local np:TaiPowerUp = new TaiPowerUp(self.x, self.y, int(Rnd(1,5)))
+					Local np:TaiPowerUp = new TaiPowerUp(self.x, self.y, int(Rnd(1, 5)))
 					'Print "Making a POwerup"
 			End select
 		

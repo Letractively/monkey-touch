@@ -110,7 +110,15 @@ Class TitleScreen Extends Screen
 			Next
 		Next
 		
-		if MouseOver(399, 406, 93, 45)
+		'About Button
+		if MouseOver(486, 400, 100, 57)
+			if TouchHit() or MouseHit(MOUSE_LEFT)
+				game.Start(AboutScr)
+			End if
+		EndIf
+		
+		'Play Button.
+		if MouseOver(317, 400, 100, 57)
 			
 			if TouchHit() or MouseHit(MOUSE_LEFT)
 			'clicked play.
