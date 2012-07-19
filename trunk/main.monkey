@@ -50,6 +50,8 @@ Import fontmachine
 
 
 Import title_screen
+Import about_screen
+
 Import game1
 Import game2
 Import game3
@@ -89,6 +91,7 @@ End
 
 
 Global TitleScr:Screen = New TitleScreen()		'Main Title Screen.
+Global AboutScr:Screen = New AboutScreen()		'Main Title Screen.
 
 Global Game1Scr:Screen = New Game1Screen()		'Game Screen
 Global Game2Scr:Screen = New Game2Screen()		'Game Screen
@@ -149,7 +152,9 @@ Class MyGame Extends DiddyApp
 			game.images.LoadAtlas(path, images.LIBGDX_ATLAS, true)
 		Next
 		
+		game.images.Load("about.png", "", False, False)
 		game.images.Load("title.png", "", False, False)
+		game.images.Load("about_mask.png", "", False, False)
 		
 	End Method
 
