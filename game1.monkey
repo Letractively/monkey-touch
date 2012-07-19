@@ -79,6 +79,10 @@ Class Game1Screen Extends Screen
 			ua.render()
 		Next		
 		
+		for local pu:TaiPowerUp = eachin TaiPowerUplist
+			pu.draw()
+		Next
+				
 		TaiPlayer.render()
 		
 		TitleFont.DrawText("x " + TaiPlayer.x, 10, 60, 1)
@@ -116,6 +120,10 @@ Class Game1Screen Extends Screen
 			ua.update()
 		Next
 		
+		for local pu:TaiPowerUp = eachin TaiPowerUplist
+			pu.update()
+		Next
+		
 		if Tai_Shunt = True
 			ShuntDown()
 			Tai_Shunt = False
@@ -150,11 +158,14 @@ Class Tai_Player
 	
 	Field gunopen:Int
 	
+	Field power:Int
+	
+	
 	#Rem
 		summary: new
 		Create a new Player and provided _x position with the provided _life
 	#END
-	Method new(_x:Int, _life = 3)
+	Method new(_x:Int, _life = 3, _power:Int = 1)
 	
 		self.sprite = game.images.Find("game1_player")
 		Self.x = _x
@@ -167,6 +178,7 @@ Class Tai_Player
 		Self.bulletstall = 100
 		
 		Self.gunopen = 0
+		Self.power = _power
 		
 	End
 	
@@ -218,8 +230,21 @@ Class Tai_Player
 			'fire a bullet
 			Self.gunopen = 0
 			Self.bullettime = Millisecs()
+			Local shot:Tai_Bullet
+			Select Self.power
+				Case 1
+					shot = new Tai_Bullet(TaiPlayer.x, TaiPlayer.y, 1)
+				Case 2
+					shot = new Tai_Bullet(TaiPlayer.x - 20, TaiPlayer.y + 18, 1)
+					shot = new Tai_Bullet(TaiPlayer.x + 20, TaiPlayer.y + 18, 1)
+				Case 3
+					shot = new Tai_Bullet(TaiPlayer.x, TaiPlayer.y, 1)
+					shot = new Tai_Bullet(TaiPlayer.x - 20, TaiPlayer.y + 18, 1)
+					shot = new Tai_Bullet(TaiPlayer.x + 20, TaiPlayer.y + 18, 1)
+					
+				
+			End
 			
-			Local shot:Tai_Bullet = new Tai_Bullet(TaiPlayer.x, TaiPlayer.y, 1)
 			
 		EndIf
 		
@@ -287,6 +312,16 @@ Class Tai_Alien
 		
 		
 		if Self.life <= 0
+			
+			Local pup:Int = Rnd(1, 10)
+			
+			Select True
+				Case pup > 8
+					'change this to drop new powerups
+					Local np:TaiPowerUp = new TaiPowerUp(self.x, self.y, int(Rnd(1,5)))
+					'Print "Making a POwerup"
+			End select
+		
 			TaiAlienList.Remove(Self)
 		End if
 	End
@@ -518,6 +553,85 @@ Function CreateWave()
 	Next
 End Function
 
+
+Global TaiPowerUplist:List<TaiPowerUp> = new List<TaiPowerUp>
+
+Const TAIPOWERUP:Int = 1
+Const TAIPOWERDOWN:Int = 2
+Const TAISPEED:Int = 3
+Const TAISLOW:Int = 4
+Const TAIBOMB:Int = 5
+
+
+Class TaiPowerUp
+	Field x:Int
+	Field y:Int
+	Field life:Int
+	Field sprite:GameImage
+	Field type:Int
+	
+	Method new(_x:Int, _y:Int, _power)
+		Self.x = _x
+		Self.y = _y
+		Self.type = _power
+		
+		select _power
+			Case TAIPOWERUP
+				Self.sprite = game.images.Find("game1_powerup")
+				
+			Case TAIPOWERDOWN
+				Self.sprite = game.images.Find("game1_powerdown")
+			Case TAIBOMB
+				Self.sprite = game.images.Find("game1_powerbomb")
+			Case TAISPEED
+				Self.sprite = game.images.Find("game1_powerspeed")
+			Case TAISLOW
+				Self.sprite = game.images.Find("game1_powerslow")
+			
+		End select
+				
+		Self.life = 1
+		TaiPowerUplist.AddLast(self)
+	End
+	
+	Method update()
+		Self.y += 2
+		
+		if Self.y > 640 Then self.life = 0
+		if RectsOverlap(TaiPlayer.x - 20, TaiPlayer.y - 20, 40, 40, Self.x - 20, Self.y - 10, 40, 20)
+			Self.life = 0
+			
+			select self.type
+				Case TAIPOWERUP
+					if TaiPlayer.power <= 2 then TaiPlayer.power += 1
+					
+				Case TAIPOWERDOWN
+					if TaiPlayer.power >= 2 then TaiPlayer.power -= 1
+					
+				Case TAIBOMB
+					For Local px:Int = 1 to SCREEN_WIDTH / 50 step 50
+						Local xb:Tai_Bullet = new Tai_Bullet(px * 50, 475)
+					next
+					
+				Case TAISPEED
+					TaiBaseSpeed += 0.5
+					
+				Case TAISLOW
+					if TaiBaseSpeed >= 0.5 Then TaiBaseSpeed -= 0.5
+					Self.sprite = game.images.Find("game1_powerslow")
+				
+			End select			
+			
+			
+		EndIf
+		
+		if Self.life <= 0 Then TaiPowerUplist.Remove(Self)
+	End
+	
+	Method draw()
+		DrawImage(Self.sprite.image, Self.x, Self.y)
+	End
+End
 
 #Rem
 footer:
