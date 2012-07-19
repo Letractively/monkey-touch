@@ -131,7 +131,12 @@ Class MyGame Extends DiddyApp
 		Return 0
 	End Method
 	
-	'summary:Load Game Images
+	#Rem
+		summary: LoadImages
+		This method also loads ALL game(index).png Atlas files in each of the games folders
+		so if your using the packer, just pack and publish , then use the game.images.find()
+		to actually get at your image.
+	#END
 	Method LoadImages:Void()
 	
 		'loading in the main apps atlas sheet.
