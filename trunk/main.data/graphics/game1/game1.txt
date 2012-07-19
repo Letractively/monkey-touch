@@ -4,59 +4,66 @@ filter: Linear,Linear
 repeat: none
 game1_alienbullet_green
   rotate: false
-  xy: 86, 219
+  xy: 228, 180
   size: 14, 29
   orig: 50, 53
   offset: 18, 12
   index: -1
 game1_alien2_red
   rotate: false
-  xy: 158, 2
-  size: 50, 53
+  xy: 104, 51
+  size: 44, 47
   orig: 50, 53
-  offset: 0, 0
+  offset: 3, 3
+  index: -1
+game1_powerspeed
+  rotate: false
+  xy: 2, 213
+  size: 58, 29
+  orig: 58, 53
+  offset: 0, 10
   index: -1
 game1_alien2_blue
   rotate: false
-  xy: 210, 51
+  xy: 142, 149
   size: 44, 47
   orig: 50, 53
   offset: 3, 3
   index: -1
 game1_alien2_yellow
   rotate: false
-  xy: 106, 159
-  size: 50, 53
+  xy: 104, 2
+  size: 44, 47
   orig: 50, 53
-  offset: 0, 0
+  offset: 3, 3
   index: -1
 game1_alienbullet_red
   rotate: false
-  xy: 70, 219
+  xy: 226, 215
   size: 14, 29
   orig: 50, 53
   offset: 18, 12
   index: -1
 game1_alienbullet_yellow
   rotate: false
-  xy: 54, 219
+  xy: 210, 215
   size: 14, 29
   orig: 50, 53
   offset: 18, 12
   index: -1
 game1_shield
   rotate: false
-  xy: 2, 219
+  xy: 192, 64
   size: 50, 33
   orig: 50, 53
   offset: 0, 6
   index: -1
 game1_alien2_green
   rotate: false
-  xy: 158, 57
-  size: 50, 53
+  xy: 108, 100
+  size: 44, 47
   orig: 50, 53
-  offset: 0, 0
+  offset: 3, 3
   index: -1
 game1_icon
   rotate: false
@@ -67,17 +74,31 @@ game1_icon
   index: -1
 game1_alien1_blue
   rotate: false
-  xy: 114, 2
+  xy: 154, 100
   size: 40, 47
   orig: 50, 53
   offset: 5, 3
   index: -1
 game1_alien1_red
   rotate: false
-  xy: 206, 112
-  size: 46, 53
+  xy: 150, 2
+  size: 40, 47
   orig: 50, 53
-  offset: 2, 0
+  offset: 5, 3
+  index: -1
+game1_powerdown
+  rotate: false
+  xy: 188, 149
+  size: 58, 29
+  orig: 58, 53
+  offset: 0, 10
+  index: -1
+game1_powerbomb
+  rotate: false
+  xy: 192, 2
+  size: 58, 29
+  orig: 58, 53
+  offset: 0, 10
   index: -1
 game1_thumb
   rotate: false
@@ -88,64 +109,78 @@ game1_thumb
   index: -1
 game1_player_bullet
   rotate: false
-  xy: 118, 214
-  size: 16, 21
+  xy: 210, 180
+  size: 16, 33
   orig: 50, 53
   offset: 16, 16
   index: -1
+game1_powerslow
+  rotate: false
+  xy: 62, 213
+  size: 58, 29
+  orig: 58, 53
+  offset: 0, 10
+  index: -1
 game1_alien3_blue
   rotate: false
-  xy: 210, 2
+  xy: 122, 202
   size: 44, 47
   orig: 50, 53
   offset: 3, 3
   index: -1
 game1_alienbullet_blue
   rotate: false
-  xy: 102, 219
+  xy: 196, 99
   size: 14, 29
   orig: 50, 53
   offset: 18, 12
   index: -1
 game1_player
   rotate: false
-  xy: 104, 51
+  xy: 2, 164
   size: 46, 47
   orig: 50, 53
   offset: 2, 3
   index: -1
 game1_alien1_yellow
   rotate: false
-  xy: 158, 112
-  size: 46, 53
+  xy: 168, 198
+  size: 40, 47
   orig: 50, 53
-  offset: 2, 0
+  offset: 5, 3
   index: -1
 game1_alien3_green
   rotate: false
-  xy: 62, 104
-  size: 50, 53
+  xy: 96, 153
+  size: 44, 47
   orig: 50, 53
-  offset: 0, 0
+  offset: 3, 3
   index: -1
 game1_alien1_green
   rotate: false
-  xy: 158, 167
-  size: 46, 53
+  xy: 150, 51
+  size: 40, 47
   orig: 50, 53
-  offset: 2, 0
+  offset: 5, 3
   index: -1
 game1_alien3_red
   rotate: false
-  xy: 54, 164
-  size: 50, 53
+  xy: 62, 104
+  size: 44, 47
   orig: 50, 53
-  offset: 0, 0
+  offset: 3, 3
   index: -1
 game1_alien3_yellow
   rotate: false
-  xy: 2, 164
-  size: 50, 53
+  xy: 50, 164
+  size: 44, 47
   orig: 50, 53
-  offset: 0, 0
+  offset: 3, 3
+  index: -1
+game1_powerup
+  rotate: false
+  xy: 192, 33
+  size: 58, 29
+  orig: 58, 53
+  offset: 0, 10
   index: -1
