@@ -136,11 +136,11 @@ Class ERT_GameState Extends Screen
         
         Field VictoryGameState:ERT_VictoryGameState = new ERT_VictoryGameState
         Field LossGameState:ERT_LossGameState = new ERT_LossGameState
-        Field CarImage:Image[5] 'Array of 5 Images
+        Field CarImage:GameImage[5] 'Array of 5 Images
         
-        Field MineImage:Image
-        Field PauseImage:Image
-        Field CrashImage:Image
+        Field MineImage:GameImage
+        Field PauseImage:GameImage
+        Field CrashImage:GameImage
         Field CarPosition:Vector2D = new Vector2D
         Field MineCooldown:Float = 10
 		
@@ -149,7 +149,7 @@ Class ERT_GameState Extends Screen
 		
         Field MineFrame:Int
         Field MineFrameTimer:Float
-        Field RoadImage:Image
+        Field RoadImage:GameImage
         Field RoadOffset:Float
         Field Distance:Float
         Field Place:Int = 1
@@ -176,14 +176,15 @@ Class ERT_GameState Extends Screen
         Const LANE4B:Int = 498 + 25
         
         Method LoadGraphics:Void()
-                CrashImage = LoadImage("graphics/game7/crash.png")
-                PauseImage = LoadImage("graphics/game7/pause.png")
-                CarImage[1] = LoadImage("graphics/game7/car.png")
-                CarImage[2] = LoadImage("graphics/game7/car2.png")
-                CarImage[3] = LoadImage("graphics/game7/car3.png")
-                CarImage[4] = LoadImage("graphics/game7/car4.png")
-                RoadImage = LoadImage("graphics/game7/road.png")
-                MineImage = LoadImage("graphics/game7/mine.png", 12, 12, 2)
+		
+                CrashImage = game.images.Find("game7_crash") 'If not using a texture packer: LoadImage("graphics/game7/crash.png")
+                PauseImage = game.images.Find("game7_pause") 'LoadImage("graphics/game7/pause.png")
+                CarImage[1] = game.images.Find("game7_car") 'LoadImage("graphics/game7/car.png")
+                CarImage[2] = game.images.Find("game7_car2") 'LoadImage("graphics/game7/car2.png")
+                CarImage[3] = game.images.Find("game7_car3") 'LoadImage("graphics/game7/car3.png")
+                CarImage[4] = game.images.Find("game7_car4") 'LoadImage("graphics/game7/car4.png")
+                RoadImage = game.images.Find("game7_road") 'LoadImage("graphics/game7/road.png")
+                MineImage = game.images.Find("game7_mine") 'LoadImage("graphics/game7/mine.png", 12, 12, 2)
                 'ERT_WorldRecordDistance 'We could Load from file + Save at end of game
                 ERT_ExitMenu = New ERT_EndOfGameMenu()
         End
@@ -201,25 +202,25 @@ Class ERT_GameState Extends Screen
         Method Render:Void()
                 Cls
                 'Draw Road
-                DrawImage(RoadImage, 0, RoadOffset)
-                DrawImage(RoadImage, 0, RoadOffset - RoadImage.Height)
+				RoadImage.Draw(0, RoadOffset)
+                RoadImage.Draw(0, RoadOffset - RoadImage.image.Height)
                 'Above: I am drawing the background twice, so it will appear as it loops when we move it
                 
                 For Local mine:Mine = EachIn MineList
-                    DrawImage(MineImage, mine.Position.x - MineImage.Height / 2, mine.Position.y - MineImage.Height / 2, MineFrame)
+                    MineImage.Draw(mine.Position.x - MineImage.h2, mine.Position.y - MineImage.h2, MineFrame)
                 Next
                 
                 
-                DrawImage(CarImage[1], CarPosition.x - CarImage[1].Width / 2, CarPosition.y - CarImage[1].Height / 2)
+                CarImage[1].Draw(CarPosition.x - CarImage[1].w2, CarPosition.y - CarImage[1].h2)
                 
                 For Local car:OpponentCar = EachIn OpponentList
-                        DrawImage(CarImage[car.Type], car.Position.x - CarImage[car.Type].Height / 2, car.Position.y - CarImage[car.Type].Height / 2)
+                        CarImage[car.Type].Draw(car.Position.x - CarImage[car.Type].h2, car.Position.y - CarImage[car.Type].h2)
                         if car.Destroyed
-                                DrawImage(CrashImage, car.Position.x - CrashImage.Width / 2, car.Position.y - CrashImage.Height / 2)
+                                CrashImage.Draw(car.Position.x - CrashImage.w2, car.Position.y - CrashImage.h2)
                         End
                 Next
                 
-                DrawImage(PauseImage, DEVICE_WIDTH - 50, DEVICE_HEIGHT - 50)
+                PauseImage.Draw(DEVICE_WIDTH - 50, DEVICE_HEIGHT - 50)
                 
                 TitleFont.DrawText("Speed: " + int(PlayerSpeed) + ". Distance: " + Int(Distance), 50, 30, 1)
                 TitleFont.DrawText("Place: " + Place, DeviceWidth(), 30, 3)
@@ -316,20 +317,20 @@ Class ERT_GameState Extends Screen
                 'Used these to Test the gameplay
                 '#REM
                 If KeyHit(KEY_1)
-                        OpponentList.AddFirst(New OpponentCar(LANE1A, RoadImage.Height + 50, 1))
-                        OpponentList.AddFirst(New OpponentCar(LANE1B, RoadImage.Height + 50, 1))
+                        OpponentList.AddFirst(New OpponentCar(LANE1A, RoadImage.h + 50, 1))
+                        OpponentList.AddFirst(New OpponentCar(LANE1B, RoadImage.h + 50, 1))
                 End
                 If KeyHit(KEY_2)
-                        OpponentList.AddFirst(New OpponentCar(LANE2A, RoadImage.Height + 50, 2))
-                        OpponentList.AddFirst(New OpponentCar(LANE2B, RoadImage.Height + 50, 2))
+                        OpponentList.AddFirst(New OpponentCar(LANE2A, RoadImage.h + 50, 2))
+                        OpponentList.AddFirst(New OpponentCar(LANE2B, RoadImage.h + 50, 2))
                 End
                 If KeyHit(KEY_3)
-                        OpponentList.AddFirst(New OpponentCar(LANE3A, RoadImage.Height + 50, 3))
-                        OpponentList.AddFirst(New OpponentCar(LANE3B, RoadImage.Height + 50, 3))
+                        OpponentList.AddFirst(New OpponentCar(LANE3A, RoadImage.h + 50, 3))
+                        OpponentList.AddFirst(New OpponentCar(LANE3B, RoadImage.h + 50, 3))
                 End
                 If KeyHit(KEY_4)
-                        OpponentList.AddFirst(New OpponentCar(LANE4A, RoadImage.Height + 50, 4))
-                        OpponentList.AddFirst(New OpponentCar(LANE4B, RoadImage.Height + 50, 4))
+                        OpponentList.AddFirst(New OpponentCar(LANE4A, RoadImage.h + 50, 4))
+                        OpponentList.AddFirst(New OpponentCar(LANE4B, RoadImage.h + 50, 4))
                 End
                 '#END
 		End
@@ -345,7 +346,7 @@ Class ERT_GameState Extends Screen
 			
             For Local mine:Mine = EachIn MineList
                     mine.Position.y += PlayerSpeed
-                    If mine.Position.y > RoadImage.Height + 50
+                    If mine.Position.y > RoadImage.h + 50
                             MineList.Remove(mine)
                     End
                     For Local opponent:OpponentCar = EachIn OpponentList
@@ -389,7 +390,7 @@ Class ERT_GameState Extends Screen
 			RoadOffset += PlayerSpeed
 				
 			'Slow down when outside Road or when over middle
-            If CarPosition.x < 92 or CarPosition.x > RoadImage.Width - 99 or (CarPosition.x > 316 - 5 And CarPosition.x < 331 + 5)
+            If CarPosition.x < 92 or CarPosition.x > RoadImage.w - 99 or (CarPosition.x > 316 - 5 And CarPosition.x < 331 + 5)
                     PlayerSpeed = PlayerMaxSpeed * 0.7
             Else
                     PlayerSpeed = PlayerMaxSpeed
@@ -399,7 +400,7 @@ Class ERT_GameState Extends Screen
                      CarPosition.y += PlayerSpeed
             End
 			
-			if RoadOffset >= RoadImage.Height Then RoadOffset = 0
+			if RoadOffset >= RoadImage.h Then RoadOffset = 0
 		End
 
 		Method OpponentCarLogic:Void()
@@ -409,7 +410,7 @@ Class ERT_GameState Extends Screen
 						If car.Destroyed
 							car.Position.y += PlayerSpeed ' Move down
 							
-							If car.Position.y > RoadImage.Height + 80
+							If car.Position.y > RoadImage.h + 80
                                 OpponentList.Remove(car)
                                 Continue
 	                        End
@@ -470,7 +471,7 @@ Class ERT_GameState Extends Screen
 		        
         'summary: This metod spawns a car at a X coordinate and with a certain speed faster than the player's current speed. Use the LANE constants to spawn on lanes!
         Method Spawn(xLane:Float, speed:Float)
-                OpponentList.AddFirst(New OpponentCar(xLane, RoadImage.Height + 50, speed))
+                OpponentList.AddFirst(New OpponentCar(xLane, RoadImage.h + 50, speed))
         End
 
 End
