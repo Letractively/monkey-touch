@@ -101,6 +101,7 @@ Class Game7Screen Extends Screen
         
 End
 
+'summary:need input
 Class Mine
 
         Field Position:Vector = new Vector
@@ -112,6 +113,7 @@ Class Mine
         End
 End
 
+'summary:need input
 Class OpponentCar
         Field Position:Vector = new Vector
         Field Type:Int
@@ -128,7 +130,7 @@ Class OpponentCar
         End
         
 End
-
+'summary:need input
 Class ERT_GameState Extends Screen
         
         Field VictoryGameState:ERT_VictoryGameState = new ERT_VictoryGameState
@@ -428,7 +430,7 @@ End
 Global ERT_DistanceTraveledThisGame:Int
 Global ERT_WorldRecordDistance:Int
 Global ERT_ExitMenu:ERT_EndOfGameMenu
-
+'summary:need input
 Class ERT_VictoryGameState Extends Screen
         
         Method Start:Void()
@@ -450,6 +452,7 @@ Class ERT_VictoryGameState Extends Screen
                 ERT_ExitMenu.Render
         End
 End
+'summary:need input
 Class ERT_LossGameState Extends Screen
         Method Start:Void()
                 
@@ -472,7 +475,7 @@ Class ERT_LossGameState Extends Screen
         End
 End
 
-
+'summary:need input
 Class ERT_EndOfGameMenu
         
         Field Restart:= new Vector(30, 430)
@@ -539,6 +542,7 @@ Monkey Coder
 
 ' Wikipedia: A vector is what is needed to "carry" the
 ' point A to the point B; the Latin word vector means "one who carries"
+'summary:need input
 Class Vector
 Public
         Field X:Float
@@ -802,11 +806,13 @@ Public
                 Return -angle
         End     
         
-                '               V E C T O R    B E T W E E N
-        '----------------------------------------------
-        ' Change the vector into a vector from Position1 to Position2
-        ' Return Self, as a vector that goes from first 
-        ' parameter's position to the second 
+		#rem
+		summary:V E C T O R    B E T W E E N
+	    ----------------------------------------------
+         Change the vector into a vector from Position1 to Position2
+         Return Self, as a vector that goes from first 
+         parameter's position to the second 
+		#END
         Method MakeBetween:Vector( PositionFrom:Vector , PositionToo:Vector)
                 If PositionFrom = Null Or PositionToo = Null Then Return Self
                 X = ( PositionToo.X - PositionFrom.X )  
@@ -820,7 +826,8 @@ Public
                 If X = 0.0 And Y = 0.0 Then Return True
                 Return False
         End
-
+		
+		'summary:need input
         Method Lerp:void( toV:Vector, speed:Float)
                 If DistanceTo(toV) < speed Then
                         Set(toV)
@@ -838,6 +845,7 @@ Public
                         Set(toV)
                 End
         End
+		'summary:need input
         Method RotateTowards:Void(other:Vector, angleAmount:Float)
                 Local angleClockwise:Float = AngleToClockwise(other)
                 Local angleAntiClockwise:Float = AngleToAntiClockwise(other)
