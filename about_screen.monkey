@@ -2,10 +2,12 @@
 header:
 [quote]
 
-[b]File Name :[/b] Title_Screen
+[b]File Name :[/b] About_Screen
 [b]Author    :[/b] Paul "Taiphoz" Grayston
 [b]About     :[/b]
-The Main screen that lets the player launch all the included mini games.
+This Screen is here to show the authors, and their details, as well as showing that
+the project was made with monkey, demonstrating it's ability to target other platforms
+and explaining how easy things are to make.
 [/quote]
 #end
 
@@ -52,9 +54,34 @@ Class AboutScreen Extends Screen
 		abouttext += "your game to any platform.~n~n"
 		abouttext += ""
 		abouttext += "You write your code in monkey, and then deply~n"
-		abouttext += "on as many or as few platforms as you like."
+		abouttext += "on as many or as few platforms as you like.~n~n"
 		abouttext += ""
 		
+		
+		abouttext += "Project Founder : Taiphos aka Paul Grayston~n"
+		abouttext += "~n"
+		abouttext += "Project Authors :~n"
+
+		For Local gameid:Int = 1 to 20
+			abouttext += " +-> Slot   : " + ( (GameList[gameid - 1].id) + 1) + "~n"
+			abouttext += " +-> Game   : " + GameList[gameid - 1].name + "~n"
+			abouttext += " +-> Author : " + GameList[gameid - 1].author + "~n"
+			abouttext += " +-> Site   : " + GameList[gameid - 1].authorurl + "~n~n"
+		next
+		
+
+		#rem		
+		SLOT 1:Taiphoz(invaders)
+		SLOT 2 : Slenker (?)
+		SLOT 3 : GeeCee3(?)
+		SLOT 4 : skn3(?)
+		SLOT 5 : Karja(?)
+		SLOT 6 : Fryman(?)
+		SLOT 7 : Tibit(?)
+		SLOT 8 : therevills(?)
+		SLOT 9 : Samah(?)
+		SLOT 10 : Neuro(?)
+		#end	
 	End
 	
 	#Rem
@@ -82,7 +109,7 @@ Class AboutScreen Extends Screen
 	#End
 	Method Update:Void()
 	
-		Self.y -= 0.2
+		Self.y -= 0.3
 	
 	if MouseOver(42, 399, 100, 57)
 		if TouchHit() or MouseHit(MOUSE_LEFT)
