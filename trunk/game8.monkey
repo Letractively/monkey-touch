@@ -25,19 +25,20 @@ Class Game8Screen Extends Screen
 		Local gameid:Int = 8
 		GameList[gameid - 1] = New miniGame
 		GameList[gameid - 1].id = gameid - 1
-		GameList[gameid - 1].name = "????"
+		GameList[gameid - 1].name = "Steves"
 		GameList[gameid - 1].iconname = "game" + gameid + "_icon"
 		GameList[gameid - 1].thumbnail = "game" + gameid + "_thumb"
-		GameList[gameid - 1].author = "????"
-		GameList[gameid - 1].authorurl = "????"
+		GameList[gameid - 1].author = "Steven Revill"
+		GameList[gameid - 1].authorurl = "therevillsgames.com"
 		GameList[gameid - 1].info = "????"
 	End
+	
 	#Rem
 	summary:Start Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		game.screenFade.Start(50, False)		
+	
 	End
 	
 	#Rem
@@ -57,8 +58,7 @@ Class Game8Screen Extends Screen
 	Method Update:Void()
 		'
 		if KeyHit(KEY_ESCAPE)
-			game.nextScreen = TitleScr
-			game.screenFade.Start(50, true)
+			game.Start(TitleScr)
 		EndIf
 		
 	End method

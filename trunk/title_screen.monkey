@@ -34,11 +34,8 @@ Class TitleScreen Extends Screen
 	#End
 	Method Start:Void()
 		background = game.images.Find("title")
-		game.screenFade.Start(50, False)
-		
 		selected = 0
 		LoadGameIcons()
-		
 	End
 	
 	#Rem
@@ -119,65 +116,45 @@ Class TitleScreen Extends Screen
 			'clicked play.
 				select Self.selected + 1
 					Case 1
-						game.nextScreen = Game1Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game1Scr)
 					Case 2
-						game.nextScreen = Game2Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game2Scr)
 					Case 3
-						game.nextScreen = Game3Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game3Scr)
 					Case 4
-						game.nextScreen = Game4Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game4Scr)
 					Case 5
-						game.nextScreen = Game5Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game5Scr)
 					Case 6
-						game.nextScreen = Game6Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game6Scr)
 					Case 7
-						game.nextScreen = Game7Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game7Scr)
 					Case 8
-						game.nextScreen = Game8Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game8Scr)
 					Case 9
-						game.nextScreen = Game9Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game9Scr)
 					Case 10
-						game.nextScreen = Game10Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game10Scr)
 					Case 11
-						game.nextScreen = Game11Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game11Scr)
 					Case 12
-						game.nextScreen = Game12Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game12Scr)
 					Case 13
-						game.nextScreen = Game13Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game13Scr)
 					Case 14
-						game.nextScreen = Game14Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game14Scr)
 					Case 15
-						game.nextScreen = Game15Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game15Scr)
 					Case 16
-						game.nextScreen = Game16Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game16Scr)
 					Case 17
-						game.nextScreen = Game17Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game17Scr)
 					Case 18
-						game.nextScreen = Game18Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game18Scr)
 					Case 19
-						game.nextScreen = Game19Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game19Scr)
 					Case 20
-						game.nextScreen = Game20Scr
-						game.screenFade.Start(50, true)
+						game.Start(Game20Scr)
 				End
 			End if
 			

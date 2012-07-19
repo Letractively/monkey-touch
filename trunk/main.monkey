@@ -119,7 +119,6 @@ Class MyGame Extends DiddyApp
 	
 	
 	Method OnCreate:Int()
-		'Seed = RealMillisecs()
 		Super.OnCreate()
 		SetGraphics(640, 480)
 		SetScreenSize(640, 480, True)
@@ -128,8 +127,7 @@ Class MyGame Extends DiddyApp
 		LoadSounds()
 		LoadFonts()
 		
-		TitleScr.PreStart()
-				
+		game.Start(TitleScr)
 		Return 0
 	End Method
 	
