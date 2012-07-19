@@ -83,7 +83,7 @@ Class TitleScreen Extends Screen
 		TitleFont.DrawText("Game Info", 295, stp, 1)
 		
 		stp += gap
-		InfoFont.DrawText(GameList[Self.selected].info, 295, stp, 1, 308)
+		InfoFont.DrawTextWidth(GameList[Self.selected].info, 295, stp, 1, 308)
 		
 		
 		
