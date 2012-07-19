@@ -274,6 +274,18 @@ Class Tai_Alien
 		
 		if Self.x > 617 or Self.x < 27 Then Tai_Shunt = true
 		
+		
+		
+		For Local bb:Tai_Bullet = eachin TaiBulletList
+			if RectsOverlap(Self.x, Self.y, 40, 40, bb.x, bb.y, 10, 10)
+				bb.life = 0
+				Self.life = 0
+			EndIf
+		Next
+		
+		
+		
+		
 		if Self.life <= 0
 			TaiAlienList.Remove(Self)
 		End if
@@ -407,6 +419,8 @@ Class Tai_Bullet
 		if Self.life <= 0
 			TaiBulletList.Remove(self)
 		EndIf
+		
+		
 		
 	End
 	
