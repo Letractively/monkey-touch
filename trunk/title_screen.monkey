@@ -57,10 +57,10 @@ Class TitleScreen Extends Screen
 			
 				if Self.selected = ( (row * 4) + col)
 					DrawImage(Self.Icons[ ( (row * 4) + col)].image, 72 + (col * 58), 175 + (row * 58))
-					HighlightFont.DrawText(GameList[Self.selected].name, 49 + (col * 58), 201 + (row * 58))
+					HighlightFont.DrawText(GameList[Self.selected].name[ .. 7], 49 + (col * 58), 201 + (row * 58))
 				Else
 					DrawImage(Self.Icons[ ( (row * 4) + col)].image, 72 + (col * 58), 182 + (row * 58))
-					SmallFont.DrawText(GameList[ ( (row * 4) + col)].name, 49 + (col * 58), 201 + (row * 58))
+					SmallFont.DrawText(GameList[ ( (row * 4) + col)].name[ .. 7], 49 + (col * 58), 201 + (row * 58))
 				EndIf
 				
 			Next
