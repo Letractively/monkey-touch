@@ -1,27 +1,20 @@
-game7/game7.png
+game7.png
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
-mine
+game7_road
   rotate: false
-  xy: 2, 484
-  size: 24, 12
-  orig: 24, 12
+  xy: 2, 2
+  size: 648, 480
+  orig: 648, 480
   offset: 0, 0
   index: -1
-car
+game7_car
   rotate: false
   xy: 932, 62
   size: 28, 46
   orig: 50, 50
   offset: 11, 1
-  index: -1
-crash
-  rotate: false
-  xy: 652, 2
-  size: 146, 146
-  orig: 150, 150
-  offset: 0, 0
   index: -1
 game7_thumb
   rotate: false
@@ -30,13 +23,20 @@ game7_thumb
   orig: 100, 100
   offset: 0, 0
   index: -1
-road
+game7_crash
   rotate: false
-  xy: 2, 2
-  size: 648, 480
-  orig: 648, 480
+  xy: 652, 2
+  size: 146, 146
+  orig: 150, 150
   offset: 0, 0
   index: -1
+game7_car
+  rotate: false
+  xy: 902, 62
+  size: 28, 46
+  orig: 50, 50
+  offset: 11, 1
+  index: 2
 game7_icon
   rotate: false
   xy: 902, 2
@@ -44,31 +44,31 @@ game7_icon
   orig: 58, 58
   offset: 0, 0
   index: -1
-pause
+game7_mine
   rotate: false
-  xy: 962, 2
-  size: 33, 39
-  orig: 55, 55
-  offset: 11, 9
+  xy: 2, 484
+  size: 24, 12
+  orig: 24, 12
+  offset: 0, 0
   index: -1
-car
-  rotate: false
-  xy: 902, 62
-  size: 28, 46
-  orig: 50, 50
-  offset: 11, 1
-  index: 2
-car
-  rotate: false
-  xy: 994, 43
-  size: 28, 46
-  orig: 50, 50
-  offset: 11, 1
-  index: 3
-car
+game7_car
   rotate: false
   xy: 962, 43
   size: 30, 46
   orig: 50, 50
   offset: 10, 1
   index: 4
+game7_car
+  rotate: false
+  xy: 994, 43
+  size: 28, 46
+  orig: 50, 50
+  offset: 11, 1
+  index: 3
+game7_pause
+  rotate: false
+  xy: 962, 2
+  size: 33, 39
+  orig: 55, 55
+  offset: 11, 9
+  index: -1
