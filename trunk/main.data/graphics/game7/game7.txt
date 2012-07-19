@@ -1,4 +1,4 @@
-game7.png
+game7/game7.png
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
