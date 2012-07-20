@@ -24,7 +24,7 @@ Used to manage and deal with all Tital Page stuff.
 Class Game1Screen Extends Screen
 	
 	Field background:Image
-	
+	Field clearing:Bool
 	
 	#Rem
 	summary: New
@@ -32,6 +32,8 @@ Class Game1Screen Extends Screen
 	#End
 	Method New()
 		name = "Game 1 Screen"
+		
+		clearing = False
 		
 		Local gameid:Int = 1
 		
@@ -55,8 +57,10 @@ Class Game1Screen Extends Screen
 		game.screenFade.Start(50, False)
 		background = LoadImage("graphics/game1/bg.png")
 		TaiPlayer = New Tai_Player(320)
-		TaiWave = 1
+		TaiWave = 0
+		self.clearing = false
 		CreateWave()
+		self.ClearGameData()
 	End
 	
 	
@@ -66,31 +70,30 @@ Class Game1Screen Extends Screen
 	#End
 	Method Render:Void()
 		Cls
-		DrawImage(background, 0, 0)
-		TitleFont.DrawText("Taiphoz Invaders", 320, 240, 2)
-		TitleFont.DrawText("Score : " + TaiPlayer.score, 1, 1, 1)
-		TitleFont.DrawText(TaiPlayer.life + ": Lives", 640, 1, 3)
-		
-		for local ub:Tai_Bullet = eachin TaiBulletList
-			ub.render()
-		Next		
-
-		for local ua:Tai_Alien = eachin TaiAlienList
-			ua.render()
-		Next		
-		
-		for local pu:TaiPowerUp = eachin TaiPowerUplist
-			pu.draw()
-		Next
-				
-		TaiPlayer.render()
-		
-		TitleFont.DrawText("x " + TaiPlayer.x, 10, 60, 1)
-		TitleFont.DrawText("Bullets " + TaiBulletList.Count(), 10, 80, 1)
-		TitleFont.DrawText("Aliens " + TaiAlienList.Count(), 10, 100, 1)
-		TitleFont.DrawText("Wave " + TaiWave, 10, 120, 1)
-		TitleFont.DrawText("Base " + TaiBaseSpeed, 10, 140, 1)
-		
+			DrawImage(background, 0, 0)
+			TitleFont.DrawText("Taiphoz Invaders", 320, 240, 2)
+			TitleFont.DrawText("Score : " + TaiPlayer.score, 1, 1, 1)
+			TitleFont.DrawText(TaiPlayer.life + ": Lives", 640, 1, 3)
+			
+			for local ub:Tai_Bullet = eachin TaiBulletList
+				ub.render()
+			Next		
+	
+			for local ua:Tai_Alien = eachin TaiAlienList
+				ua.render()
+			Next		
+			
+			for local pu:TaiPowerUp = eachin TaiPowerUplist
+				pu.draw()
+			Next
+					
+			TaiPlayer.render()
+			
+			TitleFont.DrawText("x " + TaiPlayer.x, 10, 60, 1)
+			TitleFont.DrawText("Bullets " + TaiBulletList.Count(), 10, 80, 1)
+			TitleFont.DrawText("Aliens " + TaiAlienList.Count(), 10, 100, 1)
+			TitleFont.DrawText("Wave " + TaiWave, 10, 120, 1)
+			TitleFont.DrawText("Base " + TaiBaseSpeed, 10, 140, 1)
 	End
 
 	#Rem
@@ -99,43 +102,53 @@ Class Game1Screen Extends Screen
 	and all use input.
 	#End
 	Method Update:Void()
-		'
-		if TaiPlayer.life > 0 And TaiAlienList.Count() = 0
-			TaiWave += 1
-			CreateWave()
-		EndIf
+
 		
-		
-		if KeyDown(KEY_LEFT) Then TaiPlayer.MoveLeft
-		if KeyDown(KEY_RIGHT) Then TaiPlayer.MoveRight
-		if KeyDown(KEY_Z) Then TaiPlayer.Shoot
-		
-		TaiPlayer.update()
-		
-		for local ub:Tai_Bullet = eachin TaiBulletList
-			ub.update()
-		Next
+			if TaiPlayer.life > 0 And TaiAlienList.Count() = 0
+				TaiWave += 1
+				CreateWave()
+			EndIf
+			
+			
+			if KeyDown(KEY_LEFT) Then TaiPlayer.MoveLeft
+			if KeyDown(KEY_RIGHT) Then TaiPlayer.MoveRight
+			if KeyDown(KEY_Z) Then TaiPlayer.Shoot
+			
+			TaiPlayer.update()
+			
+			for local ub:Tai_Bullet = eachin TaiBulletList
+				ub.update()
+			Next
+					
+			for local ua:Tai_Alien = eachin TaiAlienList
+				ua.update()
+			Next
+			
+			for local pu:TaiPowerUp = eachin TaiPowerUplist
+				pu.update()
+			Next
+			
+			if Tai_Shunt = True
+				ShuntDown()
+				Tai_Shunt = False
+			EndIf
+					
+			if KeyHit(KEY_ESCAPE)
 				
-		for local ua:Tai_Alien = eachin TaiAlienList
-			ua.update()
-		Next
-		
-		for local pu:TaiPowerUp = eachin TaiPowerUplist
-			pu.update()
-		Next
-		
-		if Tai_Shunt = True
-			ShuntDown()
-			Tai_Shunt = False
-		EndIf
-				
-		if KeyHit(KEY_ESCAPE)
-			game.nextScreen = TitleScr
-			game.screenFade.Start(50, true)
-		EndIf
-		
+				FadeToScreen(TitleScr)
+			EndIf
+			
+
 	End method
 
+	'summary:Clear out all the lists, and bullets, aliens. etc.
+	Method ClearGameData()
+
+		TaiBulletList.Clear
+		TaiAlienList.Clear
+		TaiPowerUplist.Clear
+		
+	End Method
 	
 End
 

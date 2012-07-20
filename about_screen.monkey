@@ -113,7 +113,7 @@ Class AboutScreen Extends Screen
 	
 	if MouseOver(42, 399, 100, 57)
 		if TouchHit() or MouseHit(MOUSE_LEFT)
-			game.Start(TitleScr)
+			FadeToScreen(TitleScr)
 		End if
 	EndIf
 	
