@@ -45,33 +45,36 @@ or assets to this project.
 
 Strict
 
-Import diddy
-Import fontmachine
+Private
+
+	Import game1
+	Import game2
+	Import game3
+	Import game4
+	Import game5
+	Import game6
+	Import game7
+	Import game8
+	Import game9
+	Import game10
+	Import game11
+	Import game12
+	Import game13
+	Import game14
+	Import game15
+	Import game16
+	Import game17
+	Import game18
+	Import game19
+	Import game20
+Public
+	Import diddy
+	Import fontmachine
+	Import title_screen
+	Import about_screen
 
 
-Import title_screen
-Import about_screen
 
-Import game1
-Import game2
-Import game3
-Import game4
-Import game5
-Import game6
-Import game7
-Import game8
-Import game9
-Import game10
-Import game11
-Import game12
-Import game13
-Import game14
-Import game15
-Import game16
-Import game17
-Import game18
-Import game19
-Import game20
 
 Global TitleFont:BitmapFont2
 Global InfoFont:BitmapFont2
