@@ -57,8 +57,8 @@ Class Game16Screen Extends Screen
 	Method Update:Void()
 		'
 		if KeyHit(KEY_ESCAPE)
-			game.nextScreen = TitleScr
-			game.screenFade.Start(50, true)
+			FadeToScreen(TitleScr)
+			 
 		EndIf
 		
 	End method
