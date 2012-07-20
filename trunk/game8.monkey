@@ -58,7 +58,7 @@ Class Game8Screen Extends Screen
 	Method Update:Void()
 		'
 		if KeyHit(KEY_ESCAPE)
-			game.Start(TitleScr)
+			FadeToScreen(TitleScr)
 		EndIf
 		
 	End method
