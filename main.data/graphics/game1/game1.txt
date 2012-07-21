@@ -18,7 +18,7 @@ game1_alien2_purple
   index: -1
 game1_bullet_orange
   rotate: false
-  xy: 21, 484
+  xy: 40, 484
   size: 17, 22
   orig: 17, 22
   offset: 0, 0
@@ -123,7 +123,7 @@ game1_alien8_blue
   index: -1
 game1_bullet_purple
   rotate: false
-  xy: 2, 484
+  xy: 21, 484
   size: 17, 22
   orig: 17, 22
   offset: 0, 0
@@ -203,6 +203,13 @@ game1_glow_green
   xy: 2, 296
   size: 60, 62
   orig: 60, 62
+  offset: 0, 0
+  index: -1
+game1_bullet_blue
+  rotate: false
+  xy: 2, 484
+  size: 17, 22
+  orig: 17, 22
   offset: 0, 0
   index: -1
 game1_alien1_orange
@@ -408,13 +415,6 @@ game1_bluebit
   orig: 12, 12
   offset: 0, 0
   index: 3
-game1_alienbullet_blue
-  rotate: false
-  xy: 103, 254
-  size: 17, 22
-  orig: 17, 22
-  offset: 0, 0
-  index: -1
 game1_alien7_blue
   rotate: false
   xy: 214, 158
@@ -508,7 +508,7 @@ game1_bluebit
   index: 2
 game1_player_bullet
   rotate: false
-  xy: 103, 230
+  xy: 103, 254
   size: 17, 22
   orig: 37, 42
   offset: 10, 0
@@ -522,7 +522,7 @@ game1_alien1_purple
   index: -1
 game1_bullet_green
   rotate: false
-  xy: 40, 484
+  xy: 103, 230
   size: 17, 22
   orig: 17, 22
   offset: 0, 0
