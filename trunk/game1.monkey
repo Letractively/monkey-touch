@@ -17,12 +17,16 @@ Import main
 Global TaiPlayer:Tai_Player
 Global Tai_Shunt:Bool = False
 Global HighScore:Int = 100
+Global blockscorefont:BitmapFont2
+Global blockfont:BitmapFont2
 
 Const BLUE:Int = 1
 Const GREEN:Int = 2
 Const ORANGE:Int = 3
 Const PURPLE:Int = 4
 Const RED:Int = 5
+
+Global GameOver:bool = false
 
 Global Game1PlayScr:Screen = New Game1PlayScreen()
 #Rem
@@ -33,7 +37,9 @@ Class Game1PlayScreen Extends Screen
 	
 	Field background:Image
 	Field clearing:Bool
-	Field blockfont:BitmapFont2
+	Field scoreup:bool
+	
+	
 	
 	#Rem
 	summary: New
@@ -54,14 +60,16 @@ Class Game1PlayScreen Extends Screen
 		game.screenFade.Start(50, False)
 		background = LoadImage("graphics/game1/bg.png")
 		
-		Self.blockfont = New BitmapFont2("graphics/game1/block_score.txt", True)
-		
 		TaiPlayer = New Tai_Player(320)
 		self.ClearGameData()
-		
+		TaiPlayer.score = 0
+		TaiPlayer.life = 3
+		TaiPlayer.score = 0
+		scoreup = false
 		TaiWave = 1
 		self.clearing = false
 		CreateWave(TaiWave)
+		GameOver = false
 		
 	End
 	
@@ -73,10 +81,10 @@ Class Game1PlayScreen Extends Screen
 	Method Render:Void()
 		Cls
 			DrawImage(background, 0, 0)
-			TitleFont.DrawText("Taiphoz Invaders", 320, 240, 2)
+			'TitleFont.DrawText("Taiphoz Invaders", 320, 240, 2)
 			
-			'blockfont.DrawText(TaiPlayer.score, DEVICE_WIDTH / 2, 1, 2)
-			blockfont.DrawText("1 2 3 4 5 6 7 8 9 0", DEVICE_WIDTH / 2, 1, 2)
+			'blockscorefont.DrawText(TaiPlayer.score, DEVICE_WIDTH / 2, 1, 2)
+			
 			
 			
 			for local ub:Tai_Bullet = eachin TaiBulletList
@@ -84,9 +92,15 @@ Class Game1PlayScreen Extends Screen
 			Next		
 	
 			for local ua:Tai_Alien = eachin TaiAlienList
-				ua.render()
-			Next		
+				ua.renderbloom()
+			Next
 			
+			for local ua:Tai_Alien = eachin TaiAlienList
+				ua.render()
+			Next
+					
+
+						
 			for local pu:TaiPowerUp = eachin TaiPowerUplist
 				pu.draw()
 			Next
@@ -96,21 +110,49 @@ Class Game1PlayScreen Extends Screen
 			Next			
 					
 			For Local lpx:Int = 1 to 3
-				DrawImage(TaiPlayer.heart.image, DEVICE_WIDTH - 140 + (lpx * 42), DEVICE_HEIGHT - 21)
+				PushMatrix
+				
+				SetMatrix(1, 0, 0, 1, 0, 0)
+				Scale 0.5, 0.5
+				Translate((DEVICE_WIDTH + 21) - (lpx * 42), DEVICE_HEIGHT - 21)
+				
+				DrawImage(TaiPlayer.heart.image, (DEVICE_WIDTH + 21) - (lpx * 42), DEVICE_HEIGHT - 21)
+				
+				PopMatrix
 			Next
 					
 			For Local lpx:Int = 1 to TaiPlayer.life
-				DrawImage(TaiPlayer.fullheart.image, DEVICE_WIDTH - 140 + (lpx * 42), DEVICE_HEIGHT - 21)
+				DrawImage(TaiPlayer.fullheart.image, (DEVICE_WIDTH + 21) - (lpx * 42), DEVICE_HEIGHT - 21)
 			Next
 			
 			
 			TaiPlayer.render()
+			
+			
+			if GameOver = true
+				'ok game over. lets draw the score in the center with a text message.
+				blockscorefont.DrawText(TaiPlayer.score, DEVICE_WIDTH / 2, 240, 2)
+				select self.scoreup
+					Case true
+						blockfont.DrawText("WOW! New High Score", DEVICE_WIDTH / 2, 300, 2)
+					case false
+						blockfont.DrawText("Better Luck Next Time!", DEVICE_WIDTH / 2, 300, 2)
+				End Select
+
+			else
+				blockscorefont.DrawText(TaiPlayer.score, DEVICE_WIDTH / 2, 1, 2)
+			EndIf
+			
+			
 			
 			TitleFont.DrawText("x " + TaiPlayer.x, 10, 60, 1)
 			TitleFont.DrawText("Bullets " + TaiBulletList.Count(), 10, 80, 1)
 			TitleFont.DrawText("Aliens " + TaiAlienList.Count(), 10, 100, 1)
 			TitleFont.DrawText("Wave " + TaiWave, 10, 120, 1)
 			TitleFont.DrawText("Base " + TaiBaseSpeed, 10, 140, 1)
+			TitleFont.DrawText("Particles " + cParticleList.Count(), 10, 180, 1)
+			TitleFont.DrawText("Life " + TaiPlayer.life, 10, 200, 1)
+
 	End
 
 	#Rem
@@ -119,7 +161,16 @@ Class Game1PlayScreen Extends Screen
 	and all use input.
 	#End
 	Method Update:Void()
-
+		
+		if GameOver = false
+			if TaiPlayer.life <= 0
+				GameOver = true
+				If TaiPlayer.score > HighScore Then
+					HighScore = TaiPlayer.score
+					Self.scoreup = true
+				End if
+								
+			EndIf
 		
 			if TaiPlayer.life > 0 And TaiAlienList.Count() = 0
 				TaiWave += 1
@@ -158,7 +209,15 @@ Class Game1PlayScreen Extends Screen
 				
 				FadeToScreen(Game1Scr)
 			EndIf
+		Else
+			'game over , detect a touch to go back.
 			
+			if TouchHit()
+				self.ClearGameData()
+				FadeToScreen(Game1Scr)
+			EndIf
+			
+		End if
 
 	End method
 
@@ -168,7 +227,8 @@ Class Game1PlayScreen Extends Screen
 		TaiBulletList.Clear
 		TaiAlienList.Clear
 		TaiPowerUplist.Clear
-		
+		cParticleList.Clear
+
 	End Method
 	
 End
@@ -179,7 +239,7 @@ End
 Class Game1Screen Extends Screen
 	
 	Field background:Image
-	Field blockfont:BitmapFont2
+	
 	
 	
 	
@@ -213,7 +273,10 @@ Class Game1Screen Extends Screen
 	Method Start:Void()
 		game.screenFade.Start(50, False)
 		background = LoadImage("graphics/game1/menu.png")
-		Self.blockfont = New BitmapFont2("graphics/game1/block_score.txt", True)
+		blockscorefont = New BitmapFont2("graphics/game1/block_score.txt", True)
+		blockfont = New BitmapFont2("graphics/game1/block.txt", True)
+		'blockfont.DrawShadow = False
+		
 	End
 	
 	
@@ -224,7 +287,8 @@ Class Game1Screen Extends Screen
 	Method Render:Void()
 		Cls
 		DrawImage(background, 0, 0)
-		blockfont.DrawText(HighScore, DEVICE_WIDTH / 2, 180, 2)
+		blockscorefont.DrawText(HighScore, DEVICE_WIDTH / 2, 180, 2)
+		'blockscorefont.DrawText("1 2 3 4 5 6 7 8 9 0", DEVICE_WIDTH / 2, 180, 2)
 	End
 
 	#Rem
@@ -238,6 +302,19 @@ Class Game1Screen Extends Screen
 			FadeToScreen(Game1PlayScr)
 		EndIf
 	
+		if TouchHit() or TouchDown()
+			
+			if MouseOver(15, 214, 264, 203)
+				'back
+				FadeToScreen(TitleScr)
+			EndIf
+			
+			if MouseOver(366, 214, 264, 203)
+				'play
+				FadeToScreen(Game1PlayScr)
+			EndIf
+		EndIf
+		
 		if KeyHit(KEY_ESCAPE)
 			FadeToScreen(TitleScr)
 		EndIf
@@ -321,6 +398,7 @@ Class Tai_Player
 		wooot score muahahahaha
 	#END
 	Method AddScore(_score:int)
+		
 		TaiPlayer.score+=_score	
 	End Method
 	
@@ -340,11 +418,24 @@ Class Tai_Player
 			TaiPlayer.Shoot()
 		EndIf
 		
+		
+		
+		For Local bb:Tai_Bullet = eachin TaiBulletList
+			if RectsOverlap(Self.x - 20, Self.y - 20, 40, 40, bb.x, bb.y, 10, 10) And bb.dir=DOWN
+				
+				bb.life = 0
+				Self.life -= 1
+				
+			EndIf
+		Next		
+		
+		
 		if TouchDown(0)
 		
 			if Tai_Touching(Self.x, Self.y, 50, 53, 2) or Self.held = true
 				TaiPlayer.x = TouchX()
 				Self.held = true
+				TaiPlayer.Shoot
 			EndIf
 			
 		Else
@@ -450,6 +541,8 @@ Class Tai_Alien
 	Field color:Int
 	Field pts:int
 
+	Field bloom:GameImage
+	
 	#Rem
 		summary: new
 		Create's a new alien at _x,_y with _life of colour _color and ship type _ship at speed _speed .
@@ -468,12 +561,16 @@ Class Tai_Alien
 		Select _color
 			Case BLUE
 				Self.sprite = game.images.Find("game1_alien" + _ship + "_blue")
+				Self.bloom = game.images.Find("game1_glow_blue")
 			Case GREEN
 				Self.sprite = game.images.Find("game1_alien" + _ship + "_green")
+				Self.bloom = game.images.Find("game1_glow_green")
 			Case ORANGE
 				Self.sprite = game.images.Find("game1_alien" + _ship + "_orange")
+				Self.bloom = game.images.Find("game1_glow_orange")
 			Case PURPLE
 				Self.sprite = game.images.Find("game1_alien" + _ship + "_purple")
+				Self.bloom = game.images.Find("game1_glow_purple")
 				
 		End Select
 		
@@ -508,6 +605,7 @@ Class Tai_Alien
 				bb.life = 0
 				TaiPlayer.AddScore(Self.pts)
 				Self.life -= 1
+				self.shoot()
 			EndIf
 		Next
 		
@@ -546,7 +644,15 @@ Class Tai_Alien
 		DrawImage(Self.sprite.image, Self.x, Self.y)
 	End
 	
+	Method renderbloom()
+		DrawImage(Self.bloom.image, Self.x, Self.y)
+	End
 
+	Method shoot()
+		Local shot:Tai_Bullet
+		shot = new Tai_Bullet(self.x, self.y, DOWN, self.color)
+	End Method
+	
 End
 
 'summary:Shunts down every alien alive if any alien reaches the side of the screen.
@@ -589,7 +695,8 @@ End
 
 	
 	
-	
+Const UP:Int = 1
+Const DOWN:Int = 0
 'summary:Bullet list to manage all the bullets that get fired.
 Global TaiBulletList:List<Tai_Bullet> = new List<Tai_Bullet>
 #Rem
@@ -603,9 +710,27 @@ Class Tai_Bullet
 	Field life:Int
 	Field dir:Int
 	
-	'summary:Create a new bullet at _x,_y traveling in _dir direction (1=down 0=up)
-	Method new(_x:Int, _y:Int, _dir:Int = 1)
-		Self.sprite = game.images.Find("game1_player_bullet")
+	'summary:Create a new bullet at _x,_y traveling in _dir direction (0=down 1=up)
+	Method new(_x:Int, _y:Int, _dir:Int = UP, _color:int = RED)
+		Select _dir
+			Case UP
+				'Player Shooting UP
+				Self.sprite = game.images.Find("game1_player_bullet")
+			Case DOWN
+				'Alien shooting down.
+				select _color
+					Case BLUE
+						Self.sprite = game.images.Find("game1_bullet_blue")'must rmemebr to fix this image filename.
+					Case GREEN
+						Self.sprite = game.images.Find("game1_bullet_green")
+					Case ORANGE
+						Self.sprite = game.images.Find("game1_bullet_orange")
+					Case PURPLE
+						Self.sprite = game.images.Find("game1_bullet_purple")
+				End Select
+		End Select
+		
+		
 		Self.x = _x
 		Self.y = _y
 		Self.dir = _dir
@@ -617,15 +742,18 @@ Class Tai_Bullet
 	Method update()
 	
 		Select Self.dir
-			Case 0 ' down
+			Case DOWN ' down
 				Self.y += 8
-			Case 1 ' up
+			Case UP ' up
 				Self.y -= 8
 		End
 		
 		if Self.y < 0 or Self.y > 480
 			Self.life = 0
 		EndIf
+		
+		
+		
 		
 		if Self.life <= 0
 			CreateShatter(Self.x, Self.y, 10)
@@ -710,7 +838,8 @@ Class TaiPowerUp
 		Self.y += 2
 		
 		For Local bb:Tai_Bullet = eachin TaiBulletList
-			if RectsOverlap(Self.x - 20, Self.y - 20, 40, 40, bb.x, bb.y, 10, 10)
+		
+			if RectsOverlap(Self.x - 20, Self.y - 20, 40, 40, bb.x, bb.y, 10, 10) and bb.dir=UP
 				bb.life = 0
 				Self.life -= 1
 				if self.life <= 0 then TaiPlayer.AddScore(Self.pts)
@@ -996,16 +1125,6 @@ Function CreateWave(_wave:Int = 1)
 			_life = 4
 		
 	End
-	
-	if _wave = 8 then
-		Print "Wave 8"
-		Print "Color : " + _color
-	EndIf
-	
-	if _wave = 9 then
-		Print "Wave 9"
-		Print "Color : " + _color
-	EndIf
 
 	Local ta:Tai_Alien
 	For Local y:Int = 0 to 3
