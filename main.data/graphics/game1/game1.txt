@@ -4,35 +4,35 @@ filter: Linear,Linear
 repeat: none
 game1_alien7_purple
   rotate: false
-  xy: 2, 358
+  xy: 187, 420
   size: 35, 28
   orig: 35, 40
   offset: 0, 8
   index: -1
 game1_alien2_purple
   rotate: false
-  xy: 205, 212
+  xy: 39, 360
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_orangebit
   rotate: false
-  xy: 76, 198
+  xy: 242, 78
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 1
 game1_powerup
   rotate: false
-  xy: 213, 2
+  xy: 64, 104
   size: 37, 42
   orig: 37, 42
   offset: 0, 0
   index: -1
 game1_alien10_orange
   rotate: false
-  xy: 182, 86
+  xy: 2, 212
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
@@ -46,434 +46,469 @@ game1_thumb
   index: -1
 game1_alien4_blue
   rotate: false
-  xy: 201, 338
+  xy: 187, 344
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien6_orange
   rotate: false
-  xy: 2, 190
+  xy: 2, 296
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien2_green
   rotate: false
-  xy: 39, 274
+  xy: 76, 360
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien10_blue
   rotate: false
-  xy: 201, 254
+  xy: 39, 444
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien2_blue
   rotate: false
-  xy: 39, 316
+  xy: 113, 466
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_powerslow
   rotate: false
-  xy: 2, 104
+  xy: 163, 170
   size: 37, 42
   orig: 37, 42
   offset: 0, 0
   index: -1
 game1_alien6_purple
   rotate: false
-  xy: 39, 148
+  xy: 39, 276
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien4_green
   rotate: false
-  xy: 39, 232
+  xy: 76, 318
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_purplebit
   rotate: false
-  xy: 76, 156
+  xy: 228, 64
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 1
 game1_alien8_blue
   rotate: false
-  xy: 127, 298
+  xy: 76, 444
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
+game1_glow_orange
+  rotate: false
+  xy: 104, 66
+  size: 60, 62
+  orig: 60, 62
+  offset: 0, 0
+  index: -1
 game1_alien2_orange
   rotate: false
-  xy: 2, 274
+  xy: 2, 380
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien10_purple
   rotate: false
-  xy: 99, 106
+  xy: 51, 192
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_bluebit
   rotate: false
-  xy: 76, 282
+  xy: 241, 202
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 1
 game1_alien7_orange
   rotate: false
-  xy: 39, 358
+  xy: 150, 428
   size: 35, 28
   orig: 35, 40
   offset: 0, 8
   index: -1
 game1_alien6_blue
   rotate: false
-  xy: 201, 296
+  xy: 150, 344
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_orangebit
   rotate: false
-  xy: 76, 184
+  xy: 228, 78
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 2
 game1_alien6_green
   rotate: false
-  xy: 39, 190
+  xy: 76, 276
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_greenbit
   rotate: false
-  xy: 76, 212
+  xy: 228, 92
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 3
 game1_redbit
   rotate: false
-  xy: 242, 212
+  xy: 242, 120
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 1
+game1_glow_green
+  rotate: false
+  xy: 166, 66
+  size: 60, 62
+  orig: 60, 62
+  offset: 0, 0
+  index: -1
 game1_alien1_orange
   rotate: false
-  xy: 127, 256
+  xy: 2, 464
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_powerspeed
   rotate: false
-  xy: 104, 62
+  xy: 64, 148
   size: 37, 42
   orig: 37, 42
   offset: 0, 0
   index: -1
 game1_alien5_purple
   rotate: false
-  xy: 173, 170
+  xy: 150, 260
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien8_green
   rotate: false
-  xy: 2, 148
+  xy: 113, 256
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien1_blue
   rotate: false
-  xy: 76, 316
+  xy: 150, 386
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien1_green
   rotate: false
-  xy: 90, 274
+  xy: 39, 402
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien3_orange
   rotate: false
-  xy: 127, 214
+  xy: 113, 340
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien8_orange
   rotate: false
-  xy: 94, 148
+  xy: 76, 234
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_greenbit
   rotate: false
-  xy: 76, 226
+  xy: 242, 92
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 2
 game1_alien10_green
   rotate: false
-  xy: 219, 86
+  xy: 142, 214
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
+game1_glow_purple
+  rotate: false
+  xy: 166, 2
+  size: 60, 62
+  orig: 60, 62
+  offset: 0, 0
+  index: -1
 game1_alien5_blue
   rotate: false
-  xy: 164, 338
+  xy: 113, 382
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien3_green
   rotate: false
-  xy: 90, 232
+  xy: 187, 302
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_powerbomb
   rotate: false
-  xy: 143, 86
+  xy: 103, 190
   size: 37, 42
   orig: 37, 42
   offset: 0, 0
   index: -1
 game1_alien9_purple
   rotate: false
-  xy: 219, 128
+  xy: 179, 218
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_orangebit
   rotate: false
-  xy: 76, 170
+  xy: 242, 64
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 3
+game1_glow_blue
+  rotate: false
+  xy: 2, 104
+  size: 60, 62
+  orig: 60, 62
+  offset: 0, 0
+  index: -1
 game1_icon
   rotate: false
-  xy: 104, 2
+  xy: 103, 130
   size: 58, 58
   orig: 58, 58
   offset: 0, 0
   index: -1
 game1_alien4_purple
   rotate: false
-  xy: 210, 170
+  xy: 39, 318
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien3_blue
   rotate: false
-  xy: 2, 316
+  xy: 113, 424
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_fullheart
   rotate: false
-  xy: 164, 46
+  xy: 163, 130
   size: 42, 38
   orig: 42, 42
   offset: 0, 4
   index: -1
 game1_player
   rotate: false
-  xy: 164, 2
+  xy: 2, 168
   size: 47, 42
   orig: 47, 42
   offset: 0, 0
   index: -1
 game1_alien5_green
   rotate: false
-  xy: 90, 190
+  xy: 187, 260
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_purplebit
   rotate: false
-  xy: 80, 128
+  xy: 228, 50
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 3
 game1_alien4_orange
   rotate: false
-  xy: 2, 232
+  xy: 2, 338
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien9_blue
   rotate: false
-  xy: 164, 296
+  xy: 76, 402
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_shield
   rotate: false
-  xy: 113, 340
+  xy: 187, 386
   size: 35, 32
   orig: 35, 40
   offset: 0, 8
   index: -1
 game1_alien9_orange
   rotate: false
-  xy: 182, 128
+  xy: 216, 218
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_bluebit
   rotate: false
-  xy: 242, 226
+  xy: 241, 174
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 3
 game1_alienbullet_blue
   rotate: false
-  xy: 80, 104
+  xy: 228, 26
   size: 17, 22
   orig: 35, 40
   offset: 9, 9
   index: -1
 game1_alien7_blue
   rotate: false
-  xy: 113, 374
+  xy: 187, 450
   size: 35, 28
   orig: 35, 40
   offset: 0, 8
   index: -1
 game1_alien7_green
   rotate: false
-  xy: 76, 358
+  xy: 150, 458
   size: 35, 28
   orig: 35, 40
   offset: 0, 8
   index: -1
 game1_greenbit
   rotate: false
-  xy: 76, 240
+  xy: 228, 106
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 1
 game1_redbit
   rotate: false
-  xy: 76, 254
+  xy: 242, 106
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 3
 game1_alien8_purple
   rotate: false
-  xy: 136, 130
+  xy: 2, 254
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_emptyheart
   rotate: false
-  xy: 208, 46
+  xy: 207, 134
   size: 42, 38
   orig: 42, 42
   offset: 0, 4
   index: -1
 game1_powerdown
   rotate: false
-  xy: 41, 104
+  xy: 202, 174
   size: 37, 42
   orig: 37, 42
   offset: 0, 0
   index: -1
 game1_alien3_purple
   rotate: false
-  xy: 168, 212
+  xy: 150, 302
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
+game1_glow_red
+  rotate: false
+  xy: 104, 2
+  size: 60, 62
+  orig: 60, 62
+  offset: 0, 0
+  index: -1
 game1_purplebit
   rotate: false
-  xy: 80, 142
+  xy: 242, 50
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 2
 game1_alien9_green
   rotate: false
-  xy: 219, 128
+  xy: 39, 234
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_alien5_orange
   rotate: false
-  xy: 131, 172
+  xy: 113, 298
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_bluebit
   rotate: false
-  xy: 242, 240
+  xy: 241, 188
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: 2
 game1_player_bullet
   rotate: false
-  xy: 143, 62
+  xy: 228, 2
   size: 17, 22
   orig: 37, 42
   offset: 10, 0
   index: -1
 game1_alien1_purple
   rotate: false
-  xy: 164, 254
+  xy: 2, 422
   size: 35, 40
   orig: 35, 40
   offset: 0, 0
   index: -1
 game1_redbit
   rotate: false
-  xy: 76, 268
+  xy: 228, 120
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
