@@ -108,7 +108,7 @@ Class Game1Screen Extends Screen
 				TaiWave += 1
 				CreateWave()
 			EndIf
-			
+			 
 			
 			if KeyDown(KEY_LEFT) Then TaiPlayer.MoveLeft
 			if KeyDown(KEY_RIGHT) Then TaiPlayer.MoveRight
