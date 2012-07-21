@@ -1,5 +1,5 @@
 #Rem
-header:
+header:  
 [quote]
 
 [b]File Name :[/b] About_Screen
@@ -10,6 +10,7 @@ the project was made with monkey, demonstrating it's ability to target other pla
 and explaining how easy things are to make.
 [/quote]
 #end
+
 
 
 
