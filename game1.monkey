@@ -16,37 +16,34 @@ Import main
 
 Global TaiPlayer:Tai_Player
 Global Tai_Shunt:Bool = False
+Global HighScore:Int = 100
 
+Const BLUE:Int = 1
+Const GREEN:Int = 2
+Const ORANGE:Int = 3
+Const PURPLE:Int = 4
+Const RED:Int = 5
+
+Global Game1PlayScr:Screen = New Game1PlayScreen()
 #Rem
 summary:Title Screen Class.
 Used to manage and deal with all Tital Page stuff.
 #End
-Class Game1Screen Extends Screen
+Class Game1PlayScreen Extends Screen
 	
 	Field background:Image
 	Field clearing:Bool
+	Field blockfont:BitmapFont2
 	
 	#Rem
 	summary: New
 	New method to create a new instance of this screen class.
 	#End
 	Method New()
-		name = "Game 1 Screen"
+		name = "Game 1 Play Screen"
 		
 		clearing = False
-		
-		Local gameid:Int = 1
-		
-		GameList[gameid - 1] = New miniGame
-		GameList[gameid - 1].id = (gameid - 1)
-		GameList[gameid - 1].name = "Invader"
-		GameList[gameid - 1].iconname = "game" + gameid + "_icon"
-		GameList[gameid - 1].thumbnail = "game" + gameid + "_thumb"
-		GameList[gameid - 1].author = "Paul Grayston"
-		GameList[gameid - 1].authorurl = "dev.cruel-gaming.com"
-		GameList[gameid - 1].info = "Aliens are planning to take over the world it's your job to save us all "
-		'Print "GameList " + GameList[0].name
-		
+				
 	End
 	
 	#Rem
@@ -56,11 +53,16 @@ Class Game1Screen Extends Screen
 	Method Start:Void()
 		game.screenFade.Start(50, False)
 		background = LoadImage("graphics/game1/bg.png")
+		
+		Self.blockfont = New BitmapFont2("graphics/game1/block_score.txt", True)
+		
 		TaiPlayer = New Tai_Player(320)
-		TaiWave = 0
-		self.clearing = false
-		CreateWave()
 		self.ClearGameData()
+		
+		TaiWave = 1
+		self.clearing = false
+		CreateWave(TaiWave)
+		
 	End
 	
 	
@@ -72,8 +74,10 @@ Class Game1Screen Extends Screen
 		Cls
 			DrawImage(background, 0, 0)
 			TitleFont.DrawText("Taiphoz Invaders", 320, 240, 2)
-			TitleFont.DrawText("Score : " + TaiPlayer.score, 1, 1, 1)
-			TitleFont.DrawText(TaiPlayer.life + ": Lives", 640, 1, 3)
+			
+			'blockfont.DrawText(TaiPlayer.score, DEVICE_WIDTH / 2, 1, 2)
+			blockfont.DrawText("1 2 3 4 5 6 7 8 9 0", DEVICE_WIDTH / 2, 1, 2)
+			
 			
 			for local ub:Tai_Bullet = eachin TaiBulletList
 				ub.render()
@@ -86,7 +90,20 @@ Class Game1Screen Extends Screen
 			for local pu:TaiPowerUp = eachin TaiPowerUplist
 				pu.draw()
 			Next
+			
+			for local pt:cParticle = eachin cParticleList
+				pt.draw()
+			Next			
 					
+			For Local lpx:Int = 1 to 3
+				DrawImage(TaiPlayer.heart.image, DEVICE_WIDTH - 140 + (lpx * 42), DEVICE_HEIGHT - 21)
+			Next
+					
+			For Local lpx:Int = 1 to TaiPlayer.life
+				DrawImage(TaiPlayer.fullheart.image, DEVICE_WIDTH - 140 + (lpx * 42), DEVICE_HEIGHT - 21)
+			Next
+			
+			
 			TaiPlayer.render()
 			
 			TitleFont.DrawText("x " + TaiPlayer.x, 10, 60, 1)
@@ -106,7 +123,7 @@ Class Game1Screen Extends Screen
 		
 			if TaiPlayer.life > 0 And TaiAlienList.Count() = 0
 				TaiWave += 1
-				CreateWave()
+				CreateWave(TaiWave)
 			EndIf
 			 
 			
@@ -128,6 +145,10 @@ Class Game1Screen Extends Screen
 				pu.update()
 			Next
 			
+			for local pt:cParticle = eachin cParticleList
+				pt.update()
+			Next			
+			
 			if Tai_Shunt = True
 				ShuntDown()
 				Tai_Shunt = False
@@ -135,7 +156,7 @@ Class Game1Screen Extends Screen
 					
 			if KeyHit(KEY_ESCAPE)
 				
-				FadeToScreen(TitleScr)
+				FadeToScreen(Game1Scr)
 			EndIf
 			
 
@@ -153,12 +174,109 @@ Class Game1Screen Extends Screen
 End
 
 
+
+
+Class Game1Screen Extends Screen
+	
+	Field background:Image
+	Field blockfont:BitmapFont2
+	
+	
+	
+	#Rem
+	summary: New
+	New method to create a new instance of this screen class.
+	#End
+	Method New()
+		name = "Game 1 Menu"
+		
+		
+		
+		Local gameid:Int = 1
+		
+		GameList[gameid - 1] = New miniGame
+		GameList[gameid - 1].id = (gameid - 1)
+		GameList[gameid - 1].name = "Invader"
+		GameList[gameid - 1].iconname = "game" + gameid + "_icon"
+		GameList[gameid - 1].thumbnail = "game" + gameid + "_thumb"
+		GameList[gameid - 1].author = "Paul Grayston"
+		GameList[gameid - 1].authorurl = "dev.cruel-gaming.com"
+		GameList[gameid - 1].info = "Aliens are planning to take over the world it's your job to save us all "
+		'Print "GameList " + GameList[0].name
+		
+	End
+	
+	#Rem
+	summary:Start Screen
+	Start the Title Screen.
+	#End
+	Method Start:Void()
+		game.screenFade.Start(50, False)
+		background = LoadImage("graphics/game1/menu.png")
+		Self.blockfont = New BitmapFont2("graphics/game1/block_score.txt", True)
+	End
+	
+	
+	#Rem
+	summary:Render Title Screen
+	Renders all the Screen Elements.
+	#End
+	Method Render:Void()
+		Cls
+		DrawImage(background, 0, 0)
+		blockfont.DrawText(HighScore, DEVICE_WIDTH / 2, 180, 2)
+	End
+
+	#Rem
+	summary:Update Title Screen
+	Will update all screen objects, handles mouse, keys
+	and all use input.
+	#End
+	Method Update:Void()
+	
+		if KeyHit(KEY_SPACE)
+			FadeToScreen(Game1PlayScr)
+		EndIf
+	
+		if KeyHit(KEY_ESCAPE)
+			FadeToScreen(TitleScr)
+		EndIf
+			
+	End method
+
+	
+End
+
+
+
+
+
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+
+
+
+
+
+
+
+
+
 #Rem
 summary: Tai_Player
 Class Created to manage the Player charcter
 #End
 Class Tai_Player
 	Field sprite:GameImage
+	Field heart:GameImage
+	Field fullheart:GameImage
+	
 	Field x:Int
 	Field y:Int
 	Field life:Int
@@ -181,6 +299,8 @@ Class Tai_Player
 	Method new(_x:Int, _life = 3, _power:Int = 1)
 	
 		self.sprite = game.images.Find("game1_player")
+		self.fullheart = game.images.Find("game1_fullheart")
+		self.heart = game.images.Find("game1_emptyheart")
 		Self.x = _x
 		Self.y = 450
 		Self.life = _life
@@ -194,6 +314,16 @@ Class Tai_Player
 		Self.power = _power
 		
 	End
+	
+	
+	#Rem
+		summary: gives the player some points :P
+		wooot score muahahahaha
+	#END
+	Method AddScore(_score:int)
+		TaiPlayer.score+=_score	
+	End Method
+	
 	
 	#Rem
 		summary: update
@@ -275,7 +405,33 @@ Class Tai_Player
 	End
 End
 
-Global Taiwave:int = 2
+
+
+
+
+
+
+
+
+
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+
+
+
+
+
+
+
+
+
+Global Taiwave:int=0
 
 'summary:Alien List, holds all alien objects once created, used when updating all aliens.
 Global TaiAlienList:List<Tai_Alien> = new List<Tai_Alien>
@@ -284,7 +440,6 @@ Global TaiAlienList:List<Tai_Alien> = new List<Tai_Alien>
 	summary:Tai_Alien
 	Alien class used to manage and control all alien ships, this class gets instanced and fills up the alienlist.
 #END
-
 Class Tai_Alien
 	Field sprite:GameImage
 	Field x:float
@@ -292,7 +447,41 @@ Class Tai_Alien
 	Field life:Int
 	Field dir:int
 	Field speed:float
+	Field color:Int
+	Field pts:int
+
+	#Rem
+		summary: new
+		Create's a new alien at _x,_y with _life of colour _color and ship type _ship at speed _speed .
+		And then adds this new alien to the TaiAlienList
+	#END
+	Method new(_x:Int, _y:Int, _life:Int, _color:int = 1, _ship:int, _speed:int)
 	
+		Self.x = _x
+		Self.y = _y
+		Self.life = _life
+		Self.pts = _life * 3
+		Self.dir = 1
+		Self.speed = _speed
+		Self.color = _color
+		
+		Select _color
+			Case BLUE
+				Self.sprite = game.images.Find("game1_alien" + _ship + "_blue")
+			Case GREEN
+				Self.sprite = game.images.Find("game1_alien" + _ship + "_green")
+			Case ORANGE
+				Self.sprite = game.images.Find("game1_alien" + _ship + "_orange")
+			Case PURPLE
+				Self.sprite = game.images.Find("game1_alien" + _ship + "_purple")
+				
+		End Select
+		
+		TaiAlienList.AddLast(Self)
+		
+	End	
+	
+		
 	'dir 1 = left 2 = right
 	'color : 1=red 2=green 3=blue 4=yellow
 	'ship 1,2,3,4
@@ -317,6 +506,7 @@ Class Tai_Alien
 		For Local bb:Tai_Bullet = eachin TaiBulletList
 			if RectsOverlap(Self.x - 20, Self.y - 20, 40, 40, bb.x, bb.y, 10, 10)
 				bb.life = 0
+				TaiPlayer.AddScore(Self.pts)
 				Self.life -= 1
 			EndIf
 		Next
@@ -325,6 +515,8 @@ Class Tai_Alien
 		
 		
 		if Self.life <= 0
+		
+			CreateBang(Self.x, Self.y, Self.color, Rnd(10, 20))
 			
 			Local pup:Int = Rnd(1, 10)
 			
@@ -351,66 +543,10 @@ Class Tai_Alien
 
 	'summary:Draw the alien.
 	Method render()
-		
 		DrawImage(Self.sprite.image, Self.x, Self.y)
 	End
 	
-	#Rem
-		summary: new
-		Create's a new alien at _x,_y with _life of colour _color and ship type _ship at speed _speed .
-		And then adds this new alien to the TaiAlienList
-	#END
-	Method new(_x:Int, _y:Int, _life:Int, _color:int = 1, _ship:int, _speed:int)
-	
-		Self.x = _x
-		Self.y = _y
-		Self.life = _life
-		Self.dir = 1
-		Self.speed = _speed
-		
-		Select _color
-			Case 1
-				Select _ship
-					Case 1
-						Self.sprite = game.images.Find("game1_alien1_red")
-					Case 2
-						Self.sprite = game.images.Find("game1_alien2_red")
-					Case 3
-						Self.sprite = game.images.Find("game1_alien3_red")
-				End
-			Case 2
-				Select _ship
-					Case 1
-						Self.sprite = game.images.Find("game1_alien1_green")
-					Case 2
-						Self.sprite = game.images.Find("game1_alien2_green")
-					Case 3
-						Self.sprite = game.images.Find("game1_alien3_green")
-				End
-			Case 3
-				Select _ship
-					Case 1
-						Self.sprite = game.images.Find("game1_alien1_blue")
-					Case 2
-						Self.sprite = game.images.Find("game1_alien2_blue")
-					Case 3
-						Self.sprite = game.images.Find("game1_alien3_blue")
-				End
-			Case 4
-				Select _ship
-					Case 1
-						Self.sprite = game.images.Find("game1_alien1_yellow")
-					Case 2
-						Self.sprite = game.images.Find("game1_alien2_yellow")
-					Case 3
-						Self.sprite = game.images.Find("game1_alien3_yellow")
-				End
-			
-		End select
-		
-		TaiAlienList.AddLast(Self)
-		
-	End
+
 End
 
 'summary:Shunts down every alien alive if any alien reaches the side of the screen.
@@ -426,6 +562,33 @@ End
 		Next
 	End
 
+	
+	
+	
+
+
+
+
+
+
+
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+
+
+
+
+
+
+
+	
+	
 	
 'summary:Bullet list to manage all the bullets that get fired.
 Global TaiBulletList:List<Tai_Bullet> = new List<Tai_Bullet>
@@ -465,6 +628,7 @@ Class Tai_Bullet
 		EndIf
 		
 		if Self.life <= 0
+			CreateShatter(Self.x, Self.y, 10)
 			TaiBulletList.Remove(self)
 		EndIf
 		
@@ -477,6 +641,284 @@ Class Tai_Bullet
 		DrawImage(Self.sprite.image, Self.x, Self.y)
 	End
 End
+
+
+
+
+
+
+
+
+
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+
+
+
+
+Global TaiPowerUplist:List<TaiPowerUp> = new List<TaiPowerUp>
+
+Const TAIPOWERUP:Int = 1
+Const TAIPOWERDOWN:Int = 2
+Const TAISPEED:Int = 3
+Const TAISLOW:Int = 4
+Const TAIBOMB:Int = 5
+
+
+Class TaiPowerUp
+	Field x:Int
+	Field y:Int
+	Field life:Int
+	Field sprite:GameImage
+	Field type:Int
+	Field pts:Int
+	
+	Method new(_x:Int, _y:Int, _power)
+		Self.x = _x
+		Self.y = _y
+		Self.type = _power
+		
+		select _power
+			Case TAIPOWERUP
+				Self.sprite = game.images.Find("game1_powerup")
+				Self.pts = 100
+			Case TAIPOWERDOWN
+				Self.sprite = game.images.Find("game1_powerdown")
+				Self.pts = -100
+			Case TAIBOMB
+				Self.sprite = game.images.Find("game1_powerbomb")
+				Self.pts = 100
+			Case TAISPEED
+				Self.sprite = game.images.Find("game1_powerspeed")
+				Self.pts = -100
+			Case TAISLOW
+				Self.sprite = game.images.Find("game1_powerslow")
+				Self.pts = 100
+		End select
+				
+		Self.life = 10
+		TaiPowerUplist.AddLast(self)
+	End
+	
+	Method update()
+		Self.y += 2
+		
+		For Local bb:Tai_Bullet = eachin TaiBulletList
+			if RectsOverlap(Self.x - 20, Self.y - 20, 40, 40, bb.x, bb.y, 10, 10)
+				bb.life = 0
+				Self.life -= 1
+				if self.life <= 0 then TaiPlayer.AddScore(Self.pts)
+			EndIf
+		Next
+		
+		
+		if Self.y > 640 Then self.life = 0
+		if RectsOverlap(TaiPlayer.x - 20, TaiPlayer.y - 20, 40, 40, Self.x - 20, Self.y - 10, 40, 20)
+			Self.life = 0
+			
+			select self.type
+				Case TAIPOWERUP
+					if TaiPlayer.power <= 2 then TaiPlayer.power += 1
+					CreateRing(TaiPlayer.x, TaiPlayer.y, RED)
+					
+				Case TAIPOWERDOWN
+					if TaiPlayer.power >= 2 then TaiPlayer.power -= 1
+					CreateRing(TaiPlayer.x, TaiPlayer.y, BLUE)
+					
+				Case TAIBOMB
+					CreateRing(TaiPlayer.x, TaiPlayer.y, RED)
+					For Local px:Int = 1 to SCREEN_WIDTH / 50 step 50
+						Local xb:Tai_Bullet = new Tai_Bullet(px * 50, 475)
+					next
+					
+				Case TAISPEED
+					CreateRing(TaiPlayer.x, TaiPlayer.y, BLUE)
+					TaiBaseSpeed += 0.5
+					
+				Case TAISLOW
+					CreateRing(TaiPlayer.x, TaiPlayer.y, RED)
+					if TaiBaseSpeed >= 0.5 Then TaiBaseSpeed -= 0.5
+					Self.sprite = game.images.Find("game1_powerslow")
+				
+			End select			
+			
+			
+		EndIf
+		
+		if Self.life <= 0 Then TaiPowerUplist.Remove(Self)
+	End
+	
+	Method draw()
+		DrawImage(Self.sprite.image, Self.x, Self.y)
+	End
+End
+
+
+
+
+
+
+
+
+
+
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+
+
+
+
+
+Global cParticleList:List<cParticle> = new List<cParticle>
+
+#Rem
+	summary: Particle Manager
+	Basic Particle Manager, wont bother with emiiters.
+#END
+Class cParticle
+	'position
+	Field x:float
+	field y:Float
+	Field dx:Float
+	Field dy:float
+	Field angle:float
+	Field force:float
+	
+	
+	'environment
+	Field gravity:Float
+	Field friction:Float
+	
+	Field winddirection:Float
+	Field windrange:Float
+	Field windforce:Float
+	
+	
+	'data
+	Field life:float
+	Field sprite:GameImage
+	
+	Method new(_x:float, _y:float, _color:int)
+		Self.x = _x
+		Self.y = _y
+		Self.angle = Rnd( - 180, 180)
+		Self.dx = Sin(Self.angle)
+		Self.dy = Cos(Self.angle)
+		Self.force = Rnd(10, 15)
+		
+		Self.gravity = 0.2
+		self.friction = 0.9
+		Self.life = 100
+		
+		
+		Select _color
+			Case BLUE
+				Self.sprite = game.images.Find("game1_bluebit" + int(Rnd(1, 3)))
+			Case GREEN
+				Self.sprite = game.images.Find("game1_greenbit" + int(Rnd(1, 3)))
+			Case ORANGE
+				Self.sprite = game.images.Find("game1_orangebit" + int(Rnd(1, 3)))
+			Case PURPLE
+				Self.sprite = game.images.Find("game1_purplebit" + int(Rnd(1, 3)))
+			Case RED
+				Self.sprite = game.images.Find("game1_redbit" + int(Rnd(1, 3)))
+		End select
+		
+		cParticleList.AddLast(Self)
+	End Method
+	
+	Method updatevector()
+		Self.dx = Sin(Self.angle)
+		Self.dy = Cos(Self.angle)
+	End Method
+	
+	Method update()
+	
+		'move
+		Self.x += self.dx * Self.force
+		Self.y += Self.dy * Self.force
+		
+		'apply env
+		if self.friction <> 0 then Self.force *= Self.friction
+		if gravity <> 0 then
+				Self.gravity += 0.2
+				Self.y += Self.gravity
+		EndIf
+		
+		if Self.life <= 0 or (Self.x < 0) or (Self.y < 0) or (Self.x > DEVICE_WIDTH) or (Self.y > DEVICE_HEIGHT)
+			cParticleList.Remove(Self)
+		EndIf
+		
+	End Method
+	
+	Method draw()
+		DrawImage Self.sprite.image, Self.x, Self.y
+	End Method
+	
+	Method new(_x:float, _y:float, _gravity:float, _friction:float, _winddirection:float, _windrange:float, _windforce:float, _life:float)
+		'for a more complex particle.
+		'probably not gona need this tho.
+	End Method
+	
+	
+End Class
+
+
+
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+'*********************************************************************************************
+
+#Rem
+	summary: Create a burst of particles.
+#END
+Function CreateBang:void(_x:Int, _y:Int, _color:Int = BLUE, _count:int = 20)
+	
+	For Local loop:Int = 1 to _count
+		Local part:cParticle = new cParticle(_x, _y, _color)
+	Next
+		
+End Function
+
+
+Function CreateRing:void(_x:Int, _y:Int, _color:Int = BLUE)
+	local loop:Int
+	For loop = 1 to 360 step 12
+		Local part:cParticle = new cParticle(_x, _y, _color)
+			part.gravity = 0
+			part.friction = 0
+			part.angle = loop
+			part.updatevector()
+	Next
+End function
+
+
+Function CreateShatter:void(_x:Int, _y:Int, _count:int = 20)
+	For Local loop:Int = 1 to _count
+		Local part:cParticle = new cParticle(_x, _y, RED)
+		part.friction = 0
+		part.gravity = 0
+		part.angle = 180 + Rnd( - 30, 30)
+		part.updatevector()
+	Next	
+End Function
 
 
 #Rem
@@ -504,7 +946,7 @@ Function Tai_Touching:Bool(_x:Int, _y:Int, _w:Int, _h:int, _handle:Int = 1)
 End
 
 
-Global TaiWave:Int = 1
+Global TaiWave:Int = 0
 Global TaiBaseSpeed:Float = 0
 
 #Rem
@@ -512,139 +954,69 @@ Global TaiBaseSpeed:Float = 0
 	waves are created based on current level, and current base speed, which increases a little each new level
 	making the ships travel faster the further you progress.
 #END
-Function CreateWave()
-	Local ta:Tai_Alien
+Function CreateWave(_wave:Int = 1)
 	
-	Local _speed:Int = 0
-	Local _ship:Int = 0
-	Local _color:Int = 0
+	'level structure, 10 aliens, so 10 waves.
+	'after wave ten change alien colour start again but increase
+	'thei health and their shooting speed.
+	'by stage 4, or 5, it should be dodge and bullet hell. :P
+
 	
-	Local _taiwave:Int = TaiWave
 	
-	select TaiWave
-		Case 4
+	
+	Local _speed:Int = 1
+	Local _ship:Int = 1
+	Local _color:Int = 1
+	Local _life:Int
+		
+	select true
+	
+		Case(_wave > 0 and _wave < 11) '1-10
 			TaiBaseSpeed += 0.5
-		Case 8
-			TaiBaseSpeed += 0.5
-		Case 12
-			TaiBaseSpeed += 0.5
-		Case 16
-			TaiBaseSpeed += 0.5
-	End
+			_ship = _wave
+			_color = GREEN
+			_life = 1
 			
-	
+		Case(_wave >= 11 And _wave <= 20) '11-20
+			TaiBaseSpeed += 1
+			_ship = (_wave - 10)
+			_color = BLUE
+			_life = 2
 			
-	Select _taiwave
-		Case 1
-			_speed = 2 + TaiBaseSpeed
-			_ship = 1
-			_color = 1
+		Case(_wave >= 21 And _wave <= 30)
+			TaiBaseSpeed += 1.5
+			_ship = (_wave - 20)
+			_color = PURPLE
+			_life = 3
 			
-		Case 2
-			_speed = 2.5 + TaiBaseSpeed
-			_ship = 2
-			_color = 2
-		Case 3
-			_speed = 3 + TaiBaseSpeed
-			_ship = 3
-			_color = 3
-		Case 4
-			_speed = 3.5 + TaiBaseSpeed
-			_ship = 3
-			_color = 4
-		Default
-			_speed = 3.5 + TaiBaseSpeed
-			_ship = 3
-			_color = Rnd(1,4)
+		Case(_wave >= 31 And _wave <= 40)
+			TaiBaseSpeed += 2.5
+			_ship = (_wave-30)
+			_color = ORANGE
+			_life = 4
 		
 	End
 	
+	if _wave = 8 then
+		Print "Wave 8"
+		Print "Color : " + _color
+	EndIf
+	
+	if _wave = 9 then
+		Print "Wave 9"
+		Print "Color : " + _color
+	EndIf
+
+	Local ta:Tai_Alien
 	For Local y:Int = 0 to 3
 		For Local x:Int = 0 to 6
-			ta = New Tai_Alien(50 + (x * 50), 50 + (y * 50), 3, _color, _ship, _speed)
+			ta = New Tai_Alien(50 + (x * 50), 50 + (y * 50), _life, _color, _ship, _speed)
 		Next
 	Next
+	
 End Function
 
 
-Global TaiPowerUplist:List<TaiPowerUp> = new List<TaiPowerUp>
-
-Const TAIPOWERUP:Int = 1
-Const TAIPOWERDOWN:Int = 2
-Const TAISPEED:Int = 3
-Const TAISLOW:Int = 4
-Const TAIBOMB:Int = 5
-
-
-Class TaiPowerUp
-	Field x:Int
-	Field y:Int
-	Field life:Int
-	Field sprite:GameImage
-	Field type:Int
-	
-	Method new(_x:Int, _y:Int, _power)
-		Self.x = _x
-		Self.y = _y
-		Self.type = _power
-		
-		select _power
-			Case TAIPOWERUP
-				Self.sprite = game.images.Find("game1_powerup")
-				
-			Case TAIPOWERDOWN
-				Self.sprite = game.images.Find("game1_powerdown")
-			Case TAIBOMB
-				Self.sprite = game.images.Find("game1_powerbomb")
-			Case TAISPEED
-				Self.sprite = game.images.Find("game1_powerspeed")
-			Case TAISLOW
-				Self.sprite = game.images.Find("game1_powerslow")
-			
-		End select
-				
-		Self.life = 1
-		TaiPowerUplist.AddLast(self)
-	End
-	
-	Method update()
-		Self.y += 2
-		
-		if Self.y > 640 Then self.life = 0
-		if RectsOverlap(TaiPlayer.x - 20, TaiPlayer.y - 20, 40, 40, Self.x - 20, Self.y - 10, 40, 20)
-			Self.life = 0
-			
-			select self.type
-				Case TAIPOWERUP
-					if TaiPlayer.power <= 2 then TaiPlayer.power += 1
-					
-				Case TAIPOWERDOWN
-					if TaiPlayer.power >= 2 then TaiPlayer.power -= 1
-					
-				Case TAIBOMB
-					For Local px:Int = 1 to SCREEN_WIDTH / 50 step 50
-						Local xb:Tai_Bullet = new Tai_Bullet(px * 50, 475)
-					next
-					
-				Case TAISPEED
-					TaiBaseSpeed += 0.5
-					
-				Case TAISLOW
-					if TaiBaseSpeed >= 0.5 Then TaiBaseSpeed -= 0.5
-					Self.sprite = game.images.Find("game1_powerslow")
-				
-			End select			
-			
-			
-		EndIf
-		
-		if Self.life <= 0 Then TaiPowerUplist.Remove(Self)
-	End
-	
-	Method draw()
-		DrawImage(Self.sprite.image, Self.x, Self.y)
-	End
-End
 
 #Rem
 footer:
