@@ -1,5 +1,5 @@
 #Rem
-header:  
+header:
 [quote]
 
 [b]File Name :[/b] About_Screen
@@ -13,7 +13,6 @@ and explaining how easy things are to make.
 
 
 
-
 Import main
 
 #Rem
@@ -23,6 +22,9 @@ Used to manage and deal with all Tital Page stuff.
 Class AboutScreen Extends Screen
 	Field background:GameImage
 	Field background_mask:GameImage
+	Field buttons_image:GameImage
+	
+	Field buttonajust:Int
 	
 	Field y:Float
 	Field abouttext:String
@@ -38,6 +40,8 @@ Class AboutScreen Extends Screen
 	Method Start:Void()
 		background = game.images.Find("about")
 		background_mask = game.images.Find("about_mask")
+		buttons_image = game.images.Find("about_buttons")
+		
 		Self.y = 440
 		 abouttext = "Welcome to the MonkeyCoder.co.nz Community~n"
 		abouttext += "Project, built with Monkey, for Monkey and~n"
@@ -94,13 +98,16 @@ Class AboutScreen Extends Screen
 		DrawImage(background.image, 0, 0)
 		
 		
-		InfoFont.DrawText(abouttext, 159, Self.y, 1)
+		InfoFont.DrawText(abouttext, 190, Self.y, 1)
 		
 					
 		DrawImage(background_mask.image, 159, 0)
 		
-		SmallFont.DrawText("y = " + Self.y, 20, 60)
+		'for debug.
+		'SmallFont.DrawText("y = " + Self.y, 20, 60)
 		
+		
+		DrawImage(buttons_image.image, 585, 103)
 	End
 
 	#Rem
@@ -110,8 +117,19 @@ Class AboutScreen Extends Screen
 	#End
 	Method Update:Void()
 	
-		Self.y -= 0.3
+		Self.y -= (0.2 + Self.buttonajust)
 	
+		if Self.y < - 3000 Then Self.y = 440
+		if Self.y > 440 Then Self.y = - 3000
+		
+	if MouseOver(585, 103, 53, 53)
+		Self.buttonajust = -5
+	elseif MouseOver(585, 426, 53, 53)
+		Self.buttonajust = 5
+	Else
+		Self.buttonajust = 0
+	End if
+		
 	if MouseOver(42, 399, 100, 57)
 		if TouchHit() or MouseHit(MOUSE_LEFT)
 			FadeToScreen(TitleScr)
