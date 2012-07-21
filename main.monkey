@@ -133,7 +133,7 @@ Class MyGame Extends DiddyApp
 		LoadSounds()
 		LoadFonts()
 		
-		game.Start(TitleScr)
+		game.Start(TitleScr) 
 		Return 0
 	End Method
 	
@@ -158,6 +158,8 @@ Class MyGame Extends DiddyApp
 		game.images.Load("about.png", "", False, False)
 		game.images.Load("title.png", "", False, False)
 		game.images.Load("about_mask.png", "", False, False)
+		game.images.Load("about_buttons.png", "", False, False)
+		
 		
 	End Method
 
@@ -278,3 +280,4 @@ footer:
 [a Http://www.monkeycoder.co.nz]Monkey Coder[/a] 
 [/quote]
 #end
+
