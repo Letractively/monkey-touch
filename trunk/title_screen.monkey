@@ -21,6 +21,8 @@ Class TitleScreen Extends Screen
 	Field background:GameImage
 	Field Icons:GameImage[20]
 	Field Thumbs:GameImage[20]
+	Field outoforder:GameImage
+	
 	
 	Field selected:Int
 	
@@ -33,7 +35,9 @@ Class TitleScreen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		background = game.images.Find("title")
+		self.background = game.images.Find("title")
+		Self.outoforder = game.images.Find("ooo")
+		
 		selected = 0
 		LoadGameIcons()
 	End
@@ -52,13 +56,18 @@ Class TitleScreen Extends Screen
 		For Local row:Int = 0 To 4
 			For Local col:Int = 0 To 3
 			
-				If Self.selected = ( (row * 4) + col)
-					DrawImage(Self.Icons[ ( (row * 4) + col)].image, 72 + (col * 58), 175 + (row * 58))
-					HighlightFont.DrawText(GameList[Self.selected].name[ .. 7], 49 + (col * 58), 201 + (row * 58))
+				if GameList[ ( (row * 4) + col)].name <> "????"
+					If Self.selected = ( (row * 4) + col)
+						DrawImage(Self.Icons[ ( (row * 4) + col)].image, 72 + (col * 58), 175 + (row * 58))
+						HighlightFont.DrawText(GameList[Self.selected].name[ .. 7], 49 + (col * 58), 201 + (row * 58))
+					Else
+						DrawImage(Self.Icons[ ( (row * 4) + col)].image, 72 + (col * 58), 182 + (row * 58))
+						SmallFont.DrawText(GameList[ ( (row * 4) + col)].name[ .. 7], 49 + (col * 58), 201 + (row * 58))
+					Endif
 				Else
-					DrawImage(Self.Icons[ ( (row * 4) + col)].image, 72 + (col * 58), 182 + (row * 58))
-					SmallFont.DrawText(GameList[ ( (row * 4) + col)].name[ .. 7], 49 + (col * 58), 201 + (row * 58))
-				Endif
+					DrawImage(Self.outoforder.image, 72 + (col * 58), 182 + (row * 58))
+					'SmallFont.DrawText("Out Of Order", 49 + (col * 58), 201 + (row * 58))
+				End if
 				
 			Next
 		Next

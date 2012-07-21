@@ -159,7 +159,7 @@ Class MyGame Extends DiddyApp
 		game.images.Load("title.png", "", False, False)
 		game.images.Load("about_mask.png", "", False, False)
 		game.images.Load("about_buttons.png", "", False, False)
-		
+		game.images.Load("ooo.png", "", true, False)
 		
 	End Method
 
