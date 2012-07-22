@@ -41,7 +41,13 @@ Class TitleScreen Extends Screen
 		selected = 0
 		LoadGameIcons()
 		
-		game.MusicPlay("brain_menu.mp3", True)
+		#IF TARGET="glfw"
+			game.MusicPlay("brain_menu.wav", True)
+		#ELSE
+			game.MusicPlay("brain_menu.mp3", True)
+		#END
+		
+				
 		game.MusicSetVolume(30)
 		
 		
