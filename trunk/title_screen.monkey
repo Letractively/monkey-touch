@@ -48,7 +48,7 @@ Class TitleScreen Extends Screen
 		#END
 		
 				
-		game.MusicSetVolume(30)
+		
 		
 		
 	End
