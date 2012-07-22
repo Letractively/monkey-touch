@@ -246,9 +246,11 @@ Class Game1PlayScreen Extends Screen
 								blockfont.DrawText("Congratulations, and thanks for playing.", DEVICE_WIDTH / 2, 240, 2)
 								blockfont.DrawText("And you beat your Highest Score...", DEVICE_WIDTH / 2, 270, 2)
 								blockfont.DrawText("Well Done!", DEVICE_WIDTH / 2, 300, 2)
+								blockfont.DrawText("Tap or Shoot to Continue!", DEVICE_WIDTH / 2, 340, 2)
 							case false
 								blockscorefont.DrawText(TaiPlayer.score, DEVICE_WIDTH / 2, 250, 2)
 								blockfont.DrawText("New High Score", DEVICE_WIDTH / 2, 300, 2)
+								blockfont.DrawText("Tap or Shoot to Continue!", DEVICE_WIDTH / 2, 340, 2)
 						End Select
 						
 					case false
@@ -265,9 +267,11 @@ Class Game1PlayScreen Extends Screen
 								blockfont.DrawText("Congratulations, and thanks for playing.", DEVICE_WIDTH / 2, 240, 2)
 								blockfont.DrawText("Play Again and beat your High Score..", DEVICE_WIDTH / 2, 270, 2)
 								blockfont.DrawText("Better Luck Next Time!", DEVICE_WIDTH / 2, 300, 2)
+								blockfont.DrawText("Tap or Shoot to Continue!", DEVICE_WIDTH / 2, 340, 2)
 							Case False
 								blockscorefont.DrawText(TaiPlayer.score, DEVICE_WIDTH / 2, 250, 2)
 								blockfont.DrawText("Better Luck Next Time!", DEVICE_WIDTH / 2, 300, 2)
+								blockfont.DrawText("Tap or Shoot to Continue!", DEVICE_WIDTH / 2, 340, 2)
 						End Select
 						
 				End Select
@@ -379,7 +383,7 @@ Class Game1PlayScreen Extends Screen
 				pt.update()
 			Next
 						
-			if TouchHit()
+			if TouchHit() or KeyHit(KEY_Z)
 				ClearGameData()
 				
 				'here
