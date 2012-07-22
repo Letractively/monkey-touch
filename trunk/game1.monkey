@@ -100,9 +100,6 @@ Class Game1PlayScreen Extends Screen
 		#ELSE
 			game.MusicPlay("demon_game.mp3", True)
 		#END
-				
-		
-		game.MusicSetVolume(50)
 		
 		OldHighScore = HighScore
 		
@@ -330,7 +327,6 @@ Class Game1PlayScreen Extends Screen
 				TaiWave += 1
 				if waveinsound.IsPlaying() = false then
 					waveinsound.Play()
-					waveinsound.volume=10
 				End if
 				
 				CreateWave(TaiWave)
@@ -455,9 +451,7 @@ Class Game1Screen Extends Screen
 		#ELSE
 			game.MusicPlay("demon_menu.mp3", True)
 		#END
-		
-		game.MusicSetVolume(30)
-		
+			
 		endscoreplayed = False
 		
 		if HighScore > OldHighScore
