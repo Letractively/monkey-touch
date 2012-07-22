@@ -151,7 +151,7 @@ Class MyGame Extends DiddyApp
 		'loading in all the mini games atlas sheets.
 		For Local g:Int = 1 to 20
 			Local path:String
-			path = ("/game" + g + "/game" + g + ".txt")
+			path = ("game" + g + "/game" + g + ".txt")
 			'Print "Loading " + path
 			game.images.LoadAtlas(path, images.LIBGDX_ATLAS, true)
 			
