@@ -86,8 +86,8 @@ Global HighlightFont:BitmapFont2
 Function Main:Int()
 	
 	game = New MyGame()
-	game.debugKeyOn = True
-	game.drawFPSOn = True
+	'game.debugKeyOn = True
+	'game.drawFPSOn = True
 	game.FPS = 60
 	Return 1
 End
