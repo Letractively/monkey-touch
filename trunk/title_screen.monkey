@@ -42,7 +42,7 @@ Class TitleScreen Extends Screen
 		LoadGameIcons()
 		
 		game.MusicPlay("brain_menu.mp3", True)
-		game.MusicSetVolume(8)
+		game.MusicSetVolume(30)
 		
 		
 	End
