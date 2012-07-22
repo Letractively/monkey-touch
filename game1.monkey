@@ -160,10 +160,10 @@ Class Game1PlayScreen Extends Screen
 				if TaiPlayer.power > 1 Then TaiPlayer.power -= 1
 				CreateBang(TaiPlayer.x,TaiPlayer.y,RED,50)
 				
-				'TaiPlayer.life -= 1
+				TaiPlayer.life -= 1
 				shot.life = 0
 				hitsound.Play()
-				'TaiPlayer.phase=1
+				TaiPlayer.phase=1
 			End if
 		EndIf
 	Next
