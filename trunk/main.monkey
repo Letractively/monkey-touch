@@ -152,7 +152,9 @@ Class MyGame Extends DiddyApp
 		For Local g:Int = 1 to 20
 			Local path:String
 			path = ("/game" + g + "/game" + g + ".txt")
+			'Print "Loading " + path
 			game.images.LoadAtlas(path, images.LIBGDX_ATLAS, true)
+			
 		Next
 		
 		game.images.Load("about.png", "", False, False)
