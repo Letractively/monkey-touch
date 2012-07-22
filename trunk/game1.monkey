@@ -94,7 +94,14 @@ Class Game1PlayScreen Extends Screen
 		waveinsound = game.sounds.Find("spawn_03")
 		highscoresound = game.sounds.Find("highscore")
 		lowscoresound = game.sounds.Find("lowscore")
-		game.MusicPlay("demon_game.mp3", True)
+		
+		#IF TARGET="glfw"
+			game.MusicPlay("demon_game.wav", True)
+		#ELSE
+			game.MusicPlay("demon_game.mp3", True)
+		#END
+				
+		
 		game.MusicSetVolume(50)
 		
 		OldHighScore = HighScore
@@ -443,7 +450,12 @@ Class Game1Screen Extends Screen
 		blockfont = New BitmapFont2("graphics/game1/block.txt", True)
 		'blockfont.DrawShadow = False
 		
-		game.MusicPlay("demon_menu.mp3", True)
+		#IF TARGET="glfw"
+			game.MusicPlay("demon_menu.wav", True)
+		#ELSE
+			game.MusicPlay("demon_menu.mp3", True)
+		#END
+		
 		game.MusicSetVolume(30)
 		
 		endscoreplayed = False
