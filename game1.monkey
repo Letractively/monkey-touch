@@ -57,11 +57,12 @@ Class Game1PlayScreen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
+				
 		game.screenFade.Start(50, False)
 		background = LoadImage("graphics/game1/bg.png")
 		
 		TaiPlayer = New Tai_Player(320)
-		self.ClearGameData()
+		ClearGameData()
 		TaiPlayer.score = 0
 		TaiPlayer.life = 3
 		TaiPlayer.score = 0
@@ -93,14 +94,13 @@ Class Game1PlayScreen Extends Screen
 	
 			for local ua:Tai_Alien = eachin TaiAlienList
 				ua.renderbloom()
-			Next
-			
-			for local ua:Tai_Alien = eachin TaiAlienList
 				ua.render()
 			Next
-					
-
-						
+			
+			'for local ua:Tai_Alien = eachin TaiAlienList
+				'ua.render()
+			'Next
+				
 			for local pu:TaiPowerUp = eachin TaiPowerUplist
 				pu.draw()
 			Next
@@ -172,12 +172,13 @@ Class Game1PlayScreen Extends Screen
 								
 			EndIf
 		
-			if TaiPlayer.life > 0 And TaiAlienList.Count() = 0
+			if TaiPlayer.life > 0 And TaiAlienList.Count() = 0 And cParticleList.Count() = 0 And TaiBulletList.Count() = 0 and TaiPowerUplist.Count() = 0 ' waveout = false
+				ClearGameData()
 				TaiWave += 1
 				CreateWave(TaiWave)
 			EndIf
 			 
-			
+					
 			if KeyDown(KEY_LEFT) Then TaiPlayer.MoveLeft
 			if KeyDown(KEY_RIGHT) Then TaiPlayer.MoveRight
 			if KeyDown(KEY_Z) Then TaiPlayer.Shoot
@@ -213,7 +214,7 @@ Class Game1PlayScreen Extends Screen
 			'game over , detect a touch to go back.
 			
 			if TouchHit()
-				self.ClearGameData()
+				ClearGameData()
 				FadeToScreen(Game1Scr)
 			EndIf
 			
@@ -221,18 +222,17 @@ Class Game1PlayScreen Extends Screen
 
 	End method
 
-	'summary:Clear out all the lists, and bullets, aliens. etc.
-	Method ClearGameData()
-
-		TaiBulletList.Clear
-		TaiAlienList.Clear
-		TaiPowerUplist.Clear
-		cParticleList.Clear
-
-	End Method
 	
 End
 
+
+'summary:Clear out all the lists, and bullets, aliens. etc.
+Function ClearGameData()
+	TaiBulletList.Clear
+	TaiAlienList.Clear
+	TaiPowerUplist.Clear
+	cParticleList.Clear
+End Function
 
 
 
