@@ -437,6 +437,7 @@ Class Game1Screen Extends Screen
 		game.MusicSetVolume(30)
 		endscoreplayed = False
 		
+		Self.Load()
 	End
 	
 	
@@ -466,6 +467,7 @@ Class Game1Screen Extends Screen
 			
 			if MouseOver(15, 214, 264, 203)
 				'back
+				Self.Save()
 				FadeToScreen(TitleScr)
 			EndIf
 			
@@ -474,14 +476,40 @@ Class Game1Screen Extends Screen
 				FadeToScreen(Game1PlayScr)
 			EndIf
 		EndIf
-		
-		if KeyHit(KEY_ESCAPE)
-			FadeToScreen(TitleScr)
-		EndIf
+
 			
 	End method
 
+	Method Load:bool()
+		Local filein:FileStream
+		Local filehandler:FileSystem
+		
+		Try
+			filein = filehandler.ReadFile("game1/score.dat")
+		Catch err:Throwable
+		
+		End Try
+		
+		if filein	
+			HighScore = filein.ReadInt()
+		Else
+			HighScore = 100
+			Self.Save()
+		EndIf
+		
+		
+	End Method
 	
+	Method Save:void()
+		Local fileout:FileStream
+		Local filehandler:FileSystem
+		
+		fileout = filehandler.WriteFile("game1/score.dat")
+		fileout.WriteInt(HighScore)
+		
+		filehandler.SaveAll()
+		
+	End Method
 End
 
 
