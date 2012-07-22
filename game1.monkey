@@ -321,7 +321,11 @@ Class Game1PlayScreen Extends Screen
 			
 			if TaiPlayer.life > 0 And TaiAlienList.Count() = 0 And cParticleList.Count() = 0 And TaiBulletList.Count() = 0 and TaiPowerUplist.Count() = 0 ' waveout = false
 				TaiWave += 1
-				waveinsound.Play()
+				if waveinsound.IsPlaying() = false then
+					waveinsound.Play()
+					waveinsound.volume=10
+				End if
+				
 				CreateWave(TaiWave)
 			EndIf
 			 
@@ -418,12 +422,12 @@ Class Game1Screen Extends Screen
 		
 		GameList[gameid - 1] = New miniGame
 		GameList[gameid - 1].id = (gameid - 1)
-		GameList[gameid - 1].name = "Invader"
+		GameList[gameid - 1].name = "Bit Invader"
 		GameList[gameid - 1].iconname = "game" + gameid + "_icon"
 		GameList[gameid - 1].thumbnail = "game" + gameid + "_thumb"
 		GameList[gameid - 1].author = "Paul Grayston"
 		GameList[gameid - 1].authorurl = "dev.cruel-gaming.com"
-		GameList[gameid - 1].info = "Aliens are planning to take over the world it's your job to save us all "
+		GameList[gameid - 1].info = "Aliens are planning to take over the world it's your job to save us all. Original HUH! "
 		'Print "GameList " + GameList[0].name
 		
 	End
@@ -556,6 +560,8 @@ Class Tai_Player
 	Field heart:GameImage
 	Field fullheart:GameImage
 	
+	Field diesound:GameSound
+	
 	Field x:Int
 	Field y:Int
 	Field life:Int
@@ -585,6 +591,7 @@ Class Tai_Player
 	
 		self.sprite = game.images.Find("game1_player")
 		self.fullheart = game.images.Find("game1_fullheart")
+		self.diesound = game.sounds.Find("explode_01")
 		self.heart = game.images.Find("game1_emptyheart")
 		Self.x = _x
 		Self.y = 450
@@ -626,6 +633,7 @@ Class Tai_Player
 
 		Select phase
 			Case 1
+				self.diesound.Play()
 				Self.y += 70
 				phase = 2
 			Case 2
