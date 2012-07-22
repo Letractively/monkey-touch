@@ -143,7 +143,8 @@ Class Game1PlayScreen Extends Screen
 				blockscorefont.DrawText(TaiPlayer.score, DEVICE_WIDTH / 2, 1, 2)
 			EndIf
 			
-			
+						
+
 			
 			TitleFont.DrawText("x " + TaiPlayer.x, 10, 60, 1)
 			TitleFont.DrawText("Bullets " + TaiBulletList.Count(), 10, 80, 1)
@@ -163,6 +164,9 @@ Class Game1PlayScreen Extends Screen
 	Method Update:Void()
 		
 		if GameOver = false
+		
+			CollisionCheck()
+		
 			if TaiPlayer.life <= 0
 				GameOver = true
 				If TaiPlayer.score > HighScore Then
@@ -173,7 +177,6 @@ Class Game1PlayScreen Extends Screen
 			EndIf
 		
 			if TaiPlayer.life > 0 And TaiAlienList.Count() = 0 And cParticleList.Count() = 0 And TaiBulletList.Count() = 0 and TaiPowerUplist.Count() = 0 ' waveout = false
-				ClearGameData()
 				TaiWave += 1
 				CreateWave(TaiWave)
 			EndIf
@@ -235,6 +238,73 @@ Function ClearGameData()
 End Function
 
 
+#Rem
+	summary: Check the bullet against all collidable objects.
+	Using the bullet as its the most common check.
+#END
+
+Function CollisionCheck()
+
+	For Local shot:Tai_Bullet = eachin TaiBulletList
+		
+		'check aliens.
+		
+		For Local alien:Tai_Alien = eachin TaiAlienList
+			if RectsOverlap(shot.x, shot.y, 10, 10, alien.x - 18, alien.y - 20, 36, 40) and shot.dir = UP And shot.life > 0
+				'bullet hit the alien.
+				
+				alien.shoot()
+				
+				if alien.life <= 1 Then
+					'it died, give points
+					alien.life = 0
+					'Print "Adding a point"
+					TaiPlayer.AddScore(alien.pts)
+				else
+					'its alive make it shoot back
+					'and take some like off.
+					alien.life -= 1
+					
+				EndIf
+				
+				shot.life = 0
+			End if
+		Next
+		
+		'check power ups.
+		
+		For Local power:TaiPowerUp = eachin TaiPowerUplist
+			if RectsOverlap(shot.x, shot.y, 10, 10, power.x - 18, power.y - 20, 36, 41) and shot.dir = UP And shot.life > 0
+				'bullet hit the power.
+				shot.life = 0
+				power.life -= 1
+				
+			End if				
+			
+		Next
+		
+		
+
+		
+		
+		'check player.
+
+		if shot.dir = DOWN
+			if RectsOverlap(shot.x, shot.y, 10, 10, TaiPlayer.x - 20, TaiPlayer.y - 20, 40, 40) And shot.life > 0
+				'bullet hit the player.
+				TaiPlayer.life -= 1
+				shot.life = 0
+				
+			End if
+		EndIf
+	
+		
+	
+	Next
+
+		
+
+End Function
 
 Class Game1Screen Extends Screen
 	
@@ -418,18 +488,7 @@ Class Tai_Player
 			TaiPlayer.Shoot()
 		EndIf
 		
-		
-		
-		For Local bb:Tai_Bullet = eachin TaiBulletList
-			if RectsOverlap(Self.x - 20, Self.y - 20, 40, 40, bb.x, bb.y, 10, 10) And bb.dir=DOWN
-				
-				bb.life = 0
-				Self.life -= 1
-				
-			EndIf
-		Next		
-		
-		
+			
 		if TouchDown(0)
 		
 			if Tai_Touching(Self.x, Self.y, 50, 53, 2) or Self.held = true
@@ -600,14 +659,7 @@ Class Tai_Alien
 		
 		
 		
-		For Local bb:Tai_Bullet = eachin TaiBulletList
-			if RectsOverlap(Self.x - 20, Self.y - 20, 40, 40, bb.x, bb.y, 10, 10)
-				bb.life = 0
-				TaiPlayer.AddScore(Self.pts)
-				Self.life -= 1
-				self.shoot()
-			EndIf
-		Next
+
 		
 		
 		
@@ -621,7 +673,10 @@ Class Tai_Alien
 			Select True
 				Case pup > 8
 					'change this to drop new powerups
-					Local np:TaiPowerUp = new TaiPowerUp(self.x, self.y, int(Rnd(1, 5)))
+					Local tp:Int = int(Rnd(1, 6))
+					if tp > 5 Then tp = 5
+					
+					Local np:TaiPowerUp = new TaiPowerUp(self.x, self.y, tp)
 					'Print "Making a POwerup"
 			End select
 		
@@ -750,10 +805,7 @@ Class Tai_Bullet
 		
 		if Self.y < 0 or Self.y > 480
 			Self.life = 0
-		EndIf
-		
-		
-		
+		EndIf	
 		
 		if Self.life <= 0
 			CreateShatter(Self.x, Self.y, 10)
@@ -811,6 +863,7 @@ Class TaiPowerUp
 		Self.x = _x
 		Self.y = _y
 		Self.type = _power
+		Self.life = 10
 		
 		select _power
 			Case TAIPOWERUP
@@ -820,6 +873,7 @@ Class TaiPowerUp
 				Self.sprite = game.images.Find("game1_powerdown")
 				Self.pts = -100
 			Case TAIBOMB
+				Self.life = 4
 				Self.sprite = game.images.Find("game1_powerbomb")
 				Self.pts = 100
 			Case TAISPEED
@@ -830,28 +884,21 @@ Class TaiPowerUp
 				Self.pts = 100
 		End select
 				
-		Self.life = 10
+		
 		TaiPowerUplist.AddLast(self)
 	End
 	
 	Method update()
 		Self.y += 2
 		
-		For Local bb:Tai_Bullet = eachin TaiBulletList
-		
-			if RectsOverlap(Self.x - 20, Self.y - 20, 40, 40, bb.x, bb.y, 10, 10) and bb.dir=UP
-				bb.life = 0
-				Self.life -= 1
-				if self.life <= 0 then TaiPlayer.AddScore(Self.pts)
-			EndIf
-		Next
-		
-		
 		if Self.y > 640 Then self.life = 0
-		if RectsOverlap(TaiPlayer.x - 20, TaiPlayer.y - 20, 40, 40, Self.x - 20, Self.y - 10, 40, 20)
+
+		'power hit the player
+		if RectsOverlap(TaiPlayer.x - 20, TaiPlayer.y - 20, 40, 40, Self.x - 20, Self.y - 20, 40, 40)
+			'Print "Hit"
 			Self.life = 0
 			
-			select self.type
+			select Self.type
 				Case TAIPOWERUP
 					if TaiPlayer.power <= 2 then TaiPlayer.power += 1
 					CreateRing(TaiPlayer.x, TaiPlayer.y, RED)
@@ -862,8 +909,9 @@ Class TaiPowerUp
 					
 				Case TAIBOMB
 					CreateRing(TaiPlayer.x, TaiPlayer.y, RED)
-					For Local px:Int = 1 to SCREEN_WIDTH / 50 step 50
-						Local xb:Tai_Bullet = new Tai_Bullet(px * 50, 475)
+					
+					For Local px:Int = 1 to SCREEN_WIDTH / 50
+						Local xb:Tai_Bullet = new Tai_Bullet(px * 50, 400, UP, RED)
 					next
 					
 				Case TAISPEED
@@ -873,11 +921,9 @@ Class TaiPowerUp
 				Case TAISLOW
 					CreateRing(TaiPlayer.x, TaiPlayer.y, RED)
 					if TaiBaseSpeed >= 0.5 Then TaiBaseSpeed -= 0.5
-					Self.sprite = game.images.Find("game1_powerslow")
 				
-			End select			
-			
-			
+			End select		
+					
 		EndIf
 		
 		if Self.life <= 0 Then TaiPowerUplist.Remove(Self)
