@@ -89,6 +89,9 @@ Function Main:Int()
 	'game.debugKeyOn = True
 	'game.drawFPSOn = True
 	game.FPS = 60
+	
+	game.SoundSetVolume(30)
+	game.MusicSetVolume(50)
 	Return 1
 End
 
