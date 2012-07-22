@@ -27,7 +27,18 @@ Const PURPLE:Int = 4
 Const RED:Int = 5
 
 Global GameOver:bool = false
+Global shotsound:GameSound
+Global explodesound:GameSound
+Global hitsound:GameSound
+Global powerupdropsound:GameSound
+Global poweruppicksound:GameSound
+Global waveinsound:GameSound
+Global lowscoresound:GameSound
+Global highscoresound:GameSound
 
+Global endscoreplayed:Bool = false
+
+	
 Global Game1PlayScr:Screen = New Game1PlayScreen()
 #Rem
 summary:Title Screen Class.
@@ -38,8 +49,6 @@ Class Game1PlayScreen Extends Screen
 	Field background:Image
 	Field clearing:Bool
 	Field scoreup:bool
-	
-	
 	
 	#Rem
 	summary: New
@@ -72,8 +81,73 @@ Class Game1PlayScreen Extends Screen
 		CreateWave(TaiWave)
 		GameOver = false
 		
+		shotsound = game.sounds.Find("shot_02")
+		explodesound = game.sounds.Find("explode_02")
+		hitsound = game.sounds.Find("hit_01")
+		powerupdropsound = game.sounds.Find("powerup_01")
+		poweruppicksound = game.sounds.Find("powerup_04")
+		waveinsound = game.sounds.Find("spawn_03")
+		highscoresound = game.sounds.Find("highscore")
+		lowscoresound = game.sounds.Find("lowscore")
+		game.MusicPlay("demon_game.mp3", True)
+		game.MusicSetVolume(50)
 	End
 	
+	method CollisionCheck()
+
+	For Local shot:Tai_Bullet = eachin TaiBulletList
+		
+		'check aliens.
+		
+		For Local alien:Tai_Alien = eachin TaiAlienList
+			if RectsOverlap(shot.x, shot.y, 10, 10, alien.x - 18, alien.y - 20, 36, 40) and shot.dir = UP And shot.life > 0
+				'bullet hit the alien.
+				
+				alien.shoot()
+				
+				if alien.life <= 1 Then
+					'it died, give points
+					alien.life = 0
+					'Print "Adding a point"
+					TaiPlayer.AddScore(alien.pts)
+					
+					'Self.explodesound.Play()
+					
+				else
+					'its alive make it shoot back
+					'and take some like off.
+					alien.life -= 1
+					
+					
+				EndIf
+				
+				hitsound.Play()
+				shot.life = 0
+			End if
+		Next
+		
+		'check power ups.
+		
+		For Local power:TaiPowerUp = eachin TaiPowerUplist
+			if RectsOverlap(shot.x, shot.y, 10, 10, power.x - 18, power.y - 20, 36, 41) and shot.dir = UP And shot.life > 0
+				'bullet hit the power.
+				shot.life = 0
+				power.life -= 1
+				hitsound.Play()
+			End if					
+		Next
+		
+		'check player.
+		if shot.dir = DOWN
+			if RectsOverlap(shot.x, shot.y, 10, 10, TaiPlayer.x - 20, TaiPlayer.y - 20, 40, 40) And shot.life > 0
+				'bullet hit the player.
+				TaiPlayer.life -= 1
+				shot.life = 0
+				hitsound.Play()
+			End if
+		EndIf
+	Next
+	End method
 	
 	#Rem
 	summary:Render Title Screen
@@ -134,8 +208,16 @@ Class Game1PlayScreen Extends Screen
 				blockscorefont.DrawText(TaiPlayer.score, DEVICE_WIDTH / 2, 240, 2)
 				select self.scoreup
 					Case true
+						if not endscoreplayed
+							highscoresound.Play()
+							endscoreplayed = true
+						EndIf
 						blockfont.DrawText("WOW! New High Score", DEVICE_WIDTH / 2, 300, 2)
 					case false
+						if not endscoreplayed
+							lowscoresound.Play()
+							endscoreplayed = true
+						EndIf					
 						blockfont.DrawText("Better Luck Next Time!", DEVICE_WIDTH / 2, 300, 2)
 				End Select
 
@@ -175,9 +257,12 @@ Class Game1PlayScreen Extends Screen
 				End if
 								
 			EndIf
-		
+			
+
+			
 			if TaiPlayer.life > 0 And TaiAlienList.Count() = 0 And cParticleList.Count() = 0 And TaiBulletList.Count() = 0 and TaiPowerUplist.Count() = 0 ' waveout = false
 				TaiWave += 1
+				waveinsound.Play()
 				CreateWave(TaiWave)
 			EndIf
 			 
@@ -243,7 +328,7 @@ End Function
 	Using the bullet as its the most common check.
 #END
 
-Function CollisionCheck()
+Function CollisionCheck2()
 
 	For Local shot:Tai_Bullet = eachin TaiBulletList
 		
@@ -320,7 +405,8 @@ Class Game1Screen Extends Screen
 	Method New()
 		name = "Game 1 Menu"
 		
-		
+		'game.MusicPlay("brain_menu.mp3", True)
+		'game.MusicSetVolume(8)
 		
 		Local gameid:Int = 1
 		
@@ -346,6 +432,10 @@ Class Game1Screen Extends Screen
 		blockscorefont = New BitmapFont2("graphics/game1/block_score.txt", True)
 		blockfont = New BitmapFont2("graphics/game1/block.txt", True)
 		'blockfont.DrawShadow = False
+		
+		game.MusicPlay("demon_menu.mp3", True)
+		game.MusicSetVolume(30)
+		endscoreplayed = False
 		
 	End
 	
@@ -527,13 +617,16 @@ Class Tai_Player
 			Select Self.power
 				Case 1
 					shot = new Tai_Bullet(TaiPlayer.x, TaiPlayer.y, 1)
+					shotsound.Play()
 				Case 2
 					shot = new Tai_Bullet(TaiPlayer.x - 20, TaiPlayer.y + 18, 1)
 					shot = new Tai_Bullet(TaiPlayer.x + 20, TaiPlayer.y + 18, 1)
+					shotsound.Play()
 				Case 3
 					shot = new Tai_Bullet(TaiPlayer.x, TaiPlayer.y, 1)
 					shot = new Tai_Bullet(TaiPlayer.x - 20, TaiPlayer.y + 18, 1)
 					shot = new Tai_Bullet(TaiPlayer.x + 20, TaiPlayer.y + 18, 1)
+					shotsound.Play()
 					
 				
 			End
@@ -667,6 +760,8 @@ Class Tai_Alien
 		if Self.life <= 0
 		
 			CreateBang(Self.x, Self.y, Self.color, Rnd(10, 20))
+			
+			explodesound.Play()
 			
 			Local pup:Int = Rnd(1, 10)
 			
@@ -860,6 +955,7 @@ Class TaiPowerUp
 	Field pts:Int
 	
 	Method new(_x:Int, _y:Int, _power)
+		powerupdropsound.Play()
 		Self.x = _x
 		Self.y = _y
 		Self.type = _power
@@ -897,6 +993,7 @@ Class TaiPowerUp
 		if RectsOverlap(TaiPlayer.x - 20, TaiPlayer.y - 20, 40, 40, Self.x - 20, Self.y - 20, 40, 40)
 			'Print "Hit"
 			Self.life = 0
+			poweruppicksound.Play()
 			
 			select Self.type
 				Case TAIPOWERUP
