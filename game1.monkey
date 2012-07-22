@@ -506,7 +506,7 @@ Class Game1Screen Extends Screen
 			filein = filehandler.ReadFile("game1/score.dat")
 			if filein
 				HighScore = filein.ReadInt()
-				Print "Loading Score " + HighScore
+				'Print "Loading Score " + HighScore
 			End if
 			
 		Else
@@ -522,7 +522,7 @@ Class Game1Screen Extends Screen
 		filehandler = FileSystem.Create()
 		
 		fileout = filehandler.WriteFile("game1/score.dat")
-		Print "Saving Score " + HighScore
+		'Print "Saving Score " + HighScore
 		fileout.WriteInt(HighScore)
 		
 		filehandler.SaveAll()
