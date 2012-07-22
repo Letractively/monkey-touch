@@ -175,7 +175,29 @@ Class MyGame Extends DiddyApp
 	
 	'summary: load sounds.
 	Method LoadSounds:Void()
-		'
+		game.sounds.Load("explode_01")
+		game.sounds.Load("explode_02")
+		game.sounds.Load("explode_03")
+		
+		game.sounds.Load("powerup_01")
+		game.sounds.Load("powerup_02")
+		game.sounds.Load("powerup_03")
+		game.sounds.Load("powerup_04")
+		
+		game.sounds.Load("shot_01")
+		game.sounds.Load("shot_02")
+		game.sounds.Load("shot_03")
+		
+		game.sounds.Load("spawn_01")
+		game.sounds.Load("spawn_02")
+		game.sounds.Load("spawn_03")
+		
+		game.sounds.Load("hit_01")
+		game.sounds.Load("hit_02")
+		game.sounds.Load("hit_03")
+		
+		game.sounds.Load("highscore")
+		game.sounds.Load("lowscore")
 	End Method
 	
 End
