@@ -40,6 +40,11 @@ Class TitleScreen Extends Screen
 		
 		selected = 0
 		LoadGameIcons()
+		
+		game.MusicPlay("brain_menu.mp3", True)
+		game.MusicSetVolume(8)
+		
+		
 	End
 	
 	#rem
