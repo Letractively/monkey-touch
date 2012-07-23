@@ -117,15 +117,15 @@ Class AboutScreen Extends Screen
 	#End
 	Method Update:Void()
 	
-		Self.y -= (0.2 + Self.buttonajust)
+		Self.y -= (0.2 + Self.buttonajust) * dt.delta
 	
 		if Self.y < - 3000 Then Self.y = 440
 		if Self.y > 440 Then Self.y = - 3000
 		
 	if MouseOver(585, 103, 53, 53)
-		Self.buttonajust = -5
+		Self.buttonajust = -5 * dt.delta
 	elseif MouseOver(585, 426, 53, 53)
-		Self.buttonajust = 5
+		Self.buttonajust = 5 * dt.delta
 	Else
 		Self.buttonajust = 0
 	End if
