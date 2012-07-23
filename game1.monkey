@@ -644,13 +644,13 @@ Class Tai_Player
 		Select phase
 			Case 1
 				self.diesound.Play()
-				Self.y += 70
+				Self.y += 70 * dt.delta
 				phase = 2
 			Case 2
 				Self.held = 0
 				Self.x = 320
 				if Self.y > 450 then
-					Self.y -= 0.2
+					Self.y -= 0.2 * dt.delta
 				
 					if Millisecs() - phasetime > phaseduration
 						phasetime = Millisecs()
@@ -719,12 +719,12 @@ Class Tai_Player
 	
 	'summary:Move Player Left
 	Method MoveLeft:void()
-		Self.x -= 4
+		Self.x -= 4 * dt.delta
 	End
 	
 	'summary:Move Player Right
 	Method MoveRight:void()
-		Self.x += 4
+		Self.x += 4* dt.delta
 	End
 	
 	'summary:If the player's gun is not reloading then fire off a round.
@@ -970,12 +970,12 @@ Class Tai_Alien
 	
 	'summary:Move alien left
 	Method MoveLeft()
-		Self.x -= Self.speed + TaiBaseSpeed
+		Self.x -= (Self.speed + TaiBaseSpeed) * dt.delta
 	End
 	
 	'summary:Move alien Right
 	Method MoveRight()
-		Self.x += Self.speed + TaiBaseSpeed
+		Self.x += (Self.speed + TaiBaseSpeed) * dt.delta
 	End
 
 	'summary:Draw the alien.
@@ -1114,13 +1114,13 @@ Class Tai_Bullet
 	
 		Select Self.dir
 			Case DOWN ' down
-				Self.y += Self.speed
+				Self.y += Self.speed * dt.delta
 			Case UP ' up
-				Self.y -= Self.speed
+				Self.y -= Self.speed * dt.delta
 			Case TARGETED
-				Self.x += (Self.dx * Self.speed)
-				Self.y += (Self.dy * Self.speed)
-				Self.rotation += 10
+				Self.x += (Self.dx * Self.speed) * dt.delta
+				Self.y += (Self.dy * Self.speed) * dt.delta
+				Self.rotation += 10 * dt.delta
 		End
 		
 		if Self.y < 0 or Self.y > DEVICE_HEIGHT or Self.x < 0 or Self.x > DEVICE_WIDTH
@@ -1233,7 +1233,7 @@ Class TaiPowerUp
 	End
 	
 	Method update()
-		Self.y += 2
+		Self.y += 2 * dt.delta
 		
 		if Self.y > 640 Then self.life = 0
 
@@ -1371,14 +1371,14 @@ Class cParticle
 	Method update()
 	
 		'move
-		Self.x += self.dx * Self.force
-		Self.y += Self.dy * Self.force
+		Self.x += (self.dx * Self.force) * dt.delta
+		Self.y += (Self.dy * Self.force) * dt.delta
 		
 		'apply env
 		if self.friction <> 0 then Self.force *= Self.friction
 		if gravity <> 0 then
-				Self.gravity += 0.2
-				Self.y += Self.gravity
+				Self.gravity += (0.2 * dt.delta)
+				Self.y += (Self.gravity * dt.delta)
 		EndIf
 		
 		if Self.life <= 0 or (Self.x < 0) or (Self.y < 0) or (Self.x > DEVICE_WIDTH) or (Self.y > DEVICE_HEIGHT)
@@ -1478,7 +1478,7 @@ End
 	Function ShuntDown()
 	
 		For Local t:Tai_Alien = eachin TaiAlienList
-			t.y += 10 ' (10 + (TaiWave / 2))
+			t.y += 10  ' (10 + (TaiWave / 2))
 	
 			Select t.dir
 				Case 1
