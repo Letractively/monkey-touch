@@ -78,7 +78,7 @@ Class Game1PlayScreen Extends Screen
 		ClearGameData()
 		TaiPlayer.score = 0
 		TaiPlayer.life = 3
-		TaiPlayer.score = HighScore
+		TaiPlayer.score = 0' debug HighScore
 		scoreup = false
 		GameComplete = false
 		TaiWave = 1
