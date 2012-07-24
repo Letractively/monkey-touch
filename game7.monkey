@@ -178,12 +178,14 @@ Class ERT_GameState Extends Screen
         Method LoadGraphics:Void()
 		
                 CrashImage = game.images.Find("game7_crash") 'If not using a texture packer: LoadImage("graphics/game7/crash.png")
+				CrashImage.SetHandle(0, 0)
                 PauseImage = game.images.Find("game7_pause") 'LoadImage("graphics/game7/pause.png")
                 CarImage[1] = game.images.Find("game7_car") 'LoadImage("graphics/game7/car.png")
                 CarImage[2] = game.images.Find("game7_car2") 'LoadImage("graphics/game7/car2.png")
                 CarImage[3] = game.images.Find("game7_car3") 'LoadImage("graphics/game7/car3.png")
                 CarImage[4] = game.images.Find("game7_car4") 'LoadImage("graphics/game7/car4.png")
                 RoadImage = game.images.Find("game7_road") 'LoadImage("graphics/game7/road.png")
+				RoadImage.SetHandle(0, 0)
                 MineImage = game.images.Find("game7_mine") 'LoadImage("graphics/game7/mine.png", 12, 12, 2)
                 'ERT_WorldRecordDistance 'We could Load from file + Save at end of game
                 ERT_ExitMenu = New ERT_EndOfGameMenu()

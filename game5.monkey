@@ -25,7 +25,7 @@ Class Game5Screen Extends Screen
 		Local gameid:Int = 5
 		GameList[gameid - 1] = New miniGame
 		GameList[gameid - 1].id = gameid - 1
-		GameList[gameid - 1].name = "????"
+		GameList[gameid - 1].name = "Karja"
 		GameList[gameid - 1].iconname = "game" + gameid + "_icon"
 		GameList[gameid - 1].thumbnail = "game" + gameid + "_thumb"
 		GameList[gameid - 1].author = "????"
