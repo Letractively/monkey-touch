@@ -9,9 +9,9 @@ what it is..
 [/quote]
 #end
 
-
-
 Import main
+
+Global gameScreen:GameScreen
 
 #Rem
 summary:Title Screen Class.
@@ -38,7 +38,7 @@ Class Game8Screen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-	
+		gameScreen = New GameScreen
 	End
 	
 	#Rem
@@ -56,7 +56,9 @@ Class Game8Screen Extends Screen
 	and all use input.
 	#End
 	Method Update:Void()
-		'
+		If KeyHit(KEY_SPACE) Or MouseHit() Then
+			FadeToScreen(gameScreen)
+		End
 		if KeyHit(KEY_ESCAPE)
 			FadeToScreen(TitleScr)
 		EndIf
@@ -66,6 +68,53 @@ Class Game8Screen Extends Screen
 	
 End
 
+Class GameScreen extends Screen
+	Field tilemap:MyTileMap
+	
+	Method New()
+		name = "Game 8's GameScreen"
+	End
+	
+	Method Start:Void()
+		Local reader:MyTiledTileMapReader = New MyTiledTileMapReader
+		Local tm:TileMap = reader.LoadMap("graphics/game8/level1.tmx")
+		tilemap = MyTileMap(tm)
+		Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
+		Local endPos:TileMapObject = tilemap.FindObjectByName("End")
+	End
+	
+	Method Render:Void()
+		Cls
+		tilemap.RenderMap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+	End
+
+	Method Update:Void()
+
+		If KeyHit(KEY_ESCAPE)
+			FadeToScreen(Game8Scr)
+		End
+	End
+End
+
+Class MyTiledTileMapReader Extends TiledTileMapReader
+	Method CreateMap:TileMap()
+		graphicsPath = "game8/"
+		Return New MyTileMap
+	End
+End
+
+Class MyTileMap Extends TileMap
+	Const GRAVITY:Float = 0.5
+	Const COLLISION_LAYER:String = "CollisionLayer"
+		
+	Method ConfigureLayer:Void(tileLayer:TileMapLayer)
+		SetAlpha(tileLayer.opacity)
+	End
+	
+	Method DrawTile:Void(tileLayer:TileMapTileLayer, mapTile:TileMapTile, x:Int, y:Int)
+		mapTile.image.DrawTile(x, y, mapTile.id, 0, 1, 1)
+	End
+End
 
 #Rem
 footer:
