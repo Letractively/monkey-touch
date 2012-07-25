@@ -44,6 +44,7 @@ or assets to this project.
 
 
 Strict
+#TEXT_FILES="*.txt|*.xml|*.json|*.tmx"
 
 Private
 
