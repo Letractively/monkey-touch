@@ -337,8 +337,18 @@ Class Game1PlayScreen Extends Screen
 			EndIf
 			 
 					
-			if KeyDown(KEY_LEFT) and TaiPlayer.phase = 0 Then TaiPlayer.MoveLeft
-			if KeyDown(KEY_RIGHT) and TaiPlayer.phase = 0 Then TaiPlayer.MoveRight
+			if KeyDown(KEY_LEFT) Then
+				if TaiPlayer.phase = 0
+					TaiPlayer.MoveLeft
+				ElseIf TaiPlayer.phase >= 3
+					TaiPlayer.MoveLeft
+				End if
+			End if
+			 
+			if KeyDown(KEY_RIGHT) and (TaiPlayer.phase = 0 or TaiPlayer.phase>=3 )Then
+				TaiPlayer.MoveRight
+			End if
+			
 			if KeyDown(KEY_Z) Then TaiPlayer.Shoot
 			
 			TaiPlayer.update()
