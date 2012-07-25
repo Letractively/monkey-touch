@@ -3,9 +3,9 @@ header:
 [quote]
 
 [b]File Name :[/b] Game11Screen
-[b]Author    :[/b] firstname "alias" lastname
-[b]About     :[/b]
-what it is..
+[b]Author    :[/b] Paul "alias" Grayston
+[b]About     :[/b] 
+Pong Game, code is messy but it fills a space.
 [/quote]
 #end
 
@@ -114,7 +114,7 @@ Const LEFTSIDE:Int = 1
 Const RIGHTSIDE:Int = 2
 
 Global PlayerList:List<cPlayer>
-
+'summary:Class to manage the ball.
 Class cBall
 	Field x:Float
 	Field y:Float
@@ -124,7 +124,7 @@ Class cBall
 	Field speed:Float
 	Field sprite:Image
 
-	
+	'summary:creates a new ball 
 	Method New()
 		Self.sprite = LoadImage("graphics/game11/ball.png")
 		Self.x=323
@@ -135,6 +135,7 @@ Class cBall
 		Self.speed=3
 	End Method
 	
+	'summary:updates the ball, takes both players as paramaters, this makes their data available inside the scope of this method.
 	Method Update:Void(_PlayerOne:cPlayer,_PlayerTwo:cPlayer)
 		Self.x+=Self.dx*Self.speed
 		Self.y+=Self.dy*Self.speed
@@ -163,6 +164,7 @@ Class cBall
 		
 	End Method
 	
+	'summary:resets the ball
 	Method Reset:void()
 		Self.x=323
 		Self.y=277
@@ -172,6 +174,7 @@ Class cBall
 		Self.speed=3
 	End Method
 	
+	'summary:adds a little nudge to the ball so its a little less predictable.
 	Method Nudge:void()
 		Self.angle=ATan2(Self.dx,Self.dy)
 		Self.angle+=Rnd(-10,10)
@@ -180,13 +183,14 @@ Class cBall
 		Self.speed+=.2	
 	End Method 
 	
+	'summary:draw the thing.
 	Method Render:Void()
 		DrawImage(Self.sprite,Self.x,Self.y)
 	End Method
 End Class
 
 
-
+'summary:bat class, used to show how to extend a class.
 Class cBat
 	Field x:Int
 	Field y:Int
@@ -194,12 +198,13 @@ Class cBat
 End Class
 
 
-
+'summary:player class, extends a bat , when this happens it gets all the bats fields, in this case, x,y,sprite
 Class cPlayer Extends cBat
 	Field score:Int
 	Field ai:Int
 	Field side:Int
 	
+	'summary:new bat, a player will be on either the left or right and be AI or player controlled.
 	Method New(_ai:Int,_side:Int)
 		Self.sprite = LoadImage("graphics/game11/bat.png")
 		Self.side=_side
@@ -216,10 +221,12 @@ Class cPlayer Extends cBat
 		
 	End Method
 
+	'summary:draw the player
 	Method Render:Void()
 		DrawImage (Self.sprite,Self.x,Self.y)
 	End Method
 
+	'summary:updates the player, checks if the bat is AI controlled or player and then calls the correct update method.
 	Method Update:Void(_ball:cBall)
 		Select ai
 			Case AI
@@ -228,15 +235,21 @@ Class cPlayer Extends cBat
 				UpdatePlayer()
 		End Select
 	End Method	
-		
+	
+	'summary:move up
 	Method Up:Void()
 		Self.y-=3
 	End Method
-	
+	'summary:move down
 	Method Down:Void()
 		Self.y+=3
 	End Method	
 
+	#Rem
+		summary: Update the AI
+		the method gets passed the ball instance so the AI can see the ball, if the ball is moving away
+		the ai will center the bat, if not it will try and track the bats Y position.
+	#END
 	Method UpdateAI:Void(_ball:cBall)
 	
 		Select Self.side
@@ -284,6 +297,7 @@ Class cPlayer Extends cBat
 		End Select
 	End Method
 	
+	'summary:get player input and act on it
 	Method UpdatePlayer:Void()
 		If KeyDown(KEY_DOWN) Then
 			If Self.y<384 Then Self.Down()
