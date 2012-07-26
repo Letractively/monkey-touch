@@ -70,6 +70,10 @@ End
 
 Class GameScreen extends Screen
 	Field tilemap:MyTileMap
+	Field x:Float, y:Float
+	Field TILE_SIZE:Int = 20
+	Field grid:Float[]
+	Field currentPath:Int = 0
 	
 	Method New()
 		name = "Game 8's GameScreen"
@@ -81,15 +85,62 @@ Class GameScreen extends Screen
 		tilemap = MyTileMap(tm)
 		Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
 		Local endPos:TileMapObject = tilemap.FindObjectByName("End")
+
+		Local layer:TileMapTileLayer = tilemap.FindLayerByName(tilemap.COLLISION_LAYER)
+		grid = New Float[tilemap.width * tilemap.height]
+		
+		For Local i:Int = 0 until layer.mapData.tiles.Length
+			grid[i] = layer.mapData.tiles[i]
+		Next
+		
+		PathFinder.SetMap(grid, tilemap.width, tilemap.height, 2, 1)
+		SetPath()
+	End
+	
+	Method SetPath:Void()
+		Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
+		Local endPos:TileMapObject = tilemap.FindObjectByName("End")
+		PathFinder.FindPath(startPos.x / TILE_SIZE, startPos.y / TILE_SIZE, endPos.x / TILE_SIZE, endPos.y / TILE_SIZE)
+		currentPath = (PathFinder.paths - 1) * 2
+		x = startPos.x
+		y = startPos.y
 	End
 	
 	Method Render:Void()
 		Cls
 		tilemap.RenderMap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+		SetColor 255, 0, 255
+		DrawOval x, y, 20, 20
+		'Draw path
+		SetColor 0, 255, 0
+		For local i:Int = 0 Until PathFinder.paths * 2 Step 2
+			DrawRect PathFinder.route[i] * TILE_SIZE + TILE_SIZE/2, PathFinder.route[i + 1] * TILE_SIZE + TILE_SIZE / 2, 5, 5
+		Next
+		SetColor 255, 255, 255
 	End
 
 	Method Update:Void()
-
+		If currentPath >= 0 And PathFinder.route.Length() > 0
+			If x < PathFinder.route[currentPath] * TILE_SIZE
+				x += 1
+			End
+			If x > PathFinder.route[currentPath] * TILE_SIZE
+				x -= 1
+			End
+			If y < PathFinder.route[currentPath + 1] * TILE_SIZE
+				y += 1
+			End
+			If y > PathFinder.route[currentPath + 1] * TILE_SIZE
+				y -= 1
+			End
+			If x = PathFinder.route[currentPath] * TILE_SIZE And
+				y = PathFinder.route[currentPath + 1] * TILE_SIZE
+				currentPath -= 2
+				if currentPath < 0
+					SetPath()
+				End
+			End
+		End
 		If KeyHit(KEY_ESCAPE)
 			FadeToScreen(Game8Scr)
 		End
