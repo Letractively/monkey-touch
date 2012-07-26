@@ -19,7 +19,8 @@ Private
 Global smhGameScreen:Smh_GameScreen
 Global defaultBullet:Smh_Bullet
 Global background:Smh_EntityGroup
-Global bullets:Smh_BulletPool
+Global enemyBullets:Smh_BulletPool
+Global playerBullets:Smh_BulletPool
 
 Public
 #rem
@@ -46,30 +47,7 @@ Class Game9Screen Extends Screen
 	#End
 	Method Start:Void()
 		game.images.Load("game9/game9_bullet1.png")
-		
 		smhGameScreen = New Smh_GameScreen
-		
-		background = New Smh_EntityGroup
-		background.boundsLeft = 0
-		background.boundsTop = 0
-		background.boundsRight = SCREEN_WIDTH
-		background.boundsBottom = SCREEN_HEIGHT
-		
-		bullets = New Smh_BulletPool
-		bullets.parent = background
-		bullets.boundsLeft = background.boundsLeft
-		bullets.boundsTop = background.boundsTop
-		bullets.boundsRight = background.boundsRight
-		bullets.boundsBottom = background.boundsBottom
-		
-		defaultBullet = New Smh_Bullet
-		defaultBullet.image = game.images.Find("game9_bullet1")
-		defaultBullet.rotation = 90
-		defaultBullet.scaleX = 0.75
-		defaultBullet.scaleY = 0.75
-		defaultBullet.parent = bullets
-			
-		background.children.Add(bullets)
 	End
 	
 	#rem
@@ -97,8 +75,35 @@ Class Game9Screen Extends Screen
 End
 
 Class Smh_GameScreen Extends Screen
+	Field player:Smh_Player
+	
 	Method Start:Void()
+		background = New Smh_EntityGroup
+		background.boundsLeft = 0
+		background.boundsTop = 0
+		background.boundsRight = SCREEN_WIDTH
+		background.boundsBottom = SCREEN_HEIGHT
 		
+		enemyBullets = New Smh_BulletPool
+		enemyBullets.parent = background
+		
+		playerBullets = New Smh_BulletPool
+		playerBullets.parent = background
+		
+		defaultBullet = New Smh_Bullet
+		defaultBullet.image = game.images.Find("game9_bullet1")
+		defaultBullet.rotation = 90
+		defaultBullet.scaleX = 0.75
+		defaultBullet.scaleY = 0.75
+		
+		player = New Smh_Player
+		player.parent = background
+		
+		'background.children.Add(enemies)
+		'background.children.Add(boss)
+		background.children.Add(enemyBullets)
+		background.children.Add(playerBullets)
+		background.children.Add(player)
 	End
 	
 	Method Update:Void()
@@ -106,7 +111,7 @@ Class Smh_GameScreen Extends Screen
 			FadeToScreen(Game9Scr)
 		End
 		If KeyHit(KEY_SPACE) Or MouseHit() Then
-			bullets.FireBulletSpray(
+			enemyBullets.FireBulletSpray(
 				defaultBullet, Null,
 				MouseX(), MouseY(), 5,
 				'100, 100, 5,
@@ -120,7 +125,7 @@ Class Smh_GameScreen Extends Screen
 	
 	Method Render:Void()
 		Cls
-		DrawText("Bullet Count: " + bullets.aliveCount, 0, 15)
+		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
 		background.DoRender()
 	End
 End
@@ -144,7 +149,9 @@ Class Smh_Entity
 	Field recalcPolar?
 	Field boundsRestrict? = False
 	Field boundsPurge? = False
+	Field useParentBounds? = True
 	Field boundsLeft#, boundsRight#, boundsTop#, boundsBottom#
+	Field boundsInset# = 0
 	Field radius# = 0
 	
 	' interpolation
@@ -173,6 +180,38 @@ Class Smh_Entity
 	Field recalcHSL?
 	Field alpha# = 1
 	Field visible? = True
+	
+	Method CalcBoundsLeft:Float()
+		Local current:Smh_Entity = Self
+		While current.parent And current.useParentBounds
+			current = current.parent
+		End
+		Return current.boundsLeft + boundsInset
+	End
+	
+	Method CalcBoundsRight:Float()
+		Local current:Smh_Entity = Self
+		While current.parent And current.useParentBounds
+			current = current.parent
+		End
+		Return current.boundsRight - boundsInset
+	End
+	
+	Method CalcBoundsTop:Float()
+		Local current:Smh_Entity = Self
+		While current.parent And current.useParentBounds
+			current = current.parent
+		End
+		Return current.boundsTop + boundsInset
+	End
+	
+	Method CalcBoundsBottom:Float()
+		Local current:Smh_Entity = Self
+		While current.parent And current.useParentBounds
+			current = current.parent
+		End
+		Return current.boundsBottom - boundsInset
+	End
 	
 	Method SetVelocityCartesian:Void(dx#, dy#)
 		Self.dx = dx
@@ -254,19 +293,28 @@ Class Smh_Entity
 			x += dx * millis / 1000.0
 			y += dy * millis / 1000.0
 		End
-		' clip
-		Local boundsSrc:Smh_Entity = parent
-		If Not boundsSrc Then boundsSrc = Self
+		
+		' get bounds
+		Local current:Smh_Entity = Self
+		While current.parent And current.useParentBounds
+			current = current.parent
+		End
+		Local bl:Float = current.boundsLeft + boundsInset
+		Local br:Float = current.boundsRight - boundsInset
+		Local bt:Float = current.boundsTop + boundsInset
+		Local bb:Float = current.boundsBottom - boundsInset
+		
+		' restrict
 		If boundsRestrict Then
-			If x < boundsSrc.boundsLeft Then x = boundsSrc.boundsLeft
-			If x > boundsSrc.boundsRight Then x = boundsSrc.boundsRight
-			If y < boundsSrc.boundsTop Then y = boundsSrc.boundsTop
-			If y > boundsSrc.boundsBottom Then y = boundsSrc.boundsBottom
+			If x < bl Then x = bl
+			If x > br Then x = br
+			If y < bt Then y = bt
+			If y > bb Then y = bb
 		End
 
 		' mark for purging
 		If boundsPurge Then
-			'If x < boundsSrc.boundsLeft Or x > boundsSrc.boundsRight Or y < boundsSrc.boundsTop Or y > boundsSrc.boundsBottom Then alive = False
+			If x < bl Or x > br Or y < bt Or y > bb Then alive = False
 		End
 	End
 	
@@ -512,7 +560,7 @@ Class Smh_Unit Extends Smh_Entity
 	
 	Method CopyFrom:Smh_Entity(source:Smh_Entity)
 		Local unit:Smh_Unit = Smh_Unit(source)
-		If Not unit Then Return ' error, wrong entity type
+		If Not unit Then Return Null ' error, wrong entity type
 		Super.CopyFrom(source)
 		currentHP = unit.currentHP
 		maxHP = unit.maxHP
@@ -525,6 +573,7 @@ Class Smh_Player Extends Smh_Unit
 		active = True
 		boundsRestrict = True
 		boundsPurge = False
+		boundsInset = 20
 	End
 	
 	Method Update:Void(millis#)
@@ -565,11 +614,15 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 	
 	' fires one or more identical bullets with an optional delay between them
 	Method FireBullet:Smh_Bullet(template:Smh_Bullet, parent:Smh_Entity, x:Float, y:Float, delayMillis:Int=0, bulletCount:Int=1)
+		' if we're firing more than an arbitrary number, purge
+		If bulletCount > 10 Then Purge()
 		Local bullet:Smh_Bullet = Null
+		If Not parent Then parent = Self
 		For Local i:Int = 1 To bulletCount
 			bullet = GetEntity(template)
 			If Not bullet Then Return Null
 			bullet.parent = parent
+			bullet.active = False
 			bullet.activeDelayMillis = delayMillis * i
 			bullet.x = x
 			bullet.y = y
@@ -579,11 +632,15 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 	
 	' fires one or more identical bullets with an optional frame delay between them
 	Method FireBulletLinear:Smh_Bullet(template:Smh_Bullet, parent:Smh_Entity, x:Float, y:Float, polarAngle:Float, polarVelocity:Float, delayMillis:Int=0, bulletCount:Int=1)
+		' if we're firing more than an arbitrary number, purge
+		If bulletCount > 10 Then Purge()
 		Local bullet:Smh_Bullet = Null
+		If Not parent Then parent = Self
 		For Local i:Int = 1 To bulletCount
 			bullet = GetEntity(template)
 			If Not bullet Then Return Null
 			bullet.parent = parent
+			bullet.active = False
 			bullet.activeDelayMillis = delayMillis * i
 			bullet.x = x
 			bullet.y = y
@@ -598,8 +655,11 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 			firstDelayMillis:Int, intervalDelayMillis:Int, ' the delay before the first bullet, and the delay between each bullet
 			firstSpeed:Float, lastSpeed:Float, ' the speed of the first and last bullets (the rest are linearly interpolated)
 			bulletCount:Int) ' the number of bullets to fire
+		' if we're firing more than an arbitrary number, purge
+		If bulletCount > 10 Then Purge()
 		Local bullet:Smh_Bullet = Null
 		Local delayMillis:Int = firstDelayMillis
+		If Not parent Then parent = Self
 		For Local i:Int = 0 Until bulletCount
 			Local ratio:Float = 0
 			If bulletCount > 0 Then ratio = Float(i)/(bulletCount-1)
@@ -609,6 +669,7 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 			bullet = GetEntity(template)
 			If Not bullet Then Return Null
 			bullet.parent = parent
+			bullet.active = False
 			bullet.activeDelayMillis = delayMillis
 			delayMillis += intervalDelayMillis
 			bullet.x = x + distance*Cos(angle)
@@ -631,6 +692,7 @@ Class Smh_Bullet Extends Smh_Unit
 		active = False
 		boundsRestrict = False
 		boundsPurge = True
+		boundsInset = -30
 	End
 	
 	Method Render:Void()
