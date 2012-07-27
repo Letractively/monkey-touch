@@ -98,6 +98,8 @@ Class Smh_GameScreen Extends Screen
 		
 		player = New Smh_Player
 		player.parent = background
+		player.x = background.boundsLeft + (background.boundsRight - background.boundsLeft) * 0.5
+		player.y = background.boundsTop + (background.boundsBottom - background.boundsTop) * 0.8
 		
 		'background.children.Add(enemies)
 		'background.children.Add(boss)
@@ -332,10 +334,18 @@ Class Smh_Entity
 	End
 	
 	Method PreRender:Bool()
-		Return active
+		If Not active Then Return False
+		Local rot:Float = rotation
+		If rotateWithHeading And usePolar Then rot -= polarAngle
+		PushMatrix
+		Translate x, y
+		Scale scaleX, scaleY
+		Rotate rot
+		Return True
 	End
 	
 	Method PostRender:Void()
+		PopMatrix
 	End
 	
 	' This should be called in OnRender() or by a parent entity
@@ -348,24 +358,10 @@ Class Smh_Entity
 	
 	' Entities should override this method if they want anything special
 	Method Render:Void()
-		'If Smh_Bullet(Self) Then Print "rendering bullet"
-		'Print "render"
 		If image Then
-			Local rx:Float = AbsoluteX
-			Local ry:Float = AbsoluteY
 			If useHSL And recalcHSL Then RecalcHSL()
 			SetColor(red, green, blue)
-			
-			Local rot:Float = rotation
-			If rotateWithHeading And usePolar Then rot -= polarAngle
-			DrawImage(image.image, rx, ry, rot, scaleX, scaleY)
-			'PushMatrix
-			'Translate rx, ry
-			'Scale scaleX, scaleY
-			'Rotate rot
-			'DrawRect(-10,-10,20,20)
-			'DrawCircle(0, 0, 10)
-			'PopMatrix
+			DrawImage(image.image, 0, 0)
 		End
 	End
 	
@@ -578,10 +574,25 @@ Class Smh_Player Extends Smh_Unit
 	
 	Method Update:Void(millis#)
 		Super.Update(millis)
+		Local xdir:Int = 0, ydir:Int = 0
+		If KeyDown(KEY_LEFT) Then xdir -= 1
+		If KeyDown(KEY_RIGHT) Then xdir += 1
+		If KeyDown(KEY_UP) Then ydir -= 1
+		If KeyDown(KEY_DOWN) Then ydir += 1
+		' hard coded for now
+		Local playerSpeed:Float = 100
+		dx = playerSpeed * xdir
+		dy = playerSpeed * ydir
+		If KeyDown(KEY_SHIFT) Then
+			dx *= 0.5
+			dy *= 0.5
+		End
 	End
 	
 	Method Render:Void()
-		Super.Render()
+		If useHSL And recalcHSL Then RecalcHSL()
+		SetColor(red, green, blue)
+		DrawRect(-10,-10,20,20)
 	End
 End
 
