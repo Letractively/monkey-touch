@@ -21,6 +21,8 @@ Global defaultBullet:Smh_Bullet
 Global background:Smh_EntityGroup
 Global enemyBullets:Smh_BulletPool
 Global playerBullets:Smh_BulletPool
+Global boss:Smh_Boss
+Global player:Smh_Player
 
 Public
 #rem
@@ -75,8 +77,6 @@ Class Game9Screen Extends Screen
 End
 
 Class Smh_GameScreen Extends Screen
-	Field player:Smh_Player
-	
 	Method Start:Void()
 		background = New Smh_EntityGroup
 		background.boundsLeft = 0
@@ -95,6 +95,7 @@ Class Smh_GameScreen Extends Screen
 		defaultBullet.rotation = 90
 		defaultBullet.scaleX = 0.75
 		defaultBullet.scaleY = 0.75
+		defaultBullet.radius = 5
 		
 		player = New Smh_Player
 		player.parent = background
@@ -113,22 +114,69 @@ Class Smh_GameScreen Extends Screen
 			FadeToScreen(Game9Scr)
 		End
 		If KeyHit(KEY_SPACE) Or MouseHit() Then
-			enemyBullets.FireBulletSpray(
-				defaultBullet, Null,
-				MouseX(), MouseY(), 5,
-				'100, 100, 5,
-				0, 360,
-				0, 16,
-				60, 120,
-				50)
+			If KeyDown(KEY_SHIFT) Then
+				enemyBullets.FireBulletSpray(
+					defaultBullet, Null,
+					MouseX(), MouseY(), 5,
+					0, 360,
+					1, 16,
+					60, 120,
+					50)
+			Else
+				Local direction:Float = ATan2(player.y-MouseY(),player.x-MouseX())
+				Local intervalAngle:Float = 35.0/8.0
+				Local firstAngle:Float = direction - intervalAngle
+				Local speed:Float = 100
+				Local intervalSpeed:Float = 10
+				Local delay:Float = 20
+				For Local i:Int = 3 To 8
+					enemyBullets.FireBulletSpray(
+						defaultBullet, Null,
+						MouseX(), MouseY(), 0,
+						firstAngle, firstAngle+intervalAngle*(i-1),
+						1+delay*(i-3), 0,
+						speed-(i-3)*intervalSpeed, speed-(i-3)*intervalSpeed,
+						i)
+					firstAngle -= intervalAngle/2
+				Next
+			End
 		End
+		' update everything
 		background.DoUpdate(dt.frametime)
+		
+		ResolveCollisions()
 	End
 	
 	Method Render:Void()
 		Cls
 		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
 		background.DoRender()
+	End
+	
+	Method ResolveCollisions:Void()
+		Local bullet:Smh_Bullet = Null
+		' resolve collisions of boss with player
+		' TODO
+		
+		' resolve collisions of enemies with player
+		'bullet = enemies.FindFirstCollision(player)
+		If bullet Then bullet.red = 0
+		
+		' resolve collisions of enemy bullets with player
+		bullet = enemyBullets.FindFirstCollision(player)
+		If bullet Then bullet.green = 0
+		
+		' resolve collisions of player bullets with boss
+		If boss Then
+			bullet = playerBullets.FindFirstCollision(boss)
+			If bullet Then bullet.red = 128
+		End
+		
+		' resolve collisions of player bullets with enemies
+		'For Local i:Int = 0 Until enemies.aliveCount
+		'	bullet = playerBullets.FindFirstCollision(enemies.children[i])
+		'	If bullet Then bullet.blue = 0
+		'Next
 	End
 End
 
@@ -359,9 +407,12 @@ Class Smh_Entity
 	' Entities should override this method if they want anything special
 	Method Render:Void()
 		If image Then
+			Local oldalpha:Float = GetAlpha()
 			If useHSL And recalcHSL Then RecalcHSL()
 			SetColor(red, green, blue)
+			SetAlpha(alpha)
 			DrawImage(image.image, 0, 0)
+			SetAlpha(oldalpha)
 		End
 	End
 	
@@ -567,6 +618,7 @@ Class Smh_Player Extends Smh_Unit
 	Method New()
 		alive = True
 		active = True
+		alpha = 0.8
 		boundsRestrict = True
 		boundsPurge = False
 		boundsInset = 20
@@ -590,9 +642,12 @@ Class Smh_Player Extends Smh_Unit
 	End
 	
 	Method Render:Void()
+		Local oldalpha:Float = GetAlpha()
 		If useHSL And recalcHSL Then RecalcHSL()
 		SetColor(red, green, blue)
-		DrawRect(-10,-10,20,20)
+		SetAlpha(alpha)
+		DrawRect(-5,-5,10,10)
+		SetAlpha(oldalpha)
 	End
 End
 
@@ -697,7 +752,7 @@ Class Smh_EnemyPool Extends Smh_Pool<Smh_Enemy>
 	End
 End
 
-Class Smh_Bullet Extends Smh_Unit
+Class Smh_Bullet Extends Smh_Entity
 	Method New()
 		alive = False
 		active = False
