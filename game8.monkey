@@ -12,6 +12,7 @@ what it is..
 Import main
 
 Global gameScreen:GameScreen
+Global debugOn:Bool = true
 
 #Rem
 summary:Title Screen Class.
@@ -166,6 +167,7 @@ Class Enemy extends Sprite
 	End
 End
 
+' Towers are NOT midhandled!
 Class Tower extends Sprite
 	Global list:ArrayList<Tower> = New ArrayList<Tower>
 	Field damage:Float
@@ -175,7 +177,7 @@ Class Tower extends Sprite
 	Field health:Float
 	Field target:Enemy
 	Field targetDist:Float
-
+	Field firePosX:Int, firePosY:Int
 	Field drawLine:Bool
 	Field dx1:Int, dy1:Int, dx2:Int, dy2:Int
 	
@@ -185,6 +187,8 @@ Class Tower extends Sprite
 		Self.damage = 1
 		Self.range = 70
 		Self.health = 100
+		Self.firePosX = x + img.w2
+		Self.firePosY = y + img.h2
 		list.Add(Self)
 	End
 	
@@ -198,6 +202,10 @@ Class Tower extends Sprite
 		Local t:Tower
 		For Local i:Int = 0 Until list.Size
 			t = list.Get(i)
+			SetAlpha 0.2
+			DrawCircle(t.firePosX, t.firePosY, t.range)
+			SetAlpha 1
+			
 			t.Draw()
 			if t.drawLine
 				DrawLine t.dx1, t.dy1, t.dx2, t.dy2
@@ -219,7 +227,7 @@ Class Tower extends Sprite
 		Local e:Enemy
 		For Local i:Int = 0 Until Enemy.list.Size
 			e = Enemy.list.Get(i)
-			Local dist:Float = CalcDistance(self.x, self.y, e.x, e.y)
+			Local dist:Float = CalcDistance(self.firePosX, self.firePosY, e.x, e.y)
 			if Self.target
 				if dist < Self.targetDist
 					Self.targetDist = dist
@@ -233,13 +241,13 @@ Class Tower extends Sprite
 			End
 		Next
 		if Self.target
-			Self.targetDist = CalcDistance(self.x, self.y, self.target.x, self.target.y)
-			Local angle:Float = CalcAngle(self.x, self.y, self.target.x, self.target.y)
+			Self.targetDist = CalcDistance(self.firePosX, self.firePosY, self.target.x, self.target.y)
+			Local angle:Float = CalcAngle(self.firePosX, self.firePosY, self.target.x, self.target.y)
 			If lastFire > fireRate
 				lastFire = 0
 				Self.drawLine = True
-				dx1 = Self.x
-				dy1 = Self.y
+				dx1 = Self.firePosX
+				dy1 = Self.firePosY
 				dx2 = Self.target.x
 				dy2 = Self.target.y
 				Self.target.health -= Self.damage
@@ -290,7 +298,7 @@ Class GameScreen extends Screen
 	Method LoadImages:Void()
 		Local tmpImage:Image
 		game.images.LoadAnim("game8/tank7.png", 20, 20, 9, tmpImage)
-		game.images.LoadAnim("game8/turretBase.png", 40, 28, 2, tmpImage)
+		game.images.LoadAnim("game8/turretBase.png", 40, 28, 2, tmpImage, False)
 		
 		turretBaseImage = game.images.Find("turretBase")
 		enemyImage = game.images.Find("tank7")
@@ -309,6 +317,16 @@ Class GameScreen extends Screen
 		Enemy.DrawAll()
 		turretBaseImage.Draw( (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
 		DrawText Tower.list.Size, 10, 10
+		if debugOn
+			'Draw grid lines
+			SetColor 255, 255, 255
+			SetAlpha 0.4
+			For local fx:Int = 0 To tilemap.width
+				DrawLine fx * TILE_SIZE, 0, fx * TILE_SIZE, tilemap.width * TILE_SIZE
+				DrawLine 0, fx * TILE_SIZE, tilemap.width * TILE_SIZE, fx * TILE_SIZE
+			Next
+			SetAlpha 1
+		End
 	End
 
 	Method Update:Void()
@@ -327,11 +345,11 @@ Class GameScreen extends Screen
 	
 	Method Controls:Void()
 		if game.mouseHit
-			if gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
+			if gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 And
+			gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
+				New Tower(turretBaseImage, (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
 				gameScreen.tilemap.SetTile(game.mouseX, game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
 				gameScreen.tilemap.SetTile( (game.mouseX + TILE_SIZE), game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
-				gameScreen.tilemap.SetTile( (game.mouseX - TILE_SIZE), game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
-				New Tower(turretBaseImage, (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
 			End
 		End
 	
