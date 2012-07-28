@@ -17,7 +17,7 @@ Private
 'Global spriteSheet:GameImage
 'Global bossSheet:GameImage
 Global smhGameScreen:Smh_GameScreen
-Global defaultBullet:Smh_Bullet
+
 Global background:Smh_EntityGroup
 Global enemyBullets:Smh_BulletPool
 Global playerBullets:Smh_BulletPool
@@ -90,20 +90,24 @@ Class Smh_GameScreen Extends Screen
 		playerBullets = New Smh_BulletPool
 		playerBullets.parent = background
 		
-		defaultBullet = New Smh_Bullet
-		defaultBullet.image = game.images.Find("game9_bullet1")
-		defaultBullet.rotation = 90
-		defaultBullet.scaleX = 0.75
-		defaultBullet.scaleY = 0.75
-		defaultBullet.radius = 5
-		
 		player = New Smh_Player
 		player.parent = background
 		player.x = background.boundsLeft + (background.boundsRight - background.boundsLeft) * 0.5
 		player.y = background.boundsTop + (background.boundsBottom - background.boundsTop) * 0.8
 		
+		boss = New Smh_Stage1Boss1
+		boss.parent = background
+		boss.x = player.x
+		boss.y = background.boundsBottom - player.y
+		boss.boundsLeft = background.boundsLeft
+		boss.boundsRight = background.boundsRight
+		boss.boundsTop = background.boundsTop
+		boss.boundsBottom = background.boundsTop + (background.boundsBottom - background.boundsTop) * 0.4
+		boss.boundsInset = 20
+		boss.useParentBounds = False
+		
 		'background.children.Add(enemies)
-		'background.children.Add(boss)
+		background.children.Add(boss)
 		background.children.Add(enemyBullets)
 		background.children.Add(playerBullets)
 		background.children.Add(player)
@@ -113,6 +117,7 @@ Class Smh_GameScreen Extends Screen
 		If KeyHit(KEY_ESCAPE) Then
 			FadeToScreen(Game9Scr)
 		End
+		#Rem
 		If KeyHit(KEY_SPACE) Or MouseHit() Then
 			If KeyDown(KEY_SHIFT) Then
 				enemyBullets.FireBulletSpray(
@@ -141,6 +146,7 @@ Class Smh_GameScreen Extends Screen
 				Next
 			End
 		End
+		#End
 		' update everything
 		background.DoUpdate(dt.frametime)
 		
@@ -230,6 +236,9 @@ Class Smh_Entity
 	Field recalcHSL?
 	Field alpha# = 1
 	Field visible? = True
+	Field visibleWhileInactive? = False
+	Field fadeInTimeMillis% = 0
+	Field blendMode# = AlphaBlend
 	
 	Method CalcBoundsLeft:Float()
 		Local current:Smh_Entity = Self
@@ -294,6 +303,19 @@ Class Smh_Entity
 		Local distance# = Sqrt((targetX-sourceX)*(targetX-sourceX)+(targetY-sourceY)*(targetY-sourceY))
 		Local time# = distance/velocity
 		SetInterpOverTime(sourceX, sourceY, targetX, targetY, Int(time*1000), smooth)
+	End
+	
+	' Warning: don't call this with parameters that would give an impossible movement, or it'll infinite loop!
+	Method SetInterpRandomOverTime:Void(sourceX#, sourceY#, minDistance#, maxDistance#, millis%, smooth% = 0)
+		Local rndX# = 0
+		Local rndY# = 0
+		Local calc# = 0
+		Repeat
+			rndX = Rnd(boundsLeft+boundsInset, boundsRight-boundsInset)
+			rndY = Rnd(boundsTop+boundsInset, boundsBottom-boundsInset)
+			calc = (sourceX-rndX)*(sourceX-rndX)+(sourceY-rndY)*(sourceY-rndY)
+		Until calc >= minDistance*minDistance And calc <= maxDistance*maxDistance
+		SetInterpOverTime(sourceX, sourceY, rndX, rndY, millis, smooth)
 	End
 	
 	Method RecalcPolar:Void()
@@ -382,7 +404,8 @@ Class Smh_Entity
 	End
 	
 	Method PreRender:Bool()
-		If Not active Then Return False
+		If Not active And Not visibleWhileInactive Then Return False
+		If fadeInTimeMillis > 0 Then alpha = Max(0.0,Min(1.0,1.0-(Float(activeDelayMillis) / Float(fadeInTimeMillis))))
 		Local rot:Float = rotation
 		If rotateWithHeading And usePolar Then rot -= polarAngle
 		PushMatrix
@@ -408,11 +431,21 @@ Class Smh_Entity
 	Method Render:Void()
 		If image Then
 			Local oldalpha:Float = GetAlpha()
+			Local oldblend:Int = GetBlend()
+			SetBlend(blendMode)
 			If useHSL And recalcHSL Then RecalcHSL()
-			SetColor(red, green, blue)
-			SetAlpha(alpha)
+			If blendMode = AlphaBlend Then
+				SetAlpha(alpha)
+				SetColor(red, green, blue)
+			Else
+				SetAlpha(1)
+				SetColor(red*alpha, green*alpha, blue*alpha)
+			End
 			DrawImage(image.image, 0, 0)
-			SetAlpha(oldalpha)
+			SetBlend(oldblend)
+			If blendMode = AlphaBlend Then
+				SetAlpha(oldalpha)
+			End
 		End
 	End
 	
@@ -468,7 +501,10 @@ Class Smh_Entity
 		useHSL = source.useHSL
 		recalcHSL = source.recalcHSL
 		alpha = source.alpha
+		blendMode = source.blendMode
 		visible = source.visible
+		visibleWhileInactive = source.visibleWhileInactive
+		fadeInTimeMillis = source.fadeInTimeMillis
 		Return Self
 	End
 End
@@ -661,15 +697,68 @@ Class Smh_Enemy Extends Smh_Unit
 	End
 End
 
-Class Smh_Boss Extends Smh_Enemy
+Class Smh_Boss Extends Smh_Enemy Abstract
+	Field phaseCount:Int = 1
+	Field currentPhase:Int = -1
+	Field currentPhaseStep:Int = 0
 	Field timeRemainingMillis:Int
+	Field waitTimeMillis:Int
 	
 	Method Update:Void(millis#)
+		' call super
 		Super.Update(millis)
+		
+		' if the boss has run out of health, we go to the next phase
+		If currentPhase < 0 Or currentHP <= 0 Then
+			currentPhase += 1
+			' if this was the last phase, we win!
+			If currentPhase > phaseCount Then
+				' TODO: win!
+			Else
+				' TODO: not hardcode these?
+				timeRemainingMillis = 30000 
+				maxHP = 100
+				currentHP = 100
+				waitTimeMillis = 0
+			End
+			Return
+		End
+		
+		' update time remaining (this could go negative if we're waiting)
+		timeRemainingMillis -= millis
+		
+		' if waiting, reduce wait time
+		If waitTimeMillis > 0 Then
+			waitTimeMillis -= millis
+			millis = 0
+			If waitTimeMillis < 0 Then
+				millis = -waitTimeMillis
+				waitTimeMillis = 0
+			End
+		End
+		
+		' if we have no millis left, die
+		If millis = 0 Then Return
+		
+		' if we've run out time, jump to the previous section and interp off screen
+		If timeRemainingMillis <= 0 Then
+			' TODO interp
+			Return
+		End
+		
+		' time left, do the main boss logic
+		DoLogic(millis)
 	End
 	
+	Method DoLogic:Void(millis#) Abstract
+	
 	Method Render:Void()
-		Super.Render()
+		Local oldalpha:Float = GetAlpha()
+		If useHSL And recalcHSL Then RecalcHSL()
+		SetColor(red, green, blue)
+		SetAlpha(alpha)
+		DrawRect(-5,-5,10,10)
+		SetAlpha(oldalpha)
 	End
 End
 
@@ -766,7 +855,67 @@ Class Smh_Bullet Extends Smh_Entity
 	End
 End
 
-
+''''''''''''''''''''''''' BOSSES '''''''''''''''''''''''''
+Class Smh_Stage1Boss1 Extends Smh_Boss
+	Field firstBullet:Smh_Bullet
+	
+	Method New()
+		active = True
+		boundsRestrict = False
+		boundsPurge = False
+		
+		firstBullet = New Smh_Bullet
+		firstBullet.image = game.images.Find("game9_bullet1")
+		firstBullet.rotation = 90
+		firstBullet.scaleX = 1
+		firstBullet.scaleY = 1
+		firstBullet.radius = 3
+		firstBullet.blendMode = AdditiveBlend
+		firstBullet.visibleWhileInactive = True
+		firstBullet.fadeInTimeMillis = 1000
+	End
+	
+	Method DoLogic:Void(millis#)
+		Select currentPhase
+			Case 0 ' first phase
+				Select currentPhaseStep
+					Case 0
+						' just wait
+						currentPhaseStep = 1
+						boss.waitTimeMillis = 1000
+						
+					Case 1
+						' random interp and wait
+						boss.SetInterpRandomOverTime(boss.x, boss.y, 50, 100, 2000, 1)
+						boss.waitTimeMillis = 2000
+						currentPhaseStep = 2
+						
+					case 2
+						' fire and wait, then loop to 1
+						Local direction:Float = ATan2(player.y-boss.y,player.x-boss.x)
+						Local srcX:Float = boss.x - Cos(direction)*5
+						Local srcY:Float = boss.y - Sin(direction)*5
+						Local intervalAngle:Float = 45.0/8.0
+						Local firstAngle:Float = direction - intervalAngle
+						Local speed:Float = 150
+						Local intervalSpeed:Float = 20
+						Local delay:Float = 10
+						For Local i:Int = 3 To 8
+							enemyBullets.FireBulletSpray(
+								firstBullet, Null,
+								srcX, srcY, 0,
+								firstAngle, firstAngle+intervalAngle*(i-1),
+								1000+delay*(i-3), 0,
+								speed-(i-3)*intervalSpeed, speed-(i-3)*intervalSpeed,
+								i)
+							firstAngle -= intervalAngle/2
+						Next
+						boss.waitTimeMillis = 3000
+						currentPhaseStep = 1
+				End
+		End
+	End
+End
 
 #rem
 footer:
