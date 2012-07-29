@@ -184,6 +184,9 @@ Class Tower extends Sprite
 	Field drawLine:Bool
 	Field dx1:Int, dy1:Int, dx2:Int, dy2:Int
 	Field selected:Bool
+	Field gunImage:GameImage
+	Field gunFrame:Int
+	Field gunAngle:Float
 	
 	Method New(img:GameImage, x:Float, y:Float)
 		Super.New(img, x, y)
@@ -207,17 +210,22 @@ Class Tower extends Sprite
 		Local t:Tower
 		For Local i:Int = 0 Until list.Size
 			t = list.Get(i)
-			if t.selected
-				SetAlpha 0.2
-				DrawCircle(t.firePosX, t.firePosY, t.range)
-				SetAlpha 1
-			End
 			t.Draw()
-			if t.drawLine
-				DrawLine t.dx1, t.dy1, t.dx2, t.dy2
-			End
-
 		Next
+	End
+	
+	Method Draw:Void()
+		if selected
+			SetAlpha 0.2
+			DrawCircle(firePosX, firePosY, range)
+			SetAlpha 1
+		End
+		Super.Draw()
+
+		if drawLine
+			DrawLine dx1, dy1, dx2, dy2
+		End
+		gunImage.Draw(firePosX, firePosY, gunAngle, 1, 1, gunFrame)
 	End
 	
 	Function UpdateAll:Void()
@@ -228,14 +236,55 @@ Class Tower extends Sprite
 			t.Update()
 		Next
 	End
-		
+	
+	Method SetGunAngle:Void(angle:Float)
+		gunAngle = -angle - 90
+	
+		If angle > 22.5 And angle < 67.5
+		' down right
+			gunAngle -= 45 * 5
+			gunFrame = 3
+		ElseIf angle > 67.5 And angle < 112.5
+		' down
+			gunAngle -= 45 * 4
+			gunFrame = 4
+		ElseIf angle > 112.5 And angle < 157.5
+		' down left
+			gunAngle -= 45 * 3
+			gunFrame = 5
+		ElseIf angle > 157.5 And angle < 202.5
+		' left
+			gunAngle -= 45 * 2
+			gunFrame = 6
+		ElseIf angle > 202.5 And angle < 247.5
+		' up left
+			gunAngle -= 45
+			gunFrame = 7
+		ElseIf angle > 247.5 And angle < 292.5
+		' up
+			gunFrame = 0
+		ElseIf angle > 292.5 And angle < 337.5
+		' up right
+			gunAngle += 45
+			gunFrame = 1
+		Else
+		' right
+			gunAngle += 45 * 2
+			gunFrame = 2
+		End	
+	
+	End
+	
 	Method Update:Void()
 		Local e:Enemy
 		if Self.target And Self.target.alive
 			lastFire += 1 * dt.delta
 			Self.targetDist = CalcDistance(self.firePosX, self.firePosY, self.target.x, self.target.y)
 			Local angle:Float = CalcAngle(self.firePosX, self.firePosY, self.target.x, self.target.y)
+	
+			
 			If lastFire > fireRate
+				SetGunAngle(angle)
 				lastFire = 0
 				Self.drawLine = True
 				dx1 = Self.firePosX
@@ -246,6 +295,8 @@ Class Tower extends Sprite
 				If Self.target.health <= 0
 					Self.target = Null
 				End
+			Else
+				Self.drawLine = False
 			End
 			if Self.targetDist > Self.range
 				Self.target = Null
@@ -293,6 +344,7 @@ Class GameScreen extends Screen
 	Field grid:Float[]
 	Field enemyImage:GameImage
 	Field turretBaseImage:GameImage
+	Field turretGunImage:GameImage
 	
 	Field delay:Float, maxDelay:Int = 100
 	
@@ -323,8 +375,9 @@ Class GameScreen extends Screen
 		Local tmpImage:Image
 		game.images.LoadAnim("game8/tank7.png", 20, 20, 9, tmpImage)
 		game.images.LoadAnim("game8/turretBase.png", 40, 28, 2, tmpImage, False)
-		
+		game.images.LoadAnim("game8/turretGun.png", 52, 45, 8, tmpImage)
 		turretBaseImage = game.images.Find("turretBase")
+		turretGunImage = game.images.Find("turretGun")
 		enemyImage = game.images.Find("tank7")
 	End
 	
@@ -337,10 +390,7 @@ Class GameScreen extends Screen
 	Method Render:Void()
 		Cls
 		tilemap.RenderMap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
-		Tower.DrawAll()
-		Enemy.DrawAll()
-		turretBaseImage.Draw( (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
-		DrawText Tower.list.Size, 10, 10
+		
 		if debugOn
 			'Draw grid lines
 			SetColor 255, 255, 255
@@ -351,6 +401,13 @@ Class GameScreen extends Screen
 			Next
 			SetAlpha 1
 		End
+		
+		Tower.DrawAll()
+		Enemy.DrawAll()
+		
+		turretBaseImage.Draw( (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
+		
+		DrawText Tower.list.Size, 10, 10
 	End
 
 	Method Update:Void()
@@ -381,7 +438,10 @@ Class GameScreen extends Screen
 			
 			if gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 And
 			gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
-				New Tower(turretBaseImage, (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
+				local t:Tower = New Tower(turretBaseImage, (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
+				t.gunImage = turretGunImage
+				t.firePosY -= 7
+				
 				gameScreen.tilemap.SetTile(game.mouseX, game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
 				gameScreen.tilemap.SetTile( (game.mouseX + TILE_SIZE), game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
 				Tower.SelectTower(game.mouseX, game.mouseY)
