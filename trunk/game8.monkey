@@ -258,6 +258,8 @@ Class Tower extends Sprite
 			if Self.targetDist > Self.range
 				Self.target = Null
 			End
+		Else
+			Self.drawLine = False
 		End
 	End
 End
@@ -355,6 +357,19 @@ Class GameScreen extends Screen
 	
 		If KeyHit(KEY_ESCAPE)
 			FadeToScreen(Game8Scr)
+		End
+	End
+	
+	Method Kill:Void()
+		ClearItems()
+	End
+	
+	Method ClearItems:Void()
+		if Enemy.list
+			Enemy.list.Clear()
+		End
+		if Tower.list
+			Tower.list.Clear()
 		End
 	End
 End
