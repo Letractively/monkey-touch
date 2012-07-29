@@ -156,6 +156,7 @@ Class Smh_GameScreen Extends Screen
 	Method Render:Void()
 		Cls
 		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
+		DrawText("Player Bullet Count: " + playerBullets.aliveCount, 0, 30)
 		background.DoRender()
 	End
 	
@@ -651,6 +652,10 @@ Class Smh_Unit Extends Smh_Entity
 End
 
 Class Smh_Player Extends Smh_Unit
+	Field firingSpeed:Int = 100
+	Field nextShotAvailableMillis:Int = 0
+	Field playerShot:Smh_Bullet
+	
 	Method New()
 		alive = True
 		active = True
@@ -658,22 +663,41 @@ Class Smh_Player Extends Smh_Unit
 		boundsRestrict = True
 		boundsPurge = False
 		boundsInset = 20
+		
+		playerShot = New Smh_Bullet
+		playerShot.image = game.images.Find("game9_bullet1")
+		playerShot.rotation = 90
+		playerShot.scaleX = 1
+		playerShot.scaleY = 1
+		playerShot.radius = 10
+		playerShot.blendMode = AlphaBlend
 	End
 	
 	Method Update:Void(millis#)
 		Super.Update(millis)
+		
+		' movement
 		Local xdir:Int = 0, ydir:Int = 0
 		If KeyDown(KEY_LEFT) Then xdir -= 1
 		If KeyDown(KEY_RIGHT) Then xdir += 1
 		If KeyDown(KEY_UP) Then ydir -= 1
 		If KeyDown(KEY_DOWN) Then ydir += 1
+		
 		' hard coded for now
-		Local playerSpeed:Float = 100
+		Local playerSpeed:Float = 200
 		dx = playerSpeed * xdir
 		dy = playerSpeed * ydir
 		If KeyDown(KEY_SHIFT) Then
-			dx *= 0.5
-			dy *= 0.5
+			dx *= 0.4
+			dy *= 0.4
+		End
+		
+		' attack
+		If KeyDown(KEY_Z) And nextShotAvailableMillis < dt.currentticks Then
+			' fire bullet(s)
+			playerBullets.FireBulletLinear(playerShot, playerBullets, x, y, -90, 400, 1, 1)
+			' update next available
+			nextShotAvailableMillis = dt.currentticks + firingSpeed
 		End
 	End
 	
@@ -770,7 +794,8 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 	' fires one or more identical bullets with an optional delay between them
 	Method FireBullet:Smh_Bullet(template:Smh_Bullet, parent:Smh_Entity, x:Float, y:Float, delayMillis:Int=0, bulletCount:Int=1)
 		' if we're firing more than an arbitrary number, purge
-		If bulletCount > 10 Then Purge()
+		'If bulletCount > 10 Then Purge()
+		Purge()
 		Local bullet:Smh_Bullet = Null
 		If Not parent Then parent = Self
 		For Local i:Int = 1 To bulletCount
@@ -788,7 +813,8 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 	' fires one or more identical bullets with an optional frame delay between them
 	Method FireBulletLinear:Smh_Bullet(template:Smh_Bullet, parent:Smh_Entity, x:Float, y:Float, polarAngle:Float, polarVelocity:Float, delayMillis:Int=0, bulletCount:Int=1)
 		' if we're firing more than an arbitrary number, purge
-		If bulletCount > 10 Then Purge()
+		'If bulletCount > 10 Then Purge()
+		Purge()
 		Local bullet:Smh_Bullet = Null
 		If Not parent Then parent = Self
 		For Local i:Int = 1 To bulletCount
@@ -811,7 +837,8 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 			firstSpeed:Float, lastSpeed:Float, ' the speed of the first and last bullets (the rest are linearly interpolated)
 			bulletCount:Int) ' the number of bullets to fire
 		' if we're firing more than an arbitrary number, purge
-		If bulletCount > 10 Then Purge()
+		'If bulletCount > 10 Then Purge()
+		Purge()
 		Local bullet:Smh_Bullet = Null
 		Local delayMillis:Int = firstDelayMillis
 		If Not parent Then parent = Self
