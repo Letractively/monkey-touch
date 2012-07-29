@@ -72,6 +72,7 @@ Class Enemy extends Sprite
 	Field range:Float
 	Field fireRate:Int
 	Field health:Float
+	Field alive:Bool
 	Field route:Int[]
 	
 	Method New(img:GameImage, x:Float, y:Float)
@@ -81,6 +82,7 @@ Class Enemy extends Sprite
 		Self.range = 70
 		Self.health = 100
 		Self.speed = 1
+		Self.alive = True
 		SetPath()
 		list.Add(Self)
 	End
@@ -147,6 +149,7 @@ Class Enemy extends Sprite
 			If PointInSpot(x, y, route[currentPath] * gameScreen.TILE_SIZE, route[currentPath + 1] * gameScreen.TILE_SIZE, 3)
 				currentPath -= 2
 				if currentPath < 0
+					alive = False
 					Kill()
 				End
 			End
@@ -172,7 +175,7 @@ Class Tower extends Sprite
 	Global list:ArrayList<Tower> = New ArrayList<Tower>
 	Field damage:Float
 	Field range:Float
-	Field lastFire:Int
+	Field lastFire:Float
 	Field fireRate:Int
 	Field health:Float
 	Field target:Enemy
@@ -180,15 +183,17 @@ Class Tower extends Sprite
 	Field firePosX:Int, firePosY:Int
 	Field drawLine:Bool
 	Field dx1:Int, dy1:Int, dx2:Int, dy2:Int
+	Field selected:Bool
 	
 	Method New(img:GameImage, x:Float, y:Float)
 		Super.New(img, x, y)
 		Self.fireRate = 20
 		Self.damage = 1
-		Self.range = 70
+		Self.range = 100
 		Self.health = 100
 		Self.firePosX = x + img.w2
 		Self.firePosY = y + img.h2
+		Self.selected = False
 		list.Add(Self)
 	End
 	
@@ -202,14 +207,16 @@ Class Tower extends Sprite
 		Local t:Tower
 		For Local i:Int = 0 Until list.Size
 			t = list.Get(i)
-			SetAlpha 0.2
-			DrawCircle(t.firePosX, t.firePosY, t.range)
-			SetAlpha 1
-			
+			if t.selected
+				SetAlpha 0.2
+				DrawCircle(t.firePosX, t.firePosY, t.range)
+				SetAlpha 1
+			End
 			t.Draw()
 			if t.drawLine
 				DrawLine t.dx1, t.dy1, t.dx2, t.dy2
 			End
+
 		Next
 	End
 	
@@ -221,26 +228,11 @@ Class Tower extends Sprite
 			t.Update()
 		Next
 	End
-	
+		
 	Method Update:Void()
-		lastFire += 1
 		Local e:Enemy
-		For Local i:Int = 0 Until Enemy.list.Size
-			e = Enemy.list.Get(i)
-			Local dist:Float = CalcDistance(self.firePosX, self.firePosY, e.x, e.y)
-			if Self.target
-				if dist < Self.targetDist
-					Self.targetDist = dist
-					Self.target = e
-				End
-			Else
-				if dist < Self.range
-					Self.targetDist = dist
-					Self.target = e
-				End
-			End
-		Next
-		if Self.target
+		if Self.target And Self.target.alive
+			lastFire += 1 * dt.delta
 			Self.targetDist = CalcDistance(self.firePosX, self.firePosY, self.target.x, self.target.y)
 			Local angle:Float = CalcAngle(self.firePosX, self.firePosY, self.target.x, self.target.y)
 			If lastFire > fireRate
@@ -260,7 +252,37 @@ Class Tower extends Sprite
 			End
 		Else
 			Self.drawLine = False
+			For Local i:Int = 0 Until Enemy.list.Size
+				e = Enemy.list.Get(i)
+				Local dist:Float = CalcDistance(self.firePosX, self.firePosY, e.x, e.y)
+				if Self.target And Self.target.alive
+					if dist < Self.targetDist
+						Self.targetDist = dist
+						Self.target = e
+					End
+				Else
+					if dist < Self.range
+						Self.targetDist = dist
+						Self.target = e
+					End
+				End
+			Next
 		End
+	End
+	
+	Function UnselectTowers:Void()
+		For Local t:Tower = EachIn Tower.list
+			t.selected = False
+		Next
+	End
+	
+	Function SelectTower:Tower(x:Int, y:Int)
+		For Local t:Tower = EachIn Tower.list
+			if t.x / gameScreen.TILE_SIZE = x / gameScreen.TILE_SIZE And t.y / gameScreen.TILE_SIZE = y / gameScreen.TILE_SIZE
+				t.selected = True
+				Exit
+			End
+		Next	
 	End
 End
 
@@ -346,12 +368,27 @@ Class GameScreen extends Screen
 	End
 	
 	Method Controls:Void()
+		if debugOn
+			if KeyHit(KEY_SPACE)
+				Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
+				Local endPos:TileMapObject = tilemap.FindObjectByName("End")
+				New Enemy(enemyImage, startPos.x, startPos.y)
+			End
+		End
+		
 		if game.mouseHit
+			Tower.UnselectTowers()
+			
 			if gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 And
 			gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
 				New Tower(turretBaseImage, (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
 				gameScreen.tilemap.SetTile(game.mouseX, game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
 				gameScreen.tilemap.SetTile( (game.mouseX + TILE_SIZE), game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
+				Tower.SelectTower(game.mouseX, game.mouseY)
+			Else
+				if gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 1
+					Tower.SelectTower(game.mouseX, game.mouseY)
+				End
 			End
 		End
 	
