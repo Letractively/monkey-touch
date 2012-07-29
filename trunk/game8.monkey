@@ -1,4 +1,4 @@
-#Rem
+#rem
 header:
 [quote]
 
@@ -12,9 +12,9 @@ what it is..
 Import main
 
 Global gameScreen:GameScreen
-Global debugOn:Bool = true
+Global debugOn:Bool = True
 
-#Rem
+#rem
 summary:Title Screen Class.
 Used to manage and deal with all Tital Page stuff.
 #End
@@ -33,7 +33,7 @@ Class Game8Screen Extends Screen
 		GameList[gameid - 1].info = "????"
 	End
 	
-	#Rem
+	#rem
 	summary:Start Screen
 	Start the Title Screen.
 	#End
@@ -41,16 +41,16 @@ Class Game8Screen Extends Screen
 		gameScreen = New GameScreen
 	End
 	
-	#Rem
+	#rem
 	summary:Render Title Screen
 	Renders all the Screen Elements.
 	#End
 	Method Render:Void()
 		Cls
-		TitleFont.DrawText(self.name, 320, 240,2)
+		TitleFont.DrawText(Self.name, 320, 240,2)
 	End
 
-	#Rem
+	#rem
 	sumary:Update Title Screen
 	Will update all screen objects, handles mouse, keys
 	and all use input.
@@ -65,7 +65,7 @@ Class Game8Screen Extends Screen
 	End
 End
 
-Class Enemy extends Sprite
+Class Enemy Extends Sprite
 	Global list:ArrayList<Enemy> = New ArrayList<Enemy>
 	Field currentPath:Int = 0
 	Field damage:Float
@@ -113,7 +113,7 @@ Class Enemy extends Sprite
 	
 	Method Update:Void()
 		If currentPath >= 0 And PathFinder.route.Length() > 0
-			local angle:Float = CalcAngle(x, y, route[currentPath] * gameScreen.TILE_SIZE, route[currentPath + 1] * gameScreen.TILE_SIZE)
+			Local angle:Float = CalcAngle(x, y, route[currentPath] * gameScreen.TILE_SIZE, route[currentPath + 1] * gameScreen.TILE_SIZE)
 
 			dx = Cos(angle) * speed
 			dy = Sin(angle) * speed
@@ -123,22 +123,22 @@ Class Enemy extends Sprite
 			If angle > 22.5 And angle < 67.5
 			' down right
 				frame = 0
-			ElseIf angle > 67.5 And angle < 112.5
+			Elseif angle > 67.5 And angle < 112.5
 			' down
 				frame = 1
-			ElseIf angle > 112.5 And angle < 157.5
+			Elseif angle > 112.5 And angle < 157.5
 			' down left
 				frame = 2
-			ElseIf angle > 157.5 And angle < 202.5
+			Elseif angle > 157.5 And angle < 202.5
 			' left
 				frame = 5
-			ElseIf angle > 202.5 And angle < 247.5
+			Elseif angle > 202.5 And angle < 247.5
 			' up left
 				frame = 8
-			ElseIf angle > 247.5 And angle < 292.5
+			Elseif angle > 247.5 And angle < 292.5
 			' up
 				frame = 7
-			ElseIf angle > 292.5 And angle < 337.5
+			Elseif angle > 292.5 And angle < 337.5
 			' up right
 				frame = 6
 			Else
@@ -148,7 +148,7 @@ Class Enemy extends Sprite
 	
 			If PointInSpot(x, y, route[currentPath] * gameScreen.TILE_SIZE, route[currentPath + 1] * gameScreen.TILE_SIZE, 3)
 				currentPath -= 2
-				if currentPath < 0
+				If currentPath < 0
 					alive = False
 					Kill()
 				End
@@ -171,7 +171,7 @@ Class Enemy extends Sprite
 End
 
 ' Towers are NOT midhandled!
-Class Tower extends Sprite
+Class Tower Extends Sprite
 	Global list:ArrayList<Tower> = New ArrayList<Tower>
 	Field damage:Float
 	Field range:Float
@@ -181,7 +181,10 @@ Class Tower extends Sprite
 	Field target:Enemy
 	Field targetDist:Float
 	Field firePosX:Int, firePosY:Int
+	
 	Field drawLine:Bool
+	Field drawLineTime:Float
+	
 	Field dx1:Int, dy1:Int, dx2:Int, dy2:Int
 	Field selected:Bool
 	Field gunImage:GameImage
@@ -215,14 +218,14 @@ Class Tower extends Sprite
 	End
 	
 	Method Draw:Void()
-		if selected
+		If selected
 			SetAlpha 0.2
 			DrawCircle(firePosX, firePosY, range)
 			SetAlpha 1
 		End
 		Super.Draw()
 
-		if drawLine
+		If drawLine
 			DrawLine dx1, dy1, dx2, dy2
 		End
 		gunImage.Draw(firePosX, firePosY, gunAngle, 1, 1, gunFrame)
@@ -244,26 +247,26 @@ Class Tower extends Sprite
 		' down right
 			gunAngle -= 45 * 5
 			gunFrame = 3
-		ElseIf angle > 67.5 And angle < 112.5
+		Elseif angle > 67.5 And angle < 112.5
 		' down
 			gunAngle -= 45 * 4
 			gunFrame = 4
-		ElseIf angle > 112.5 And angle < 157.5
+		Elseif angle > 112.5 And angle < 157.5
 		' down left
 			gunAngle -= 45 * 3
 			gunFrame = 5
-		ElseIf angle > 157.5 And angle < 202.5
+		Elseif angle > 157.5 And angle < 202.5
 		' left
 			gunAngle -= 45 * 2
 			gunFrame = 6
-		ElseIf angle > 202.5 And angle < 247.5
+		Elseif angle > 202.5 And angle < 247.5
 		' up left
 			gunAngle -= 45
 			gunFrame = 7
-		ElseIf angle > 247.5 And angle < 292.5
+		Elseif angle > 247.5 And angle < 292.5
 		' up
 			gunFrame = 0
-		ElseIf angle > 292.5 And angle < 337.5
+		Elseif angle > 292.5 And angle < 337.5
 		' up right
 			gunAngle += 45
 			gunFrame = 1
@@ -277,12 +280,11 @@ Class Tower extends Sprite
 	
 	Method Update:Void()
 		Local e:Enemy
-		if Self.target And Self.target.alive
+		If Self.target And Self.target.alive
 			lastFire += 1 * dt.delta
-			Self.targetDist = CalcDistance(self.firePosX, self.firePosY, self.target.x, self.target.y)
-			Local angle:Float = CalcAngle(self.firePosX, self.firePosY, self.target.x, self.target.y)
+			Self.targetDist = CalcDistance(Self.firePosX, Self.firePosY, Self.target.x, Self.target.y)
+			Local angle:Float = CalcAngle(Self.firePosX, Self.firePosY, Self.target.x, Self.target.y)
 	
-			
 			If lastFire > fireRate
 				SetGunAngle(angle)
 				lastFire = 0
@@ -295,41 +297,45 @@ Class Tower extends Sprite
 				If Self.target.health <= 0
 					Self.target = Null
 				End
-			Else
-				Self.drawLine = False
 			End
-			if Self.targetDist > Self.range
+			If Self.targetDist > Self.range
 				Self.target = Null
 			End
 		Else
-			Self.drawLine = False
 			For Local i:Int = 0 Until Enemy.list.Size
 				e = Enemy.list.Get(i)
-				Local dist:Float = CalcDistance(self.firePosX, self.firePosY, e.x, e.y)
-				if Self.target And Self.target.alive
-					if dist < Self.targetDist
+				Local dist:Float = CalcDistance(Self.firePosX, Self.firePosY, e.x, e.y)
+				If Self.target And Self.target.alive
+					If dist < Self.targetDist
 						Self.targetDist = dist
 						Self.target = e
 					End
 				Else
-					if dist < Self.range
+					If dist < Self.range
 						Self.targetDist = dist
 						Self.target = e
 					End
 				End
 			Next
 		End
+		If Self.drawLine
+			Self.drawLineTime += 1 * dt.delta
+			If Self.drawLineTime > 10
+				Self.drawLineTime = 0
+				Self.drawLine = False
+			End
+		End
 	End
 	
 	Function UnselectTowers:Void()
-		For Local t:Tower = EachIn Tower.list
+		For Local t:Tower = Eachin Tower.list
 			t.selected = False
 		Next
 	End
 	
 	Function SelectTower:Tower(x:Int, y:Int)
-		For Local t:Tower = EachIn Tower.list
-			if t.x / gameScreen.TILE_SIZE = x / gameScreen.TILE_SIZE And t.y / gameScreen.TILE_SIZE = y / gameScreen.TILE_SIZE
+		For Local t:Tower = Eachin Tower.list
+			If t.x / gameScreen.TILE_SIZE = x / gameScreen.TILE_SIZE And t.y / gameScreen.TILE_SIZE = y / gameScreen.TILE_SIZE
 				t.selected = True
 				Exit
 			End
@@ -337,7 +343,7 @@ Class Tower extends Sprite
 	End
 End
 
-Class GameScreen extends Screen
+Class GameScreen Extends Screen
 	Const TILE_SIZE:Int = 20
 	Field tilemap:MyTileMap
 	Field x:Float, y:Float
@@ -363,7 +369,7 @@ Class GameScreen extends Screen
 		grid = New Float[tilemap.width * tilemap.height]
 		
 		' convert the tile map to a float grid for the pathfinder
-		For Local i:Int = 0 until layer.mapData.tiles.Length
+		For Local i:Int = 0 Until layer.mapData.tiles.Length
 			grid[i] = layer.mapData.tiles[i]
 		Next
 		
@@ -391,11 +397,11 @@ Class GameScreen extends Screen
 		Cls
 		tilemap.RenderMap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 		
-		if debugOn
+		If debugOn
 			'Draw grid lines
 			SetColor 255, 255, 255
-			SetAlpha 0.4
-			For local fx:Int = 0 To tilemap.width
+			SetAlpha 0.3
+			For Local fx:Int = 0 To tilemap.width
 				DrawLine fx * TILE_SIZE, 0, fx * TILE_SIZE, tilemap.width * TILE_SIZE
 				DrawLine 0, fx * TILE_SIZE, tilemap.width * TILE_SIZE, fx * TILE_SIZE
 			Next
@@ -411,7 +417,7 @@ Class GameScreen extends Screen
 	End
 
 	Method Update:Void()
-		if delay > 0
+		If delay > 0
 			delay -= 1 * dt.delta
 		Else
 			delay = maxDelay
@@ -425,20 +431,20 @@ Class GameScreen extends Screen
 	End
 	
 	Method Controls:Void()
-		if debugOn
-			if KeyHit(KEY_SPACE)
+		If debugOn
+			If KeyHit(KEY_SPACE)
 				Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
 				Local endPos:TileMapObject = tilemap.FindObjectByName("End")
 				New Enemy(enemyImage, startPos.x, startPos.y)
 			End
 		End
 		
-		if game.mouseHit
+		If game.mouseHit
 			Tower.UnselectTowers()
 			
-			if gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 And
+			If gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 And
 			gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
-				local t:Tower = New Tower(turretBaseImage, (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
+				Local t:Tower = New Tower(turretBaseImage, (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
 				t.gunImage = turretGunImage
 				t.firePosY -= 7
 				
@@ -446,7 +452,7 @@ Class GameScreen extends Screen
 				gameScreen.tilemap.SetTile( (game.mouseX + TILE_SIZE), game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
 				Tower.SelectTower(game.mouseX, game.mouseY)
 			Else
-				if gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 1
+				If gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 1
 					Tower.SelectTower(game.mouseX, game.mouseY)
 				End
 			End
@@ -462,10 +468,10 @@ Class GameScreen extends Screen
 	End
 	
 	Method ClearItems:Void()
-		if Enemy.list
+		If Enemy.list
 			Enemy.list.Clear()
 		End
-		if Tower.list
+		If Tower.list
 			Tower.list.Clear()
 		End
 	End
@@ -492,7 +498,7 @@ Class MyTileMap Extends TileMap
 	End
 End
 
-#Rem
+#rem
 footer:
 [quote]
 [a Http://www.monkeycoder.co.nz]Monkey Coder[/a] 
