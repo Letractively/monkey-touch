@@ -155,9 +155,12 @@ Class Smh_GameScreen Extends Screen
 	
 	Method Render:Void()
 		Cls
+		background.DoRender()
 		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
 		DrawText("Player Bullet Count: " + playerBullets.aliveCount, 0, 30)
-		background.DoRender()
+		DrawText("Boss Health: " + boss.currentHP, 0, 45)
+		DrawText("Boss Phase: " + boss.currentPhase, 0, 60)
+		DrawText("Time Remaining: " + Max(0,Int(Ceil(Float(boss.timeRemainingMillis) / 1000.0))), 0, 75)
 	End
 	
 	Method ResolveCollisions:Void()
@@ -176,7 +179,11 @@ Class Smh_GameScreen Extends Screen
 		' resolve collisions of player bullets with boss
 		If boss Then
 			bullet = playerBullets.FindFirstCollision(boss)
-			If bullet Then bullet.red = 128
+			If bullet Then
+				bullet.red = 128
+				boss.currentHP -= 2
+				If boss.currentHP < 0 Then boss.currentHP = 0
+			End
 		End
 		
 		' resolve collisions of player bullets with enemies
@@ -726,30 +733,49 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 	Field currentPhase:Int = -1
 	Field currentPhaseStep:Int = 0
 	Field timeRemainingMillis:Int
+	Field bossIsLeaving:Bool = False
 	Field waitTimeMillis:Int
 	
 	Method Update:Void(millis#)
 		' call super
 		Super.Update(millis)
 		
-		' if the boss has run out of health, we go to the next phase
-		If currentPhase < 0 Or currentHP <= 0 Then
-			currentPhase += 1
-			' if this was the last phase, we win!
-			If currentPhase > phaseCount Then
-				' TODO: win!
-			Else
-				' TODO: not hardcode these?
-				timeRemainingMillis = 30000 
-				maxHP = 100
-				currentHP = 100
-				waitTimeMillis = 0
+		' if leaving just die
+		If Not bossIsLeaving Then
+			' if the boss has run out of health, we go to the next phase
+			If currentPhase < 0 Or currentHP <= 0 Then
+				currentPhase += 1
+				currentPhaseStep = 0
+				' if this was the last phase, we win!
+				If currentPhase > phaseCount Then
+					Print "You won!"
+					' TODO: destroy boss
+				Else
+					' TODO: not hardcode these?
+					timeRemainingMillis = 10000
+					maxHP = 100
+					currentHP = 100
+					waitTimeMillis = 0
+				End
+				Return
 			End
-			Return
+			
+			' update time remaining (this could go negative if we're waiting)
+			timeRemainingMillis -= millis
+			
+			' if we've run out of time, interp off screen
+			If timeRemainingMillis <= 0 Then
+				If x < boundsLeft + (boundsRight-boundsLeft)/2 Then
+					SetInterpOverTime(x, y, boundsLeft, boundsTop - 100, 2000, 1)
+				Else
+					SetInterpOverTime(x, y, boundsRight, boundsTop - 100, 2000, 1)
+				End
+				timeRemainingMillis = 0
+				waitTimeMillis = 2000
+				bossIsLeaving = True
+				Return
+			End
 		End
-		
-		' update time remaining (this could go negative if we're waiting)
-		timeRemainingMillis -= millis
 		
 		' if waiting, reduce wait time
 		If waitTimeMillis > 0 Then
@@ -764,14 +790,12 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 		' if we have no millis left, die
 		If millis = 0 Then Return
 		
-		' if we've run out time, jump to the previous section and interp off screen
-		If timeRemainingMillis <= 0 Then
-			' TODO interp
-			Return
+		' time left, do the main boss logic or leave
+		If bossIsLeaving Then
+			' change to previous section
+		Else
+			DoLogic(millis)
 		End
-		
-		' time left, do the main boss logic
-		DoLogic(millis)
 	End
 	
 	Method DoLogic:Void(millis#) Abstract
@@ -900,6 +924,9 @@ Class Smh_Stage1Boss1 Extends Smh_Boss
 		firstBullet.blendMode = AdditiveBlend
 		firstBullet.visibleWhileInactive = True
 		firstBullet.fadeInTimeMillis = 1000
+		
+		phaseCount = 5
+		radius = 20
 	End
 	
 	Method DoLogic:Void(millis#)
