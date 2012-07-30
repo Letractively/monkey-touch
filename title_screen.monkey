@@ -131,17 +131,17 @@ Class TitleScreen Extends Screen
 			
 			
 			
-			if MouseDown()
+			if TouchDown()
 				if Self.startdragy <> 0
-					if MouseY() < Self.startdragy
+					if TouchY() < Self.startdragy
 						Self.dragdir = 1
-						self.dragspeed = (Self.startdragy - MouseY()) * 0.1
-					ElseIf MouseY() > Self.startdragy
+						self.dragspeed = (Self.startdragy - TouchY()) * 0.1
+					ElseIf TouchY() > Self.startdragy
 						Self.dragdir = 2
-						self.dragspeed = (MouseY() -Self.startdragy) * 0.1
+						self.dragspeed = (TouchY() -Self.startdragy) * 0.1
 					EndIf
 				Else
-					Self.startdragy = MouseY()
+					Self.startdragy = TouchY()
 					Self.dragdir = 0
 				End if
 			Else
