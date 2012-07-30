@@ -158,11 +158,15 @@ Class MyGame Extends DiddyApp
 			path = ("game" + g + "/game" + g + ".txt")
 			'Print "Loading " + path
 			game.images.LoadAtlas(path, images.LIBGDX_ATLAS, true)
-			
 		Next
+		
+		Local tmpimg:Image
+		
+		game.images.LoadAnim("game_tile.png", 202, 58, 2, tmpimg, false)
 		
 		game.images.Load("about.png", "", False, False)
 		game.images.Load("title.png", "", False, False)
+		game.images.Load("title_mask.png", "", False, False)
 		game.images.Load("about_mask.png", "", False, False)
 		game.images.Load("about_buttons.png", "", False, False)
 		game.images.Load("ooo.png", "", true, False)

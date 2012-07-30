@@ -13,19 +13,28 @@ The Main screen that lets the player launch all the included mini games.
 
 Import main
 
+
+
 #rem
 summary:Title Screen Class.
 Used to manage and deal with all Tital Page stuff.
 #End
 Class TitleScreen Extends Screen
 	Field background:GameImage
+	Field mask:GameImage
+	
 	Field Icons:GameImage[20]
 	Field Thumbs:GameImage[20]
 	Field outoforder:GameImage
 	
+	Field Tile:GameImage
 	
 	Field selected:Int
-	
+		
+	Field offsety:Int
+	Field startdragy:Int
+	Field dragdir:Int
+	Field dragspeed:float
 	
 	Method New()
 		name = "Main Screen"
@@ -37,6 +46,8 @@ Class TitleScreen Extends Screen
 	Method Start:Void()
 		self.background = game.images.Find("title")
 		Self.outoforder = game.images.Find("ooo")
+		Self.mask = game.images.Find("title_mask")
+		Self.Tile = game.images.Find("game_tile")
 		
 		selected = 0
 		LoadGameIcons()
@@ -61,50 +72,49 @@ Class TitleScreen Extends Screen
 		Cls
 		DrawImage(background.image, 0, 0)
 		
-		DrawImage(Self.Thumbs[Self.selected].image, 345, 214)
+		DrawImage(Self.Thumbs[Self.selected].image, 300, 214)
 		
 		'render the game icons.
-		For Local row:Int = 0 To 4
-			For Local col:Int = 0 To 3
-			
-				if GameList[ ( (row * 4) + col)].name <> "????"
-					If Self.selected = ( (row * 4) + col)
-						DrawImage(Self.Icons[ ( (row * 4) + col)].image, 72 + (col * 58), 175 + (row * 58))
-						HighlightFont.DrawText(GameList[Self.selected].name[ .. 7], 49 + (col * 58), 201 + (row * 58))
-					Else
-						DrawImage(Self.Icons[ ( (row * 4) + col)].image, 72 + (col * 58), 182 + (row * 58))
-						SmallFont.DrawText(GameList[ ( (row * 4) + col)].name[ .. 7], 49 + (col * 58), 201 + (row * 58))
-					Endif
+		For Local row:Int = 0 To 19
+		
+			if GameList[row].name <> "????"
+				
+				if Self.selected = row
+					DrawImage(self.Tile.image, 39, 175 + (row * 58) + offsety, 1)
 				Else
-					DrawImage(Self.outoforder.image, 72 + (col * 58), 182 + (row * 58))
-					'SmallFont.DrawText("Out Of Order", 49 + (col * 58), 201 + (row * 58))
+					DrawImage(self.Tile.image, 39, 175 + (row * 58) + offsety, 0)
 				End if
 				
-			Next
+				DrawImage(Self.Icons[row].image, 83, 203 + (row * 58) + offsety)
+				InfoFont.DrawText(GameList[row].name[ .. 12], 110, 205 + (row * 58) + offsety)
+			End if
+			
 		Next
 		
 		Local stp:Int = 150
 		Local gap:Int = 20
 		
-		TitleFont.DrawText("Game    : ", 403, stp, 1)
+		TitleFont.DrawText("Game    : ", 353, stp, 1)
 		stp += gap
-		InfoFont.DrawText("  " + GameList[Self.selected].name, 403, stp, 1)
+		InfoFont.DrawText("  " + GameList[Self.selected].name, 353, stp, 1)
 		stp += gap
-		TitleFont.DrawText("Author  : ", 403, stp, 1)
+		TitleFont.DrawText("Author  : ", 353, stp, 1)
 		stp += gap
-		InfoFont.DrawText("  " + GameList[Self.selected].author, 403, stp, 1)
+		InfoFont.DrawText("  " + GameList[Self.selected].author, 353, stp, 1)
 		
 		stp += gap
-		TitleFont.DrawText("Website : ", 403, stp, 1)
+		TitleFont.DrawText("Website : ", 353, stp, 1)
 		stp += gap
-		InfoFont.DrawText("  " + GameList[Self.selected].authorurl, 403, stp, 1)
+		InfoFont.DrawText("  " + GameList[Self.selected].authorurl, 353, stp, 1)
 		
 		stp = 272
-		TitleFont.DrawText("Game Info", 295, stp, 1)
+		TitleFont.DrawText("Game Info", 245, stp, 1)
 		
 		stp += gap
-		InfoFont.DrawTextWidth(GameList[Self.selected].info, 295, stp, 1, 308)
+		InfoFont.DrawTextWidth(GameList[Self.selected].info, 245, stp, 1, 380)
 
+		DrawImage(Self.mask.image, 0, 0, 0)
+		
 	End
 
 	#rem
@@ -113,19 +123,50 @@ Class TitleScreen Extends Screen
 	and all use input.
 	#End
 	Method Update:Void()
-	
-	
-		For Local row:Int = 0 To 4
-			For Local col:Int = 0 To 3
-				Local current:Int = ( (row * 4) + col)
-				 
-				If MouseOver(47 + (col * 58), 157 + (row * 58), 58, 58) And TouchHit()
-					Self.selected = current
-					'Print "Selected " + current
-				Endif
-				
-			Next
-		Next
+		
+		Self.selected = (Abs( (-29 + Self.offsety) / 58))' + 1)
+		
+		If MouseOver(51, 147, 186, 279)
+			
+			
+			
+			
+			if MouseDown()
+				if Self.startdragy <> 0
+					if MouseY() < Self.startdragy
+						Self.dragdir = 1
+						self.dragspeed = (Self.startdragy - MouseY()) * 0.1
+					ElseIf MouseY() > Self.startdragy
+						Self.dragdir = 2
+						self.dragspeed = (MouseY() -Self.startdragy) * 0.1
+					EndIf
+				Else
+					Self.startdragy = MouseY()
+					Self.dragdir = 0
+				End if
+			Else
+				Self.startdragy = 0			
+			End if
+			
+			select Self.dragdir
+				Case 1
+					Self.offsety -= dragspeed
+					
+				Case 2
+					Self.offsety += dragspeed
+					'need to find the upper cap, total number of games.*tile height.
+					
+			End Select
+			
+			if Self.offsety > 0 Then Self.offsety = 0
+			
+		Endif
+		
+		if Self.dragdir <> 0
+			dragspeed -= 0.1
+			if dragspeed < 0 Then dragspeed = 0
+		EndIf
+		
 		
 		'About Button
 		If MouseOver(486, 400, 100, 57)
@@ -135,7 +176,7 @@ Class TitleScreen Extends Screen
 		Endif
 		
 		'Play Button.
-		If MouseOver(317, 400, 100, 57)
+		If MouseOver(281, 400, 100, 57)
 			
 			If TouchHit() Or MouseHit(MOUSE_LEFT)
 			'clicked play.
