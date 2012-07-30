@@ -21,16 +21,16 @@ Used to manage and deal with all Tital Page stuff.
 Class Game8Screen Extends Screen
 	
 	Method New()
-		name = "Game 8 Screen"
+		name = "Tower Defense"
 		Local gameid:Int = 8
 		GameList[gameid - 1] = New miniGame
 		GameList[gameid - 1].id = gameid - 1
-		GameList[gameid - 1].name = "Steves"
+		GameList[gameid - 1].name = "Tower Defense"
 		GameList[gameid - 1].iconname = "game" + gameid + "_icon"
 		GameList[gameid - 1].thumbnail = "game" + gameid + "_thumb"
 		GameList[gameid - 1].author = "Steven Revill"
 		GameList[gameid - 1].authorurl = "therevillsgames.com"
-		GameList[gameid - 1].info = "????"
+		GameList[gameid - 1].info = "Tower Defense Info"
 	End
 	
 	#rem
@@ -284,7 +284,7 @@ Class Tower Extends Sprite
 			lastFire += 1 * dt.delta
 			Self.targetDist = CalcDistance(Self.firePosX, Self.firePosY, Self.target.x, Self.target.y)
 			Local angle:Float = CalcAngle(Self.firePosX, Self.firePosY, Self.target.x, Self.target.y)
-	
+				
 			If lastFire > fireRate
 				SetGunAngle(angle)
 				lastFire = 0
@@ -334,12 +334,15 @@ Class Tower Extends Sprite
 	End
 	
 	Function SelectTower:Tower(x:Int, y:Int)
+		Local tower:Tower
 		For Local t:Tower = Eachin Tower.list
 			If t.x / gameScreen.TILE_SIZE = x / gameScreen.TILE_SIZE And t.y / gameScreen.TILE_SIZE = y / gameScreen.TILE_SIZE
 				t.selected = True
+				tower = t
 				Exit
 			End
-		Next	
+		Next
+		Return tower
 	End
 End
 
@@ -351,11 +354,13 @@ Class GameScreen Extends Screen
 	Field enemyImage:GameImage
 	Field turretBaseImage:GameImage
 	Field turretGunImage:GameImage
-	
+	Field selectedTower:Tower
 	Field delay:Float, maxDelay:Int = 100
-	
+	Field buildableLayerOn:Bool = False
+	Field gridOn:Bool = False
+
 	Method New()
-		name = "Game 8's GameScreen"
+		name = "Tower Defense GameScreen"
 	End
 	
 	Method LoadMap:Void()
@@ -397,7 +402,7 @@ Class GameScreen Extends Screen
 		Cls
 		tilemap.RenderMap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 		
-		If debugOn
+		If gridOn
 			'Draw grid lines
 			SetColor 255, 255, 255
 			SetAlpha 0.3
@@ -408,12 +413,48 @@ Class GameScreen Extends Screen
 			SetAlpha 1
 		End
 		
+		If buildableLayerOn
+			SetColor 255, 0, 0
+			SetAlpha 0.3
+			Local layer:TileMapTileLayer = tilemap.FindLayerByName(gameScreen.tilemap.BUILD_LAYER)
+
+			For Local fx:Int = 0 Until tilemap.width
+				For Local fy:Int = 0 Until tilemap.height
+					If layer.mapData.Get(fx, fy) > 0
+						DrawRect fx * TILE_SIZE, fy * TILE_SIZE, TILE_SIZE, TILE_SIZE
+					End
+				Next
+			Next
+			SetAlpha 1
+			SetColor 255, 255, 255
+		End
+		
 		Tower.DrawAll()
 		Enemy.DrawAll()
 		
 		turretBaseImage.Draw( (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
 		
-		DrawText Tower.list.Size, 10, 10
+		If debugOn Then DrawDebugInfo()
+	End
+
+	Method DrawDebugInfo:Void()
+		Local y:Int = 10
+		Local gap:Int = 13
+		
+		If gridOn
+			DrawText "Grid: On (F1)", 10, y
+		Else
+			DrawText "Grid: Off (F1)", 10, y
+		End
+		
+		y += gap
+		
+		If buildableLayerOn
+			DrawText "Build Layer: On (F2)", 10, y
+		Else
+			DrawText "Build Layer: Off (F2)", 10, y
+		End
+
 	End
 
 	Method Update:Void()
@@ -437,10 +478,32 @@ Class GameScreen Extends Screen
 				Local endPos:TileMapObject = tilemap.FindObjectByName("End")
 				New Enemy(enemyImage, startPos.x, startPos.y)
 			End
+			If KeyHit(KEY_F2)
+				buildableLayerOn = Not buildableLayerOn
+			End
+			If KeyHit(KEY_F1)
+				gridOn = Not gridOn
+			End			
+		End
+		
+		If KeyHit(KEY_DELETE)
+			If selectedTower <> Null
+				gameScreen.tilemap.SetTile(selectedTower.x, selectedTower.y, 0, gameScreen.tilemap.BUILD_LAYER)
+				gameScreen.tilemap.SetTile((selectedTower.x + TILE_SIZE), selectedTower.y, 0, gameScreen.tilemap.BUILD_LAYER)
+
+				selectedTower.Kill()
+			End
+		End
+		
+		If KeyHit(KEY_1)
+			If selectedTower <> Null
+				selectedTower.range += 30
+			End
 		End
 		
 		If game.mouseHit
 			Tower.UnselectTowers()
+			selectedTower = Null
 			
 			If gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 And
 			gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
@@ -450,10 +513,10 @@ Class GameScreen Extends Screen
 				
 				gameScreen.tilemap.SetTile(game.mouseX, game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
 				gameScreen.tilemap.SetTile( (game.mouseX + TILE_SIZE), game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
-				Tower.SelectTower(game.mouseX, game.mouseY)
+				selectedTower = Tower.SelectTower(game.mouseX, game.mouseY)
 			Else
 				If gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 1
-					Tower.SelectTower(game.mouseX, game.mouseY)
+					selectedTower = Tower.SelectTower(game.mouseX, game.mouseY)
 				End
 			End
 		End
