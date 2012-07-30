@@ -98,7 +98,6 @@ Class Enemy Extends Sprite
 		For Local i:Int = 0 Until list.Size
 			e = list.Get(i)
 			e.Draw()
-			DrawText e.health, e.x, e.y
 		Next
 	End
 		
@@ -155,6 +154,7 @@ Class Enemy Extends Sprite
 			End
 		End
 		If Self.health <= 0
+			New Explosion(gameScreen.explosionImage, x, y, 8, 100)
 			Kill()
 		End
 	End
@@ -174,6 +174,7 @@ End
 Class Tower Extends Sprite
 	Global list:ArrayList<Tower> = New ArrayList<Tower>
 	Field damage:Float
+	Field damageBonus:Float
 	Field range:Float
 	Field lastFire:Float
 	Field fireRate:Int
@@ -195,6 +196,7 @@ Class Tower Extends Sprite
 		Super.New(img, x, y)
 		Self.fireRate = 20
 		Self.damage = 1
+		Self.damageBonus = 2
 		Self.range = 100
 		Self.health = 100
 		Self.firePosX = x + img.w2
@@ -293,7 +295,8 @@ Class Tower Extends Sprite
 				dy1 = Self.firePosY
 				dx2 = Self.target.x
 				dy2 = Self.target.y
-				Self.target.health -= Self.damage
+				Self.target.health -= Self.damage + Rnd(0, Self.damageBonus)
+				New Explosion(gameScreen.explosionSmallImage, Self.target.x, Self.target.y, 6, 100)
 				If Self.target.health <= 0
 					Self.target = Null
 				End
@@ -346,6 +349,43 @@ Class Tower Extends Sprite
 	End
 End
 
+Class Explosion Extends Sprite
+	Global list:ArrayList<Explosion> = New ArrayList<Explosion>
+
+	Method New(img:GameImage, x:Float, y:Float, frames:Int, animSpeed:Int)
+		Super.New(img, x, y)
+		Self.SetFrame(0, frames, animSpeed, False, False)
+		list.Add(Self)
+	End
+	
+	Method Kill:Void()
+		If Not list Return
+		list.Remove(Self)
+	End
+	
+	Function DrawAll:Void()
+		If Not list Return
+		Local e:Explosion
+		For Local i:Int = 0 Until list.Size
+			e = list.Get(i)
+			e.Draw()
+		Next
+	End
+	
+	Function UpdateAll:Void()
+		If Not list Return
+		Local e:Explosion
+		For Local i:Int = 0 Until list.Size
+			e = list.Get(i)
+			e.Update()
+		Next
+	End
+	
+	Method Update:Void()
+		If UpdateAnimation() Then Kill()
+	End
+End
+
 Class GameScreen Extends Screen
 	Const TILE_SIZE:Int = 20
 	Field tilemap:MyTileMap
@@ -358,6 +398,9 @@ Class GameScreen Extends Screen
 	Field delay:Float, maxDelay:Int = 100
 	Field buildableLayerOn:Bool = False
 	Field gridOn:Bool = False
+	Field explosionImage:GameImage
+	Field explosionBigImage:GameImage
+	Field explosionSmallImage:GameImage
 
 	Method New()
 		name = "Tower Defense GameScreen"
@@ -387,9 +430,15 @@ Class GameScreen Extends Screen
 		game.images.LoadAnim("game8/tank7.png", 20, 20, 9, tmpImage)
 		game.images.LoadAnim("game8/turretBase.png", 40, 28, 2, tmpImage, False)
 		game.images.LoadAnim("game8/turretGun.png", 52, 45, 8, tmpImage)
+		game.images.LoadAnim("game8/explosn.png", 20, 20, 9, tmpImage)
+		game.images.LoadAnim("game8/exploBig.png", 40, 40, 14, tmpImage)
+		game.images.LoadAnim("game8/expSmall.png", 20, 20, 7, tmpImage)
 		turretBaseImage = game.images.Find("turretBase")
 		turretGunImage = game.images.Find("turretGun")
 		enemyImage = game.images.Find("tank7")
+		explosionImage = game.images.Find("explosn")
+		explosionBigImage = game.images.Find("exploBig")
+		explosionSmallImage = game.images.Find("expSmall")
 	End
 	
 	Method Start:Void()
@@ -431,6 +480,7 @@ Class GameScreen Extends Screen
 		
 		Tower.DrawAll()
 		Enemy.DrawAll()
+		Explosion.DrawAll()
 		
 		turretBaseImage.Draw( (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
 		
@@ -440,7 +490,7 @@ Class GameScreen Extends Screen
 	Method DrawDebugInfo:Void()
 		Local y:Int = 10
 		Local gap:Int = 13
-		
+		SetAlpha 0.4
 		If gridOn
 			DrawText "Grid: On (F1)", 10, y
 		Else
@@ -454,7 +504,7 @@ Class GameScreen Extends Screen
 		Else
 			DrawText "Build Layer: Off (F2)", 10, y
 		End
-
+		SetAlpha 1
 	End
 
 	Method Update:Void()
@@ -468,6 +518,7 @@ Class GameScreen Extends Screen
 		End
 		Tower.UpdateAll()
 		Enemy.UpdateAll()
+		Explosion.UpdateAll()
 		Controls()
 	End
 	
@@ -490,7 +541,7 @@ Class GameScreen Extends Screen
 			If selectedTower <> Null
 				gameScreen.tilemap.SetTile(selectedTower.x, selectedTower.y, 0, gameScreen.tilemap.BUILD_LAYER)
 				gameScreen.tilemap.SetTile((selectedTower.x + TILE_SIZE), selectedTower.y, 0, gameScreen.tilemap.BUILD_LAYER)
-
+				New Explosion(explosionBigImage, selectedTower.x + selectedTower.image.w2, selectedTower.y + selectedTower.image.h2, 13, 80)
 				selectedTower.Kill()
 			End
 		End
@@ -536,6 +587,9 @@ Class GameScreen Extends Screen
 		End
 		If Tower.list
 			Tower.list.Clear()
+		End
+		If Explosion.list
+			Explosion.list.Clear()
 		End
 	End
 End
