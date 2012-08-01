@@ -401,7 +401,8 @@ Class GameScreen Extends Screen
 	Field explosionImage:GameImage
 	Field explosionBigImage:GameImage
 	Field explosionSmallImage:GameImage
-
+	Field gui:Gui
+	
 	Method New()
 		name = "Tower Defense GameScreen"
 	End
@@ -433,6 +434,7 @@ Class GameScreen Extends Screen
 		game.images.LoadAnim("game8/explosn.png", 20, 20, 9, tmpImage)
 		game.images.LoadAnim("game8/exploBig.png", 40, 40, 14, tmpImage)
 		game.images.LoadAnim("game8/expSmall.png", 20, 20, 7, tmpImage)
+		game.images.Load("game8/gui.png", "", False)
 		turretBaseImage = game.images.Find("turretBase")
 		turretGunImage = game.images.Find("turretGun")
 		enemyImage = game.images.Find("tank7")
@@ -445,6 +447,7 @@ Class GameScreen Extends Screen
 		delay = maxDelay
 		LoadImages()
 		LoadMap()
+		gui = New Gui
 	End
 	
 	Method Render:Void()
@@ -482,7 +485,9 @@ Class GameScreen Extends Screen
 		Enemy.DrawAll()
 		Explosion.DrawAll()
 		
-		turretBaseImage.Draw( (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
+		if gui.mode = gui.TURRENT then turretBaseImage.Draw( (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
+		
+		gui.Draw()
 		
 		If debugOn Then DrawDebugInfo()
 	End
@@ -523,6 +528,7 @@ Class GameScreen Extends Screen
 	End
 	
 	Method Controls:Void()
+		gui.Update()
 		If debugOn
 			If KeyHit(KEY_SPACE)
 				Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
@@ -558,16 +564,21 @@ Class GameScreen Extends Screen
 			
 			If gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 And
 			gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
-				Local t:Tower = New Tower(turretBaseImage, (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
-				t.gunImage = turretGunImage
-				t.firePosY -= 7
+				if gui.mode = gui.TURRENT
+					Local t:Tower = New Tower(turretBaseImage, (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
+					t.gunImage = turretGunImage
+					t.firePosY -= 7
 				
-				gameScreen.tilemap.SetTile(game.mouseX, game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
-				gameScreen.tilemap.SetTile( (game.mouseX + TILE_SIZE), game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
-				selectedTower = Tower.SelectTower(game.mouseX, game.mouseY)
-			Else
-				If gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 1
+					gameScreen.tilemap.SetTile(game.mouseX, game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
+					gameScreen.tilemap.SetTile( (game.mouseX + TILE_SIZE), game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
 					selectedTower = Tower.SelectTower(game.mouseX, game.mouseY)
+					gui.mode = gui.NONE
+				End
+			Else
+				if gui.mode = gui.NONE
+					If gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 1
+						selectedTower = Tower.SelectTower(game.mouseX, game.mouseY)
+					End
 				End
 			End
 		End
@@ -592,6 +603,80 @@ Class GameScreen Extends Screen
 			Explosion.list.Clear()
 		End
 	End
+End
+
+Class Gui
+	Const FULL:Int = 2
+	Const SCROLL_UP:Int = 1
+	Const SCROLL_DOWN:Int = 3
+	Const HIDE:Int = 0
+	Const NONE:Int = 0
+	Const TURRENT:Int = 1
+	
+	Field showGUI:Int
+	Field x:Float
+	Field y:Float
+	Field menu:SimpleMenu
+	Field mode:Int
+	Field limit:Int
+	Field override:Int = 0
+	Field backgroundImage:GameImage
+	Field speedY:Int = 4
+	Field lip:Int = 20
+	
+	Method New()
+		showGUI = SCROLL_UP
+		mode = NONE
+		x = 0
+		y = SCREEN_HEIGHT - lip
+		override = 0
+		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 0, 10, True)
+		menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png")
+		menu.SetY(y + 30)
+		backgroundImage = game.images.Find("gui")
+		limit = backgroundImage.h
+	End
+	
+	Method ShowHideGUI:Void()
+		If game.mouseY < SCREEN_HEIGHT - limit And override = 0 showGUI = SCROLL_DOWN
+		If game.mouseY >= SCREEN_HEIGHT - lip showGUI = SCROLL_UP
+		
+		If showGUI = SCROLL_UP
+			y -= speedY * dt.delta
+			If y < SCREEN_HEIGHT - limit
+				showGUI = FULL
+				y = SCREEN_HEIGHT - limit
+			End
+		End
+
+		If showGUI = SCROLL_DOWN
+			y += speedY * dt.delta
+			If y > SCREEN_HEIGHT - lip
+				showGUI = 0
+				override = 0
+				y = SCREEN_HEIGHT - lip
+			End
+		End
+	End
+	
+	
+	Method Update()
+		menu.Update()
+		menu.SetY(y)
+
+		if menu.Clicked("turretButton")
+			mode = TURRENT
+		End
+		
+		
+		ShowHideGUI()
+	End
+	
+	Method Draw()
+		backgroundImage.Draw(x, y)
+		menu.Draw()
+	End
+	
 End
 
 Class MyTiledTileMapReader Extends TiledTileMapReader
