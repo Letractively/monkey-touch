@@ -32,9 +32,12 @@ Class TitleScreen Extends Screen
 	Field selected:Int
 		
 	Field offsety:Int
-	Field startdragy:Int
-	Field dragdir:Int
-	Field dragspeed:float
+	Field startOffsetY:Int
+	Field firstTouchY:Int
+	Field lastTouchY:Int[] = New Int[3]
+	Field thisTouchY:Int
+	Field scrollSpeed:Float
+	Field scrolling:Bool
 	
 	Method New()
 		name = "Main Screen"
@@ -57,11 +60,6 @@ Class TitleScreen Extends Screen
 		#ELSE
 			game.MusicPlay("brain_menu.mp3", True)
 		#END
-		
-				
-		
-		
-		
 	End
 	
 	#rem
@@ -123,50 +121,48 @@ Class TitleScreen Extends Screen
 	and all use input.
 	#End
 	Method Update:Void()
-		
+		Local viewableHeight:Float = 19*58
 		Self.selected = (Abs( (-29 + Self.offsety) / 58))' + 1)
 		
-		If MouseOver(51, 147, 186, 279)
-			
-			
-			
-			
-			if TouchDown()
-				if Self.startdragy <> 0
-					if TouchY() < Self.startdragy
-						Self.dragdir = 1
-						self.dragspeed = (Self.startdragy - TouchY()) * 0.1
-					ElseIf TouchY() > Self.startdragy
-						Self.dragdir = 2
-						self.dragspeed = (TouchY() -Self.startdragy) * 0.1
-					EndIf
-				Else
-					Self.startdragy = TouchY()
-					Self.dragdir = 0
-				End if
-			Else
-				Self.startdragy = 0			
-			End if
-			
-			select Self.dragdir
-				Case 1
-					Self.offsety -= dragspeed
-					
-				Case 2
-					Self.offsety += dragspeed
-					'need to find the upper cap, total number of games.*tile height.
-					
-			End Select
-			
-			if Self.offsety > 0 Then Self.offsety = 0
-			
-		Endif
+		If TouchHit() Then
+			If MouseOver(51, 147, 186, 279) Then
+				firstTouchY = TouchY()
+				lastTouchY[0] = firstTouchY
+				lastTouchY[1] = firstTouchY
+				lastTouchY[2] = firstTouchY
+				thisTouchY = firstTouchY
+				startOffsetY = offsety
+				scrolling = True
+				Self.offsety = startOffsetY - firstTouchY + thisTouchY
+			End
+		ElseIf TouchDown() Then
+			If scrolling Then
+				lastTouchY[2] = lastTouchY[1]
+				lastTouchY[1] = lastTouchY[0]
+				lastTouchY[0] = thisTouchY
+				thisTouchY = TouchY()
+				Self.offsety = startOffsetY - firstTouchY + thisTouchY
+			End
+		ElseIf scrolling Then
+			scrollSpeed = Float(thisTouchY - lastTouchY[2]) / 3.0
+			scrolling = False
+		End
 		
-		if Self.dragdir <> 0
-			dragspeed -= 0.1
-			if dragspeed < 0 Then dragspeed = 0
-		EndIf
-		
+		If scrollSpeed <> 0 Then Self.offsety += scrollSpeed
+		If Self.offsety >= 0 Then
+			Self.offsety = 0
+			Self.scrollSpeed = 0
+		ElseIf Self.offsety <= -viewableHeight
+			Self.offsety = -viewableHeight
+			Self.scrollSpeed = 0
+		End
+		If scrollSpeed > 0 Then
+			scrollSpeed -= 0.1
+			If scrollSpeed < 0 Then scrollSpeed = 0
+		ElseIf scrollSpeed < 0 Then
+			scrollSpeed += 0.1
+			If scrollSpeed > 0 Then scrollSpeed = 0
+		End
 		
 		'About Button
 		If MouseOver(486, 400, 100, 57)
