@@ -224,7 +224,7 @@ Class Smh_Entity
 	Field active:Bool = True
 	Field activeDelayMillis:Int = 0
 	Field logicHandler:Smh_EntityLogicHandler = Null
-	Field aliveTimeMillis:Int = 0
+	Field activeTimeMillis:Int = 0 ' the game time that this entity became active
 	
 	' custom fields for the logic handler
 	Field logicVar1:Int
@@ -374,11 +374,11 @@ Class Smh_Entity
 			If activeDelayMillis <= 0 Then
 				millis = -activeDelayMillis
 				activeDelayMillis = 0
+				activeTimeMillis = dt.currentticks
 				active = True
 			End
 		End
 		If Not active Then Return 0
-		aliveTimeMillis += millis
 		Return millis
 	End
 	
@@ -1216,10 +1216,10 @@ Class Smh_Stage1Boss1 Extends Smh_Boss
 						enemyBullets.FireBulletSpray(
 							secondBullet, Null,
 							x, y, 0,
-							0, 360*(39.0/40.0),
+							0, 360*(19.0/20.0),
 							1, 0,
 							50, 50,
-							40)
+							20)
 						waitTimeMillis = 1000
 						currentPhaseStep = 4
 						
@@ -1228,10 +1228,10 @@ Class Smh_Stage1Boss1 Extends Smh_Boss
 						enemyBullets.FireBulletSpray(
 							thirdBullet, Null,
 							x, y, 0,
-							0, 360*(19.0/20.0),
+							0, 360*(39.0/40.0),
 							1, 0,
 							100, 100,
-							20)
+							40)
 						waitTimeMillis = 1000
 						currentPhaseStep = 5
 						
@@ -1240,10 +1240,10 @@ Class Smh_Stage1Boss1 Extends Smh_Boss
 						enemyBullets.FireBulletSpray(
 							secondBullet, Null,
 							x, y, 0,
-							0, 360*(39.0/40.0),
+							0, 360*(19.0/20.0),
 							1, 0,
 							50, 50,
-							40)
+							20)
 						
 						bulletFireCount += 1
 						If bulletFireCount = 1'3 Then
@@ -1277,12 +1277,12 @@ Class Smh_Stage1Boss1 Extends Smh_Boss
 						enemyBullets.FireBulletLinear(
 							fourthBullet, Null,
 							x, y,
-							5*(bulletFireCount-1), 75, 200,
+							5*(bulletFireCount-1), 40, 200,
 							1, 3)
 						enemyBullets.FireBulletLinear(
 							fourthBullet, Null,
 							x, y,
-							180-5*(bulletFireCount-1), 75, 200,
+							180-5*(bulletFireCount-1), 40, 200,
 							1, 3)
 						bulletFireCount += 1
 						If bulletFireCount = 11 Then bulletFireCount = 0
@@ -1308,14 +1308,15 @@ End
 
 Class Smh_Stage1Boss1RightAngleBulletLogic Implements Smh_EntityLogicHandler
 	Method Update:Void(entity:Smh_Entity, millis%)
+		If entity.logicVar2 <= 0 Then entity.logicVar2 = entity.polarVelocity
 		If entity.logicVar1 = 0 Then
-			' need to calc the accel so that they all stop at the same time
-			Local timeLeft:Float = (2000 - entity.aliveTimeMillis)/1000.0
-			Local velocity:Float = entity.polarVelocity
-			Local accel:Float = -10'velocity / timeLeft
-			entity.polarVelocity += accel * Float(millis) / 1000.0
+			Local targetTime# = 2500
+			Local currentTime# = dt.currentticks - entity.activeTimeMillis
+			Local ratio:Float = Min(1.0, currentTime / targetTime)
+			ratio *= ratio
+			entity.polarVelocity = entity.logicVar2 * (1-ratio)
 			' assume they've all stopped at a certain life value
-			If entity.aliveTimeMillis >= 2000 Then
+			If currentTime >= targetTime Then
 				entity.polarVelocity = 40
 				If entity.polarAngle > 90 Then
 					entity.polarAngle -= 90
