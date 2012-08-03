@@ -7,7 +7,7 @@ header:
 [b]About     :[/b]
 Touhou Clone
 [/quote]
-#end
+#End
 
 
 Public
@@ -21,8 +21,11 @@ Global smhGameScreen:Smh_GameScreen
 Global background:Smh_EntityGroup
 Global enemyBullets:Smh_BulletPool
 Global playerBullets:Smh_BulletPool
-Global boss:Smh_Boss
+Global enemies:Smh_EnemyPool
 Global player:Smh_Player
+Global boss:Smh_Boss
+
+Global currentStage:Smh_Stage
 
 Public
 #rem
@@ -40,7 +43,7 @@ Class Game9Screen Extends Screen
 		GameList[gameid - 1].thumbnail = "game" + gameid + "_thumb"
 		GameList[gameid - 1].author = "Shane Woolcock"
 		GameList[gameid - 1].authorurl = "????"
-		GameList[gameid - 1].info = "????"
+		GameList[gameid - 1].info = "Touhou Clone"
 	End
 	
 	#rem
@@ -48,7 +51,9 @@ Class Game9Screen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		game.images.Load("game9/game9_bullet1.png")
+		game.images.LoadAtlas("game9/game9_bullets1.txt", ImageBank.LIBGDX_ATLAS, True)
+		Local tmpImage:GameImage = Null
+		'game.images.LoadAnim("Ship1.png", 64, 64, 7, tmpImage)
 		smhGameScreen = New Smh_GameScreen
 	End
 	
@@ -64,7 +69,7 @@ Class Game9Screen Extends Screen
 	#rem
 	summary:Update Title Screen
 	Will update all screen objects, handles mouse, keys
-	and all use input.
+	And all use input.
 	#End
 	Method Update:Void()
 		If KeyHit(KEY_ESCAPE) Then
@@ -79,10 +84,11 @@ End
 Class Smh_GameScreen Extends Screen
 	Method Start:Void()
 		background = New Smh_EntityGroup
-		background.boundsLeft = 0
-		background.boundsTop = 0
-		background.boundsRight = SCREEN_WIDTH
-		background.boundsBottom = SCREEN_HEIGHT
+		background.scissor = True
+		background.boundsLeft = 20
+		background.boundsTop = 20
+		background.boundsRight = background.boundsLeft + 400
+		background.boundsBottom = SCREEN_HEIGHT - 20
 		
 		enemyBullets = New Smh_BulletPool
 		enemyBullets.parent = background
@@ -95,22 +101,20 @@ Class Smh_GameScreen Extends Screen
 		player.x = background.boundsLeft + (background.boundsRight - background.boundsLeft) * 0.5
 		player.y = background.boundsTop + (background.boundsBottom - background.boundsTop) * 0.8
 		
-		boss = New Smh_Stage1Boss1
-		boss.parent = background
-		boss.x = player.x
-		boss.y = background.boundsBottom - player.y
-		boss.boundsLeft = background.boundsLeft
-		boss.boundsRight = background.boundsRight
-		boss.boundsTop = background.boundsTop
-		boss.boundsBottom = background.boundsTop + (background.boundsBottom - background.boundsTop) * 0.4
-		boss.boundsInset = 20
-		boss.useParentBounds = False
+		enemies = New Smh_EnemyPool
+		enemies.parent = background
 		
-		'background.children.Add(enemies)
-		background.children.Add(boss)
-		background.children.Add(enemyBullets)
-		background.children.Add(playerBullets)
-		background.children.Add(player)
+		currentStage = New Smh_Stage1
+	End
+	
+	Method Kill:Void()
+		background = Null
+		enemyBullets = Null
+		playerBullets = Null
+		player = Null
+		enemies = Null
+		boss = Null
+		currentStage = Null
 	End
 	
 	Method Update:Void()
@@ -133,7 +137,7 @@ Class Smh_GameScreen Extends Screen
 				Local firstAngle:Float = direction - intervalAngle
 				Local speed:Float = 100
 				Local intervalSpeed:Float = 10
-				Local delay:Float = 20
+				Local delay:Int = 20
 				For Local i:Int = 3 To 8
 					enemyBullets.FireBulletSpray(
 						defaultBullet, Null,
@@ -148,7 +152,14 @@ Class Smh_GameScreen Extends Screen
 		End
 		#End
 		' update everything
+		currentStage.Update(dt.frametime)
+		
 		background.DoUpdate(dt.frametime)
+		enemies.DoUpdate(dt.frametime)
+		If boss Then boss.DoUpdate(dt.frametime)
+		enemyBullets.DoUpdate(dt.frametime)
+		playerBullets.DoUpdate(dt.frametime)
+		player.DoUpdate(dt.frametime)
 		
 		ResolveCollisions()
 	End
@@ -156,11 +167,19 @@ Class Smh_GameScreen Extends Screen
 	Method Render:Void()
 		Cls
 		background.DoRender()
+		enemies.DoRender()
+		If boss Then boss.DoRender()
+		enemyBullets.DoRender()
+		playerBullets.DoRender()
+		player.DoRender()
 		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
 		DrawText("Player Bullet Count: " + playerBullets.aliveCount, 0, 30)
-		DrawText("Boss Health: " + boss.currentHP, 0, 45)
-		DrawText("Boss Phase: " + boss.currentPhase, 0, 60)
-		DrawText("Time Remaining: " + Max(0,Int(Ceil(Float(boss.timeRemainingMillis) / 1000.0))), 0, 75)
+		If boss Then
+			DrawText("Boss Health: " + boss.currentHP, 0, 45)
+			DrawText("Boss Phase: " + boss.currentPhase, 0, 60)
+			DrawText("Time Remaining: " + Max(0,Int(Ceil(Float(boss.timeRemainingMillis) / 1000.0))), 0, 75)
+		End
+		DrawRectOutline(background.boundsLeft, background.boundsTop, background.boundsRight-background.boundsLeft, background.boundsBottom-background.boundsTop)
 	End
 	
 	Method ResolveCollisions:Void()
@@ -204,6 +223,13 @@ Class Smh_Entity
 	Field alive:Bool = False ' used for pooling
 	Field active:Bool = True
 	Field activeDelayMillis:Int = 0
+	Field logicHandler:Smh_EntityLogicHandler = Null
+	Field aliveTimeMillis:Int = 0
+	
+	' custom fields for the logic handler
+	Field logicVar1:Int
+	Field logicVar2:Int
+	Field logicVar3:Int
 	
 	' position/velocities (velocity in units per second)
 	Field x#, y# ' position
@@ -228,8 +254,11 @@ Class Smh_Entity
 	
 	' visual
 	Field image:GameImage ' for a simple single image
-	'Field animations:ArrayList<AnimStrip> ' TODO: animations
-	'Field currentAnimIndex:Int
+	Field anim:Smh_AnimStrip
+	Field animFrame:Int
+	Field animDelayMillis:Int
+	Field animDirection:Int
+	Field animForcedDirection:Int
 	Field rotation# = 0
 	Field rotateWithHeading? = True
 	Field scaleX# = 1
@@ -247,6 +276,7 @@ Class Smh_Entity
 	Field visibleWhileInactive? = False
 	Field fadeInTimeMillis% = 0
 	Field blendMode# = AlphaBlend
+	Field scissor? = False
 	
 	Method CalcBoundsLeft:Float()
 		Local current:Smh_Entity = Self
@@ -338,7 +368,7 @@ Class Smh_Entity
 		red = rgbArray[0]; green = rgbArray[1]; blue = rgbArray[2]
 	End
 	
-	Method PreUpdate:Float(millis#)
+	Method PreUpdate:Float(millis%)
 		If Not active And activeDelayMillis > 0 Then
 			activeDelayMillis -= millis
 			If activeDelayMillis <= 0 Then
@@ -348,10 +378,11 @@ Class Smh_Entity
 			End
 		End
 		If Not active Then Return 0
+		aliveTimeMillis += millis
 		Return millis
 	End
 	
-	Method PostUpdate:Void(millis#)
+	Method PostUpdate:Void(millis%)
 		' update position based on interp or velocity
 		If interping Then
 			interpRemainingMillis -= millis
@@ -399,7 +430,7 @@ Class Smh_Entity
 	End
 	
 	' This should be called in OnUpdate() or by a parent entity
-	Method DoUpdate:Void(millis#)
+	Method DoUpdate:Void(millis%)
 		millis = PreUpdate(millis)
 		If millis > 0 Then
 			Update(millis)
@@ -408,7 +439,8 @@ Class Smh_Entity
 	End
 	
 	' Entities should implement this method
-	Method Update:Void(millis#)
+	Method Update:Void(millis%)
+		If logicHandler Then logicHandler.Update(Self, millis)
 	End
 	
 	Method PreRender:Bool()
@@ -420,10 +452,12 @@ Class Smh_Entity
 		Translate x, y
 		Scale scaleX, scaleY
 		Rotate rot
+		'If scissor Then SetScissor(boundsLeft, boundsTop, boundsRight-boundsLeft, boundsBottom-boundsTop)
 		Return True
 	End
 	
 	Method PostRender:Void()
+		'If scissor Then SetScissor(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 		PopMatrix
 	End
 	
@@ -437,7 +471,7 @@ Class Smh_Entity
 	
 	' Entities should override this method if they want anything special
 	Method Render:Void()
-		If image Then
+		If image Or anim Then
 			Local oldalpha:Float = GetAlpha()
 			Local oldblend:Int = GetBlend()
 			SetBlend(blendMode)
@@ -449,7 +483,11 @@ Class Smh_Entity
 				SetAlpha(1)
 				SetColor(red*alpha, green*alpha, blue*alpha)
 			End
-			DrawImage(image.image, 0, 0)
+			If image Then
+				DrawImage(image.image, 0, 0)
+			ElseIf anim Then
+				anim.Render(Self, 0, 0)
+			End
 			SetBlend(oldblend)
 			If blendMode = AlphaBlend Then
 				SetAlpha(oldalpha)
@@ -474,6 +512,10 @@ Class Smh_Entity
 		'active = source.active
 		'activeDelayMillis = source.activeDelayMillis
 		'alive = source.alive
+		logicHandler = source.logicHandler
+		logicVar1 = source.logicVar1
+		logicVar2 = source.logicVar2
+		logicVar3 = source.logicVar3
 		x = source.x
 		y = source.y
 		dx = source.dx
@@ -513,14 +555,83 @@ Class Smh_Entity
 		visible = source.visible
 		visibleWhileInactive = source.visibleWhileInactive
 		fadeInTimeMillis = source.fadeInTimeMillis
+		scissor = source.scissor
+		anim = source.anim
+		animFrame = source.animFrame
+		animDelayMillis = source.animDelayMillis
+		animDirection = source.animDirection
+		animForcedDirection = source.animForcedDirection
 		Return Self
+	End
+End
+
+' Implement this interface if you want to provide logic shared amongst entities without having to extend them.
+' This is useful for applying different functionality to pooled objects (like bullets).
+Interface Smh_EntityLogicHandler
+	Method Update:Void(entity:Smh_Entity, millis%)
+End
+
+Class Smh_AnimStrip
+	Field image:GameImage
+	Field frameCount:Int
+	Field frameDelays:Int[]
+	Field frameOffsets:Int[]
+	Field frameDirections:Int[]
+	
+	Method New(name:String, frameCount:Int)
+		Self.image = game.images.Find(name)
+		Self.frameCount = frameCount
+		frameDelays = New Int[frameCount]
+		frameOffsets = New Int[frameCount]
+		frameDirections = New Int[frameCount]
+		For Local i:Int = 0 Until frameCount
+			frameOffsets[i] = 1
+			frameDirections[i] = 0
+		Next
+	End
+	
+	Method Update:Void(entity:Smh_Entity, millis%)
+		' die if paused and not forced
+		If entity.animDirection = 0 And entity.animForcedDirection = 0 Then Return
+		' loop while we have millis
+		While millis > 0
+			' update the delay
+			entity.animDelay -= millis
+			If entity.animDelay >= 0 Then
+				millis = 0
+			Else
+				millis = -entity.animDelay
+			End
+			
+			' if we should move to the next frame
+			If entity.animDelay <= 0 Then
+				' if we're forcing a direction, use that
+				If entity.animForcedDirection <> 0 Then
+					entity.animFrame += entity.animForcedDirection
+				Else
+					entity.animFrame += frameOffsets[entity.animFrame]*entity.animDirection
+				End
+				' clip it
+				If entity.animFrame < 0 Then entity.animFrame = 0
+				If entity.animFrame >= frameCount Then entity.animFrame = frameCount-1
+				' update the direction if not forced
+				If entity.animForcedDirection = 0 And frameDirections[entity.animFrame] <> 0 Then
+					entity.animDirection = frameDirections[entity.animFrame]
+				End
+				entity.animDelay = frameDelays[entity.animFrame]
+			End
+		End
+	End
+	
+	Method Render:Void(entity:Smh_Entity, x#, y#)
+		DrawImage(image.image, x, y, entity.animFrame)
 	End
 End
 
 Class Smh_EntityGroup Extends Smh_Entity
 	Field children:ArrayList<Smh_Entity> = New ArrayList<Smh_Entity>(100)
 	
-	Method Update:Void(millis#)
+	Method Update:Void(millis%)
 		For Local i:Int = 0 Until children.Size
 			Local child:Smh_Entity = children.Get(i)
 			If child.active Then child.DoUpdate(millis)
@@ -608,7 +719,7 @@ Class Smh_Pool<T> Extends Smh_Entity
 		Return Null
 	End
 	
-	Method Update:Void(millis#)
+	Method Update:Void(millis%)
 		For Local i:Int = 0 Until aliveCount
 			If children[i].alive Then children[i].DoUpdate(millis)
 		Next
@@ -622,15 +733,28 @@ Class Smh_Pool<T> Extends Smh_Entity
 End
 
 Class Smh_Stage
-End
-
-Class Smh_StageSection
-End
-
-Class Smh_TrashStageSection
-End
-
-Class Smh_BossStageSection
+	Field currentSection:Int = 0
+	Field currentSectionStep:Int = 0
+	Field waitTimeMillis:Int = 0
+	
+	Method Update:Void(millis%)
+		' if waiting, reduce wait time
+		If waitTimeMillis > 0 Then
+			waitTimeMillis -= millis
+			millis = 0
+			If waitTimeMillis < 0 Then
+				millis = -waitTimeMillis
+				waitTimeMillis = 0
+			End
+		End
+		
+		' if we have no millis left, die
+		If millis = 0 Then Return
+		
+		DoLogic(millis)
+	End
+	
+	Method DoLogic:Void(millis%) Abstract
 End
 
 Class Smh_Unit Extends Smh_Entity
@@ -638,7 +762,7 @@ Class Smh_Unit Extends Smh_Entity
 	Field maxHP:Int
 	Field died:Bool
 	
-	Method Update:Void(millis#)
+	Method Update:Void(millis%)
 		Super.Update(millis)
 		If currentHP <= 0 And Not died Then
 			died = True
@@ -673,14 +797,14 @@ Class Smh_Player Extends Smh_Unit
 		
 		playerShot = New Smh_Bullet
 		playerShot.image = game.images.Find("game9_bullet1")
-		playerShot.rotation = 90
-		playerShot.scaleX = 1
-		playerShot.scaleY = 1
+		playerShot.rotation = 45
+		playerShot.scaleX = 4
+		playerShot.scaleY = 4
 		playerShot.radius = 10
-		playerShot.blendMode = AlphaBlend
+		playerShot.blendMode = AdditiveBlend
 	End
 	
-	Method Update:Void(millis#)
+	Method Update:Void(millis%)
 		Super.Update(millis)
 		
 		' movement
@@ -719,7 +843,7 @@ Class Smh_Player Extends Smh_Unit
 End
 
 Class Smh_Enemy Extends Smh_Unit
-	Method Update:Void(millis#)
+	Method Update:Void(millis%)
 		Super.Update(millis)
 	End
 	
@@ -735,8 +859,29 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 	Field timeRemainingMillis:Int
 	Field bossIsLeaving:Bool = False
 	Field waitTimeMillis:Int
+	Field defeated:Bool = False
 	
-	Method Update:Void(millis#)
+	Method New()
+		active = True
+		boundsRestrict = False
+		boundsPurge = False
+		
+		boundsLeft = background.boundsLeft
+		boundsRight = background.boundsRight
+		boundsTop = background.boundsTop
+		boundsBottom = background.boundsTop + (background.boundsBottom - background.boundsTop) * 0.4
+		boundsInset = 20
+		useParentBounds = False
+	End
+	
+	Method Reset:Void()
+		timeRemainingMillis = 30000
+		maxHP = 100
+		currentHP = 100
+		waitTimeMillis = 0
+	End
+	
+	Method Update:Void(millis%)
 		' call super
 		Super.Update(millis)
 		
@@ -748,14 +893,9 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 				currentPhaseStep = 0
 				' if this was the last phase, we win!
 				If currentPhase > phaseCount Then
-					Print "You won!"
-					' TODO: destroy boss
+					defeated = True
 				Else
-					' TODO: not hardcode these?
-					timeRemainingMillis = 10000
-					maxHP = 100
-					currentHP = 100
-					waitTimeMillis = 0
+					Reset()
 				End
 				Return
 			End
@@ -790,15 +930,11 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 		' if we have no millis left, die
 		If millis = 0 Then Return
 		
-		' time left, do the main boss logic or leave
-		If bossIsLeaving Then
-			' change to previous section
-		Else
-			DoLogic(millis)
-		End
+		' time left, do the main boss logic if we're not leaving
+		If Not bossIsLeaving Then DoLogic(millis)
 	End
 	
-	Method DoLogic:Void(millis#) Abstract
+	Method DoLogic:Void(millis%) Abstract
 	
 	Method Render:Void()
 		Local oldalpha:Float = GetAlpha()
@@ -834,13 +970,14 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 		Return bullet
 	End
 	
-	' fires one or more identical bullets with an optional frame delay between them
-	Method FireBulletLinear:Smh_Bullet(template:Smh_Bullet, parent:Smh_Entity, x:Float, y:Float, polarAngle:Float, polarVelocity:Float, delayMillis:Int=0, bulletCount:Int=1)
+	' fires one or more identical bullets with an optional delay between them
+	Method FireBulletLinear:Smh_Bullet(template:Smh_Bullet, parent:Smh_Entity, x:Float, y:Float, polarAngle:Float, startVelocity:Float, endVelocity:Float, delayMillis:Int=0, bulletCount:Int=1)
 		' if we're firing more than an arbitrary number, purge
 		'If bulletCount > 10 Then Purge()
 		Purge()
 		Local bullet:Smh_Bullet = Null
 		If Not parent Then parent = Self
+		Local velocity:Float = startVelocity
 		For Local i:Int = 1 To bulletCount
 			bullet = GetEntity(template)
 			If Not bullet Then Return Null
@@ -849,7 +986,8 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 			bullet.activeDelayMillis = delayMillis * i
 			bullet.x = x
 			bullet.y = y
-			bullet.SetVelocityPolar(polarAngle, polarVelocity)
+			bullet.SetVelocityPolar(polarAngle, velocity)
+			velocity += (endVelocity-startVelocity)/bulletCount
 		Next
 		Return bullet
 	End
@@ -890,6 +1028,14 @@ Class Smh_EnemyPool Extends Smh_Pool<Smh_Enemy>
 	Method New(capacity:Int=200)
 		Super.New(capacity)
 	End
+	
+	Method AreAllDead:Bool()
+		Purge()
+		For Local i:Int = 0 Until aliveCount
+			If children[i].alive And children[i].currentHP > 0 Then Return False
+		Next
+		Return True
+	End
 End
 
 Class Smh_Bullet Extends Smh_Entity
@@ -907,48 +1053,136 @@ Class Smh_Bullet Extends Smh_Entity
 End
 
 ''''''''''''''''''''''''' BOSSES '''''''''''''''''''''''''
+Class Smh_Stage1 Extends Smh_Stage
+	Field firstBoss:Smh_Boss = New Smh_Stage1Boss1
+	
+	Method DoLogic:Void(millis%)
+		Select currentSection
+			Case 0 ' first trash section
+				Select currentSectionStep
+					Case 0 ' spawn some basic trash
+						' TODO: spawn trash
+						'Print "step 0: spawning trash"
+						currentSectionStep = 1
+						waitTimeMillis = 0'3000
+						
+					Case 1 ' wait until all dead
+						' dead check
+						'Print "step 1: checking enemies are all dead"
+						If enemies.AreAllDead() Then
+							'Print "setting boss"
+							boss = firstBoss
+							currentSectionStep = 2
+						End
+						
+					Case 2 ' wait until boss is dead or timed out
+						'Print "step 2: waiting until boss has died or timed out"
+						If boss Then
+							If boss.defeated Then
+								boss = Null
+								currentSection = 1
+								currentSectionStep = 0
+							Elseif boss.timeRemainingMillis <= 0 Then
+								currentSectionStep = 0
+							End
+						End
+				End
+				
+			Case 1 ' second trash section
+				Select currentSectionStep
+					Case 0 ' spawn some trash
+						currentSectionStep = 1
+						waitTimeMillis = 3000
+						
+					Case 1 ' wait until all dead
+						If enemies.AreAllDead() Then
+							currentSectionStep = 2
+						End
+					
+					Case 2 ' we've won, this time
+						' TODO: win
+				End
+		End
+	End
+End
+
+Class Smh_Stage1Enemy1 Extends Smh_Enemy
+End
+
 Class Smh_Stage1Boss1 Extends Smh_Boss
-	Field firstBullet:Smh_Bullet
+	Field firstBullet:Smh_Bullet = New Smh_Bullet
+	Field secondBullet:Smh_Bullet = New Smh_Bullet
+	Field thirdBullet:Smh_Bullet = New Smh_Bullet
+	Field thirdBulletLogic:Smh_Stage1Boss1HomingBulletLogic = New Smh_Stage1Boss1HomingBulletLogic
+	Field fourthBullet:Smh_Bullet = New Smh_Bullet
+	Field fourthBulletLogic:Smh_Stage1Boss1RightAngleBulletLogic = New Smh_Stage1Boss1RightAngleBulletLogic
+	
+	Field bulletFireCount:Int = 0
 	
 	Method New()
-		active = True
-		boundsRestrict = False
-		boundsPurge = False
+		radius = 20
 		
-		firstBullet = New Smh_Bullet
+		' phase 1
 		firstBullet.image = game.images.Find("game9_bullet1")
-		firstBullet.rotation = 90
-		firstBullet.scaleX = 1
-		firstBullet.scaleY = 1
-		firstBullet.radius = 3
+		firstBullet.rotation = 45
+		firstBullet.scaleX = 1.5
+		firstBullet.scaleY = 1.5
+		firstBullet.radius = 5
 		firstBullet.blendMode = AdditiveBlend
 		firstBullet.visibleWhileInactive = True
 		firstBullet.fadeInTimeMillis = 1000
 		
-		phaseCount = 5
-		radius = 20
+		secondBullet.image = game.images.Find("game9_bullet1")
+		secondBullet.rotation = 45
+		secondBullet.scaleX = 2
+		secondBullet.scaleY = 2
+		secondBullet.radius = 8
+		secondBullet.blendMode = AdditiveBlend
+		secondBullet.visibleWhileInactive = False
+		secondBullet.fadeInTimeMillis = 1000
+		
+		thirdBullet.image = game.images.Find("game9_bullet1")
+		thirdBullet.rotation = 45
+		thirdBullet.scaleX = 1.5
+		thirdBullet.scaleY = 1.5
+		thirdBullet.radius = 5
+		thirdBullet.blendMode = AdditiveBlend
+		thirdBullet.visibleWhileInactive = False
+		thirdBullet.fadeInTimeMillis = 1000
+		thirdBullet.logicHandler = thirdBulletLogic
+		
+		' phase 2
+		fourthBullet.image = game.images.Find("game9_bullet1")
+		fourthBullet.rotation = 45
+		fourthBullet.scaleX = 1.5
+		fourthBullet.scaleY = 1.5
+		fourthBullet.radius = 5
+		fourthBullet.blendMode = AdditiveBlend
+		fourthBullet.visibleWhileInactive = False
+		fourthBullet.fadeInTimeMillis = 0
+		fourthBullet.logicHandler = fourthBulletLogic
+		
+		'anim = New Smh_AnimStrip(images.Find("Ship1"))
+		' FIXME: first frame always skipped
 	End
 	
-	Method DoLogic:Void(millis#)
+	Method DoLogic:Void(millis%)
+		Local boundsWidth:Float = boundsRight-boundsLeft
+		Local boundsHeight:Float = boundsBottom-boundsTop
 		Select currentPhase
 			Case 0 ' first phase
 				Select currentPhaseStep
 					Case 0
-						' just wait
+						' interp to the centre from a random point
+						SetInterpOverTime(Rnd(boundsLeft,boundsRight), -100, boundsLeft+boundsWidth/2, boundsTop+boundsHeight/2, 2000, 1)
 						currentPhaseStep = 1
-						boss.waitTimeMillis = 1000
+						waitTimeMillis = 2000
 						
 					Case 1
-						' random interp and wait
-						boss.SetInterpRandomOverTime(boss.x, boss.y, 50, 100, 2000, 1)
-						boss.waitTimeMillis = 2000
-						currentPhaseStep = 2
-						
-					case 2
 						' fire and wait, then loop to 1
-						Local direction:Float = ATan2(player.y-boss.y,player.x-boss.x)
-						Local srcX:Float = boss.x - Cos(direction)*5
-						Local srcY:Float = boss.y - Sin(direction)*5
+						Local direction:Float = ATan2(player.y-y,player.x-x)
+						Local srcX:Float = x - Cos(direction)*5
+						Local srcY:Float = y - Sin(direction)*5
 						Local intervalAngle:Float = 45.0/8.0
 						Local firstAngle:Float = direction - intervalAngle
 						Local speed:Float = 150
@@ -964,9 +1198,133 @@ Class Smh_Stage1Boss1 Extends Smh_Boss
 								i)
 							firstAngle -= intervalAngle/2
 						Next
-						boss.waitTimeMillis = 3000
-						currentPhaseStep = 1
+						waitTimeMillis = 3000
+						bulletFireCount += 1
+						If bulletFireCount = 1'3 Then
+							bulletFireCount = 0
+							currentPhaseStep = 2
+						End
+						
+					Case 2
+						' interp to top right
+						SetInterpOverTime(x, y, boundsLeft+boundsWidth*0.75, boundsHeight/2, 3000, 1)
+						waitTimeMillis = 1000
+						currentPhaseStep = 3
+						
+					Case 3
+						' fire second bullet type (while moving)
+						enemyBullets.FireBulletSpray(
+							secondBullet, Null,
+							x, y, 0,
+							0, 360*(39.0/40.0),
+							1, 0,
+							50, 50,
+							40)
+						waitTimeMillis = 1000
+						currentPhaseStep = 4
+						
+					Case 4
+						' fire third bullet type (while moving)
+						enemyBullets.FireBulletSpray(
+							thirdBullet, Null,
+							x, y, 0,
+							0, 360*(19.0/20.0),
+							1, 0,
+							100, 100,
+							20)
+						waitTimeMillis = 1000
+						currentPhaseStep = 5
+						
+					Case 5
+						' fire second bullet type (while moving)
+						enemyBullets.FireBulletSpray(
+							secondBullet, Null,
+							x, y, 0,
+							0, 360*(39.0/40.0),
+							1, 0,
+							50, 50,
+							40)
+						
+						bulletFireCount += 1
+						If bulletFireCount = 1'3 Then
+							Reset() ' TODO: convert bullets to powerups
+							bulletFireCount = 0
+							currentPhase = 1
+							currentPhaseStep = 0
+						Else
+							currentPhaseStep = 6
+						End If
+						
+						waitTimeMillis = 2000
+						
+					Case 6
+						' random interp, loop to 3
+						SetInterpRandomOverTime(x, y, 80, 110, 2000, 1)
+						currentPhaseStep = 3
 				End
+				
+			Case 1 ' second phase
+				Select currentPhaseStep
+					Case 0
+						' interp to the middle
+						SetInterpOverTime(x, y, boundsLeft+(boundsRight-boundsLeft)/2, boundsTop+(boundsBottom-boundsTop)/2, 1000, 1)
+						waitTimeMillis = 2000
+						currentPhaseStep = 1
+						bulletFireCount = 0
+						
+					Case 1
+						' fire bullet 4
+						enemyBullets.FireBulletLinear(
+							fourthBullet, Null,
+							x, y,
+							5*(bulletFireCount-1), 75, 200,
+							1, 3)
+						enemyBullets.FireBulletLinear(
+							fourthBullet, Null,
+							x, y,
+							180-5*(bulletFireCount-1), 75, 200,
+							1, 3)
+						bulletFireCount += 1
+						If bulletFireCount = 11 Then bulletFireCount = 0
+						waitTimeMillis = 1000
+				End
+		End
+	End
+End
+
+Class Smh_Stage1Boss1HomingBulletLogic Implements Smh_EntityLogicHandler
+	Method Update:Void(entity:Smh_Entity, millis%)
+		If entity.logicVar1 = 0 Then
+			entity.polarVelocity -= 55 * Float(millis) / 1000.0
+			If entity.polarVelocity < 0 Then
+				entity.polarVelocity = 100
+				entity.polarAngle = ATan2(player.y-entity.y,player.x-entity.x)
+				entity.logicVar1 = 1
+			End
+			entity.recalcPolar = True
+		End
+	End
+End
+
+Class Smh_Stage1Boss1RightAngleBulletLogic Implements Smh_EntityLogicHandler
+	Method Update:Void(entity:Smh_Entity, millis%)
+		If entity.logicVar1 = 0 Then
+			' need to calc the accel so that they all stop at the same time
+			Local timeLeft:Float = (2000 - entity.aliveTimeMillis)/1000.0
+			Local velocity:Float = entity.polarVelocity
+			Local accel:Float = -10'velocity / timeLeft
+			entity.polarVelocity += accel * Float(millis) / 1000.0
+			' assume they've all stopped at a certain life value
+			If entity.aliveTimeMillis >= 2000 Then
+				entity.polarVelocity = 40
+				If entity.polarAngle > 90 Then
+					entity.polarAngle -= 90
+				Else
+					entity.polarAngle += 90
+				End
+				entity.logicVar1 = 1
+			End
+			entity.recalcPolar = True
 		End
 	End
 End
@@ -976,4 +1334,4 @@ footer:
 [quote]
 [a Http://www.monkeycoder.co.nz]Monkey Coder[/a] 
 [/quote]
-#end
+#End
