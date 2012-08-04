@@ -20,6 +20,10 @@ Class GameOverScreen Extends Screen
 		name = "GameOverScreen"
 	End
 	
+	Method Start:Void()
+		
+	End
+	
 	Method Render:Void()
 		Cls
 		TitleFont.DrawText("GAME OVER!", 320, 240, 2)
@@ -27,7 +31,7 @@ Class GameOverScreen Extends Screen
 	
 	Method Update:Void()
 		If KeyHit(KEY_SPACE) or KeyHit(KEY_ESCAPE) Or MouseHit() Then
-			FadeToScreen(gameScreen)
+			FadeToScreen(Game8Scr)
 		End
 	End
 End
@@ -57,6 +61,7 @@ Class Game8Screen Extends Screen
 	#End
 	Method Start:Void()
 		gameScreen = New GameScreen
+		gameOverScreen = New GameOverScreen
 	End
 	
 	#rem
@@ -582,7 +587,7 @@ Class GameScreen Extends Screen
 		
 		' game over
 		if health < 0 Then
-			FadeToScreen(Game8Scr)
+			FadeToScreen(gameOverScreen, defaultFadeTime, True, True, False)
 		End
 	End
 	
@@ -661,7 +666,7 @@ Class GameScreen Extends Screen
 		End
 	
 		If KeyHit(KEY_ESCAPE)
-			FadeToScreen(Game8Scr)
+			FadeToScreen(Game8Scr, defaultFadeTime, True, True, False)
 		End
 	End
 	
