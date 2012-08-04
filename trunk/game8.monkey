@@ -12,7 +12,25 @@ what it is..
 Import main
 
 Global gameScreen:GameScreen
+Global gameOverScreen:GameOverScreen
 Global debugOn:Bool = True
+
+Class GameOverScreen Extends Screen
+	Method New()
+		name = "GameOverScreen"
+	End
+	
+	Method Render:Void()
+		Cls
+		TitleFont.DrawText("GAME OVER!", 320, 240, 2)
+	End
+	
+	Method Update:Void()
+		If KeyHit(KEY_SPACE) or KeyHit(KEY_ESCAPE) Or MouseHit() Then
+			FadeToScreen(gameScreen)
+		End
+	End
+End
 
 #rem
 summary:Title Screen Class.
@@ -65,7 +83,23 @@ Class Game8Screen Extends Screen
 	End
 End
 
-Class Enemy Extends Sprite
+Class TankEnemy Extends Enemy
+	Method New(img:GameImage, x:Float, y:Float)
+		Super.New(img, x, y)
+	End
+	
+	Method SetStats:Void()
+		Self.fireRate = 20
+		Self.damage = 10
+		Self.range = 70
+		Self.health = 100
+		Self.speed = 1
+		Self.alive = True
+		Self.score = 50
+	End
+End
+
+Class Enemy Extends Sprite 'Abstract
 	Global list:ArrayList<Enemy> = New ArrayList<Enemy>
 	Field currentPath:Int = 0
 	Field damage:Float
@@ -74,21 +108,19 @@ Class Enemy Extends Sprite
 	Field health:Float
 	Field alive:Bool
 	Field route:Int[]
+	Field score:Int
 	
 	Method New(img:GameImage, x:Float, y:Float)
 		Super.New(img, x, y)
-		Self.fireRate = 20
-		Self.damage = 1
-		Self.range = 70
-		Self.health = 100
-		Self.speed = 1
-		Self.alive = True
+		SetStats()
 		SetPath()
 		list.Add(Self)
 	End
 	
+	Method SetStats:Void() Abstract
+	
 	Method Kill:Void()
-		If Not list Return
+		If Not list Return	
 		list.Remove(Self)
 	End
 	
@@ -97,7 +129,7 @@ Class Enemy Extends Sprite
 		Local e:Enemy
 		For Local i:Int = 0 Until list.Size
 			e = list.Get(i)
-			e.Draw()
+			e.Draw(game.scrollX, game.scrollY)
 		Next
 	End
 		
@@ -148,12 +180,15 @@ Class Enemy Extends Sprite
 			If PointInSpot(x, y, route[currentPath] * gameScreen.TILE_SIZE, route[currentPath + 1] * gameScreen.TILE_SIZE, 3)
 				currentPath -= 2
 				If currentPath < 0
+					gameScreen.health -= damage
 					alive = False
 					Kill()
 				End
 			End
 		End
 		If Self.health <= 0
+			gameScreen.cash += Self.score
+			alive = False
 			New Explosion(gameScreen.explosionImage, x, y, 8, 100)
 			Kill()
 		End
@@ -170,8 +205,27 @@ Class Enemy Extends Sprite
 	End
 End
 
+Class TurretTower Extends Tower
+	Global cost:Int = 250
+	
+	Method New(img:GameImage, x:Float, y:Float)
+		Super.New(img, x, y)
+	End
+	
+	Method SetStats:Void()
+		Self.fireRate = 30
+		Self.damage = 25
+		Self.damageBonus = 2
+		Self.range = 100
+		Self.health = 100
+		Self.firePosX = x + Self.image.w2
+		Self.firePosY = y + Self.image.h2
+		Self.selected = False		
+	End
+End
+
 ' Towers are NOT midhandled!
-Class Tower Extends Sprite
+Class Tower Extends Sprite Abstract
 	Global list:ArrayList<Tower> = New ArrayList<Tower>
 	Field damage:Float
 	Field damageBonus:Float
@@ -182,7 +236,6 @@ Class Tower Extends Sprite
 	Field target:Enemy
 	Field targetDist:Float
 	Field firePosX:Int, firePosY:Int
-	
 	Field drawLine:Bool
 	Field drawLineTime:Float
 	
@@ -194,16 +247,11 @@ Class Tower Extends Sprite
 	
 	Method New(img:GameImage, x:Float, y:Float)
 		Super.New(img, x, y)
-		Self.fireRate = 20
-		Self.damage = 1
-		Self.damageBonus = 2
-		Self.range = 100
-		Self.health = 100
-		Self.firePosX = x + img.w2
-		Self.firePosY = y + img.h2
-		Self.selected = False
+		SetStats()
 		list.Add(Self)
 	End
+	
+	Method SetStats:Void() Abstract
 	
 	Method Kill:Void()
 		If Not list Return
@@ -222,15 +270,15 @@ Class Tower Extends Sprite
 	Method Draw:Void()
 		If selected
 			SetAlpha 0.2
-			DrawCircle(firePosX, firePosY, range)
+			DrawCircle(firePosX - game.scrollX, firePosY - game.scrollY, range)
 			SetAlpha 1
 		End
-		Super.Draw()
+		Super.Draw(game.scrollX, game.scrollY)
 
 		If drawLine
-			DrawLine dx1, dy1, dx2, dy2
+			DrawLine dx1 - game.scrollX, dy1 - game.scrollY, dx2 - game.scrollX, dy2 - game.scrollY
 		End
-		gunImage.Draw(firePosX, firePosY, gunAngle, 1, 1, gunFrame)
+		gunImage.Draw(firePosX - game.scrollX, firePosY - game.scrollY, gunAngle, 1, 1, gunFrame)
 	End
 	
 	Function UpdateAll:Void()
@@ -368,7 +416,7 @@ Class Explosion Extends Sprite
 		Local e:Explosion
 		For Local i:Int = 0 Until list.Size
 			e = list.Get(i)
-			e.Draw()
+			e.Draw(game.scrollX, game.scrollY)
 		Next
 	End
 	
@@ -402,6 +450,8 @@ Class GameScreen Extends Screen
 	Field explosionBigImage:GameImage
 	Field explosionSmallImage:GameImage
 	Field gui:Gui
+	Field cash:Int
+	Field health:Int
 	
 	Method New()
 		name = "Tower Defense GameScreen"
@@ -444,23 +494,27 @@ Class GameScreen Extends Screen
 	End
 	
 	Method Start:Void()
+		game.scrollX = TILE_SIZE
+		game.scrollY = TILE_SIZE
 		delay = maxDelay
 		LoadImages()
 		LoadMap()
+		cash = 1000
+		health = 100
 		gui = New Gui
 	End
 	
 	Method Render:Void()
 		Cls
-		tilemap.RenderMap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+		tilemap.RenderMap(game.scrollX, game.scrollY, SCREEN_WIDTH, SCREEN_HEIGHT)
 		
 		If gridOn
 			'Draw grid lines
 			SetColor 255, 255, 255
 			SetAlpha 0.3
 			For Local fx:Int = 0 To tilemap.width
-				DrawLine fx * TILE_SIZE, 0, fx * TILE_SIZE, tilemap.width * TILE_SIZE
-				DrawLine 0, fx * TILE_SIZE, tilemap.width * TILE_SIZE, fx * TILE_SIZE
+				DrawLine fx * TILE_SIZE - game.scrollX, 0 - game.scrollY, fx * TILE_SIZE - game.scrollX, tilemap.width * TILE_SIZE - game.scrollY
+				DrawLine 0 - game.scrollX, fx * TILE_SIZE - game.scrollY, tilemap.width * TILE_SIZE - game.scrollX, fx * TILE_SIZE - game.scrollY
 			Next
 			SetAlpha 1
 		End
@@ -473,7 +527,7 @@ Class GameScreen Extends Screen
 			For Local fx:Int = 0 Until tilemap.width
 				For Local fy:Int = 0 Until tilemap.height
 					If layer.mapData.Get(fx, fy) > 0
-						DrawRect fx * TILE_SIZE, fy * TILE_SIZE, TILE_SIZE, TILE_SIZE
+						DrawRect fx * TILE_SIZE - game.scrollX, fy * TILE_SIZE - game.scrollY, TILE_SIZE, TILE_SIZE
 					End
 				Next
 			Next
@@ -485,7 +539,7 @@ Class GameScreen Extends Screen
 		Enemy.DrawAll()
 		Explosion.DrawAll()
 		
-		if gui.mode = gui.TURRENT then turretBaseImage.Draw( (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
+		if gui.mode = gui.TURRET then turretBaseImage.Draw( (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
 		
 		gui.Draw()
 		
@@ -519,12 +573,17 @@ Class GameScreen Extends Screen
 			delay = maxDelay
 			Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
 			Local endPos:TileMapObject = tilemap.FindObjectByName("End")
-			New Enemy(enemyImage, startPos.x, startPos.y)
+			New TankEnemy(enemyImage, startPos.x, startPos.y)
 		End
 		Tower.UpdateAll()
 		Enemy.UpdateAll()
 		Explosion.UpdateAll()
 		Controls()
+		
+		' game over
+		if health < 0 Then
+			FadeToScreen(Game8Scr)
+		End
 	End
 	
 	Method Controls:Void()
@@ -533,14 +592,28 @@ Class GameScreen Extends Screen
 			If KeyHit(KEY_SPACE)
 				Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
 				Local endPos:TileMapObject = tilemap.FindObjectByName("End")
-				New Enemy(enemyImage, startPos.x, startPos.y)
+				New TankEnemy(enemyImage, startPos.x, startPos.y)
 			End
 			If KeyHit(KEY_F2)
 				buildableLayerOn = Not buildableLayerOn
 			End
 			If KeyHit(KEY_F1)
 				gridOn = Not gridOn
-			End			
+			End
+			
+			If KeyDown(KEY_LEFT)
+				game.scrollX -= 4 * dt.delta
+			End
+			If KeyDown(KEY_RIGHT)
+				game.scrollX += 4 * dt.delta
+			End
+			If KeyDown(KEY_UP)
+				game.scrollY -= 4 * dt.delta
+			End
+			If KeyDown(KEY_DOWN)
+				game.scrollY += 4 * dt.delta
+			End
+
 		End
 		
 		If KeyHit(KEY_DELETE)
@@ -561,23 +634,27 @@ Class GameScreen Extends Screen
 		If game.mouseHit
 			Tower.UnselectTowers()
 			selectedTower = Null
-			
-			If gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 And
-			gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
-				if gui.mode = gui.TURRENT
-					Local t:Tower = New Tower(turretBaseImage, (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
-					t.gunImage = turretGunImage
-					t.firePosY -= 7
-				
-					gameScreen.tilemap.SetTile(game.mouseX, game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
-					gameScreen.tilemap.SetTile( (game.mouseX + TILE_SIZE), game.mouseY, 1, gameScreen.tilemap.BUILD_LAYER)
-					selectedTower = Tower.SelectTower(game.mouseX, game.mouseY)
-					gui.mode = gui.NONE
-				End
-			Else
-				if gui.mode = gui.NONE
-					If gameScreen.tilemap.CollisionTile(game.mouseX, game.mouseY, gameScreen.tilemap.BUILD_LAYER) = 1
-						selectedTower = Tower.SelectTower(game.mouseX, game.mouseY)
+			if game.mouseY < gui.y Then
+				If gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE + game.scrollX, game.mouseY + game.scrollY, gameScreen.tilemap.BUILD_LAYER) = 0 And
+				gameScreen.tilemap.CollisionTile(game.mouseX + game.scrollX, game.mouseY + game.scrollY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
+					if gui.mode = gui.TURRET
+						Local t:TurretTower = New TurretTower(turretBaseImage, ( (game.mouseX) / TILE_SIZE) * TILE_SIZE + game.scrollX, ( (game.mouseY) / TILE_SIZE) * TILE_SIZE + game.scrollY)
+						cash -= TurretTower.cost
+						t.gunImage = turretGunImage
+						t.firePosY -= 7
+						
+						gameScreen.tilemap.SetTile(game.mouseX + game.scrollX, game.mouseY + game.scrollY, 1, gameScreen.tilemap.BUILD_LAYER)
+						gameScreen.tilemap.SetTile( (game.mouseX + game.scrollX + TILE_SIZE), game.mouseY + game.scrollY, 1, gameScreen.tilemap.BUILD_LAYER)
+						
+						selectedTower = Tower.SelectTower(game.mouseX + game.scrollX, game.mouseY + game.scrollY)
+
+						gui.Reset()
+					End
+				Else
+					if gui.mode = gui.NONE
+						If gameScreen.tilemap.CollisionTile(game.mouseX + game.scrollX, game.mouseY + game.scrollY, gameScreen.tilemap.BUILD_LAYER) = 1
+							selectedTower = Tower.SelectTower(game.mouseX + game.scrollX, game.mouseY + game.scrollY)
+						End
 					End
 				End
 			End
@@ -611,7 +688,7 @@ Class Gui
 	Const SCROLL_DOWN:Int = 3
 	Const HIDE:Int = 0
 	Const NONE:Int = 0
-	Const TURRENT:Int = 1
+	Const TURRET:Int = 1
 	
 	Field showGUI:Int
 	Field x:Float
@@ -623,6 +700,8 @@ Class Gui
 	Field backgroundImage:GameImage
 	Field speedY:Int = 4
 	Field lip:Int = 20
+	Field enableScroll:Bool
+	Field menuOffsetY:Int = 7
 	
 	Method New()
 		showGUI = SCROLL_UP
@@ -630,42 +709,69 @@ Class Gui
 		x = 0
 		y = SCREEN_HEIGHT - lip
 		override = 0
-		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 0, 10, True)
-		menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png")
-		menu.SetY(y + 30)
+		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 0, 20, True, HORIZONTAL)
+		local b:SimpleButton = menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png")
+		b.SetSelectedImage("game8/turretButtonSelected.png")
+		menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png", "2")
+		menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png", "3")
+
 		backgroundImage = game.images.Find("gui")
 		limit = backgroundImage.h
+		enableScroll = False
+		if Not enableScroll
+			y = SCREEN_HEIGHT - 50
+		End
+
+		menu.SetY(y + menuOffsetY)
+		menu.SetX(10)
+
 	End
 	
 	Method ShowHideGUI:Void()
-		If game.mouseY < SCREEN_HEIGHT - limit And override = 0 showGUI = SCROLL_DOWN
-		If game.mouseY >= SCREEN_HEIGHT - lip showGUI = SCROLL_UP
-		
-		If showGUI = SCROLL_UP
-			y -= speedY * dt.delta
-			If y < SCREEN_HEIGHT - limit
-				showGUI = FULL
-				y = SCREEN_HEIGHT - limit
+		if enableScroll
+			If game.mouseY < SCREEN_HEIGHT - limit And override = 0 showGUI = SCROLL_DOWN
+			If game.mouseY >= SCREEN_HEIGHT - lip showGUI = SCROLL_UP
+			
+			If showGUI = SCROLL_UP
+				y -= speedY * dt.delta
+				If y < SCREEN_HEIGHT - limit
+					showGUI = FULL
+					y = SCREEN_HEIGHT - limit
+				End
 			End
-		End
-
-		If showGUI = SCROLL_DOWN
-			y += speedY * dt.delta
-			If y > SCREEN_HEIGHT - lip
-				showGUI = 0
-				override = 0
-				y = SCREEN_HEIGHT - lip
+	
+			If showGUI = SCROLL_DOWN
+				y += speedY * dt.delta
+				If y > SCREEN_HEIGHT - lip
+					showGUI = 0
+					override = 0
+					y = SCREEN_HEIGHT - lip
+				End
 			End
 		End
 	End
 	
+	Method Reset:Void()
+		mode = NONE
+		For local b:SimpleButton = EachIn self.menu
+			b.selected = False
+		Next
+	End
 	
 	Method Update()
 		menu.Update()
-		menu.SetY(y)
+		menu.SetY(y + menuOffsetY)
 
-		if menu.Clicked("turretButton")
-			mode = TURRENT
+		if menu.Clicked("turretButton") And gameScreen.cash >= TurretTower.cost
+			Local sb:SimpleButton = menu.FindButton("turretButton")
+			if sb.selected = True
+				mode = NONE
+				sb.selected = False
+			Else
+				mode = TURRET
+				sb.selected = True
+			End
+			
 		End
 		
 		
@@ -675,6 +781,8 @@ Class Gui
 	Method Draw()
 		backgroundImage.Draw(x, y)
 		menu.Draw()
+		DrawText("CASH:" + gameScreen.cash, SCREEN_WIDTH, y + 10, 1, 0)
+		DrawText("HEALTH:" + gameScreen.health, SCREEN_WIDTH, y + 25, 1, 0)
 	End
 	
 End
