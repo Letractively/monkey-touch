@@ -457,6 +457,7 @@ Class GameScreen Extends Screen
 	Field gui:Gui
 	Field cash:Int
 	Field health:Int
+	Field gameScrollSpeed:Int = 5
 	
 	Method New()
 		name = "Tower Defense GameScreen"
@@ -544,7 +545,11 @@ Class GameScreen Extends Screen
 		Enemy.DrawAll()
 		Explosion.DrawAll()
 		
-		if gui.mode = gui.TURRET then turretBaseImage.Draw( (game.mouseX / TILE_SIZE) * TILE_SIZE, (game.mouseY / TILE_SIZE) * TILE_SIZE)
+		if gui.mode = gui.TURRET
+			Local nx:Float = Floor(game.mouseX / TILE_SIZE)
+			Local ny:Float = Floor(game.mouseY / TILE_SIZE)
+			turretBaseImage.Draw(nx * TILE_SIZE, ny * TILE_SIZE)
+		End
 		
 		gui.Draw()
 		
@@ -607,16 +612,16 @@ Class GameScreen Extends Screen
 			End
 			
 			If KeyDown(KEY_LEFT)
-				game.scrollX -= 4 * dt.delta
+				game.scrollX -= Floor(gameScrollSpeed * dt.delta)
 			End
 			If KeyDown(KEY_RIGHT)
-				game.scrollX += 4 * dt.delta
+				game.scrollX += Floor(gameScrollSpeed * dt.delta)
 			End
 			If KeyDown(KEY_UP)
-				game.scrollY -= 4 * dt.delta
+				game.scrollY -= Floor(gameScrollSpeed * dt.delta)
 			End
 			If KeyDown(KEY_DOWN)
-				game.scrollY += 4 * dt.delta
+				game.scrollY += Floor(gameScrollSpeed * dt.delta)
 			End
 
 		End
@@ -643,7 +648,9 @@ Class GameScreen Extends Screen
 				If gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE + game.scrollX, game.mouseY + game.scrollY, gameScreen.tilemap.BUILD_LAYER) = 0 And
 				gameScreen.tilemap.CollisionTile(game.mouseX + game.scrollX, game.mouseY + game.scrollY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
 					if gui.mode = gui.TURRET
-						Local t:TurretTower = New TurretTower(turretBaseImage, ( (game.mouseX) / TILE_SIZE) * TILE_SIZE + game.scrollX, ( (game.mouseY) / TILE_SIZE) * TILE_SIZE + game.scrollY)
+						Local nx:Float = Floor( (game.mouseX + game.scrollX) / TILE_SIZE)
+						Local ny:Float = Floor( (game.mouseY + game.scrollY) / TILE_SIZE)
+						Local t:TurretTower = New TurretTower(turretBaseImage, nx * TILE_SIZE, ny * TILE_SIZE)
 						cash -= TurretTower.cost
 						t.gunImage = turretGunImage
 						t.firePosY -= 7
