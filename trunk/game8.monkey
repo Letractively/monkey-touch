@@ -546,9 +546,9 @@ Class GameScreen Extends Screen
 		Explosion.DrawAll()
 		
 		if gui.mode = gui.TURRET
-			Local nx:Float = Floor(game.mouseX / TILE_SIZE)
-			Local ny:Float = Floor(game.mouseY / TILE_SIZE)
-			turretBaseImage.Draw(nx * TILE_SIZE, ny * TILE_SIZE)
+			Local nx:Float = Floor((game.mouseX + game.scrollX)/ TILE_SIZE)
+			Local ny:Float = Floor((game.mouseY + game.scrollY)/ TILE_SIZE)
+			turretBaseImage.Draw(nx * TILE_SIZE - game.scrollX, ny * TILE_SIZE - game.scrollY)
 		End
 		
 		gui.Draw()
@@ -645,27 +645,30 @@ Class GameScreen Extends Screen
 			Tower.UnselectTowers()
 			selectedTower = Null
 			if game.mouseY < gui.y Then
-				If gameScreen.tilemap.CollisionTile(game.mouseX + TILE_SIZE + game.scrollX, game.mouseY + game.scrollY, gameScreen.tilemap.BUILD_LAYER) = 0 And
-				gameScreen.tilemap.CollisionTile(game.mouseX + game.scrollX, game.mouseY + game.scrollY, gameScreen.tilemap.BUILD_LAYER) = 0 Then
+				Local mx:Int = game.mouseX + game.scrollX
+				Local my:Int = game.mouseY + game.scrollY
+				
+				If gameScreen.tilemap.CollisionTile(mx + TILE_SIZE, my, gameScreen.tilemap.BUILD_LAYER) = 0 And
+				gameScreen.tilemap.CollisionTile(mx, my, gameScreen.tilemap.BUILD_LAYER) = 0 Then
 					if gui.mode = gui.TURRET
-						Local nx:Float = Floor( (game.mouseX + game.scrollX) / TILE_SIZE)
-						Local ny:Float = Floor( (game.mouseY + game.scrollY) / TILE_SIZE)
+						Local nx:Float = Floor(mx / TILE_SIZE)
+						Local ny:Float = Floor(my / TILE_SIZE)
 						Local t:TurretTower = New TurretTower(turretBaseImage, nx * TILE_SIZE, ny * TILE_SIZE)
 						cash -= TurretTower.cost
 						t.gunImage = turretGunImage
 						t.firePosY -= 7
 						
-						gameScreen.tilemap.SetTile(game.mouseX + game.scrollX, game.mouseY + game.scrollY, 1, gameScreen.tilemap.BUILD_LAYER)
-						gameScreen.tilemap.SetTile( (game.mouseX + game.scrollX + TILE_SIZE), game.mouseY + game.scrollY, 1, gameScreen.tilemap.BUILD_LAYER)
+						gameScreen.tilemap.SetTile(mx, my, 1, gameScreen.tilemap.BUILD_LAYER)
+						gameScreen.tilemap.SetTile(mx + TILE_SIZE, my, 1, gameScreen.tilemap.BUILD_LAYER)
 						
-						selectedTower = Tower.SelectTower(game.mouseX + game.scrollX, game.mouseY + game.scrollY)
+						selectedTower = Tower.SelectTower(mx, my)
 
 						gui.Reset()
 					End
 				Else
 					if gui.mode = gui.NONE
-						If gameScreen.tilemap.CollisionTile(game.mouseX + game.scrollX, game.mouseY + game.scrollY, gameScreen.tilemap.BUILD_LAYER) = 1
-							selectedTower = Tower.SelectTower(game.mouseX + game.scrollX, game.mouseY + game.scrollY)
+						If gameScreen.tilemap.CollisionTile(mx, my, gameScreen.tilemap.BUILD_LAYER) = 1
+							selectedTower = Tower.SelectTower(mx, my)
 						End
 					End
 				End
