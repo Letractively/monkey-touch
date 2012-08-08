@@ -528,6 +528,9 @@ Class Smh_Entity
 		boundsRight = source.boundsRight
 		boundsTop = source.boundsTop
 		boundsBottom = source.boundsBottom
+		boundsPurge = source.boundsPurge
+		boundsRestrict = source.boundsRestrict
+		boundsInset = source.boundsInset
 		radius = source.radius
 		sourceX = source.sourceX
 		sourceY = source.sourceY
@@ -649,6 +652,8 @@ End
 Class Smh_Pool<T> Extends Smh_Entity
 	Field children:T[]
 	Field aliveCount:Int = 0
+	Field autoPurgeMillis:Int = 500
+	Field nextPurgeMillis:Int = -1
 	
 	Method New(capacity:Int)
 		active = True
@@ -723,6 +728,12 @@ Class Smh_Pool<T> Extends Smh_Entity
 		For Local i:Int = 0 Until aliveCount
 			If children[i].alive Then children[i].DoUpdate(millis)
 		Next
+		If autoPurgeMillis > 0 Then
+			If nextPurgeMillis < dt.frametime Then
+				Purge()
+				nextPurgeMillis = dt.frametime + autoPurgeMillis
+			End
+		End
 	End
 	
 	Method Render:Void()
@@ -848,7 +859,12 @@ Class Smh_Enemy Extends Smh_Unit
 	End
 	
 	Method Render:Void()
-		Super.Render()
+		Local oldalpha:Float = GetAlpha()
+		If useHSL And recalcHSL Then RecalcHSL()
+		SetColor(red, green, blue)
+		SetAlpha(alpha)
+		DrawRect(-5,-5,10,10)
+		SetAlpha(oldalpha)
 	End
 End
 
@@ -1036,6 +1052,29 @@ Class Smh_EnemyPool Extends Smh_Pool<Smh_Enemy>
 		Next
 		Return True
 	End
+	
+	Method CreateEnemyWave:Smh_Enemy(template:Smh_Enemy, parent:Smh_Entity,
+			x:Float, y:Float,
+			polarAngle:Float, polarSpeed:Float,
+			firstDelayMillis:Int, intervalDelayMillis:Int,
+			enemyCount:Int)
+		Purge()
+		Local enemy:Smh_Enemy = Null
+		Local delayMillis:Int = firstDelayMillis
+		If Not parent Then parent = Self
+		For Local i:Int = 0 Until enemyCount
+			enemy = GetEntity(template)
+			If Not enemy Then Return Null
+			enemy.parent = parent
+			enemy.active = False
+			enemy.activeDelayMillis = delayMillis
+			delayMillis += intervalDelayMillis
+			enemy.x = x
+			enemy.y = y
+			enemy.SetVelocityPolar(polarAngle, polarSpeed)
+		Next
+		Return enemy
+	End
 End
 
 Class Smh_Bullet Extends Smh_Entity
@@ -1055,28 +1094,46 @@ End
 ''''''''''''''''''''''''' BOSSES '''''''''''''''''''''''''
 Class Smh_Stage1 Extends Smh_Stage
 	Field firstBoss:Smh_Boss = New Smh_Stage1Boss1
+	Field trash1:Smh_Enemy
+	
+	Method New()
+		trash1 = New Smh_Enemy
+		trash1.currentHP = 30
+		trash1.maxHP = 30
+		trash1.boundsInset = -50
+		trash1.boundsPurge = True
+		trash1.boundsRestrict = False
+	End
 	
 	Method DoLogic:Void(millis%)
 		Select currentSection
 			Case 0 ' first trash section
 				Select currentSectionStep
 					Case 0 ' spawn some basic trash
-						' TODO: spawn trash
-						'Print "step 0: spawning trash"
+						' spawn trash
+						enemies.CreateEnemyWave(
+								trash1, background,
+								-20, background.boundsTop+(background.boundsBottom-background.boundsTop)*0.2,
+								15, 100,
+								1, 500,
+								10)
+						enemies.CreateEnemyWave(
+								trash1, background,
+								(background.boundsRight-background.boundsLeft)+20, background.boundsTop+(background.boundsBottom-background.boundsTop)*0.2,
+								180-15, 100,
+								3000, 500,
+								10)
 						currentSectionStep = 1
 						waitTimeMillis = 0'3000
 						
 					Case 1 ' wait until all dead
 						' dead check
-						'Print "step 1: checking enemies are all dead"
 						If enemies.AreAllDead() Then
-							'Print "setting boss"
 							boss = firstBoss
 							currentSectionStep = 2
 						End
 						
 					Case 2 ' wait until boss is dead or timed out
-						'Print "step 2: waiting until boss has died or timed out"
 						If boss Then
 							If boss.defeated Then
 								boss = Null
