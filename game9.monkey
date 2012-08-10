@@ -18,7 +18,7 @@ Private
 'Global bossSheet:GameImage
 Global smhGameScreen:Smh_GameScreen
 
-Global background:Smh_EntityGroup
+Global background:Smh_Background
 Global enemyBullets:Smh_BulletPool
 Global playerBullets:Smh_BulletPool
 Global enemies:Smh_EnemyPool
@@ -52,6 +52,7 @@ Class Game9Screen Extends Screen
 	#End
 	Method Start:Void()
 		game.images.LoadAtlas("game9/game9_bullets1.txt", ImageBank.LIBGDX_ATLAS, True)
+		game.images.LoadAtlas("game9/game9_ships.txt", ImageBank.LIBGDX_ATLAS, True)
 		Local tmpImage:GameImage = Null
 		'game.images.LoadAnim("Ship1.png", 64, 64, 7, tmpImage)
 		smhGameScreen = New Smh_GameScreen
@@ -83,7 +84,7 @@ End
 
 Class Smh_GameScreen Extends Screen
 	Method Start:Void()
-		background = New Smh_EntityGroup
+		background = New Smh_Background("game9_background1.tmx")
 		background.scissor = True
 		background.boundsLeft = 20
 		background.boundsTop = 20
@@ -169,9 +170,9 @@ Class Smh_GameScreen Extends Screen
 		background.DoRender()
 		enemies.DoRender()
 		If boss Then boss.DoRender()
-		enemyBullets.DoRender()
 		playerBullets.DoRender()
 		player.DoRender()
+		enemyBullets.DoRender()
 		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
 		DrawText("Player Bullet Count: " + playerBullets.aliveCount, 0, 30)
 		If boss Then
@@ -225,6 +226,7 @@ Class Smh_Entity
 	Field activeDelayMillis:Int = 0
 	Field logicHandler:Smh_EntityLogicHandler = Null
 	Field activeTimeMillis:Int = 0 ' the game time that this entity became active
+	Field entityTypeId:Int = 0 ' arbitrary value
 	
 	' custom fields for the logic handler
 	Field logicVar1:Int
@@ -440,7 +442,7 @@ Class Smh_Entity
 	
 	' Entities should implement this method
 	Method Update:Void(millis%)
-		If logicHandler Then logicHandler.Update(Self, millis)
+		If logicHandler Then logicHandler.UpdateLogic(Self, millis)
 	End
 	
 	Method PreRender:Bool()
@@ -512,6 +514,7 @@ Class Smh_Entity
 		'active = source.active
 		'activeDelayMillis = source.activeDelayMillis
 		'alive = source.alive
+		entityTypeId = source.entityTypeId
 		logicHandler = source.logicHandler
 		logicVar1 = source.logicVar1
 		logicVar2 = source.logicVar2
@@ -571,7 +574,7 @@ End
 ' Implement this interface if you want to provide logic shared amongst entities without having to extend them.
 ' This is useful for applying different functionality to pooled objects (like bullets).
 Interface Smh_EntityLogicHandler
-	Method Update:Void(entity:Smh_Entity, millis%)
+	Method UpdateLogic:Void(entity:Smh_Entity, millis%)
 End
 
 Class Smh_AnimStrip
@@ -743,6 +746,47 @@ Class Smh_Pool<T> Extends Smh_Entity
 	End
 End
 
+Class Smh_Background Extends Smh_Entity
+	Field scrollX:Float
+	Field scrollY:Float
+	Field scrollSpeed:Float = 50
+	Field tilemap:TileMap
+	
+	Method New(mapfile:String)
+		Local reader:MyTiledTileMapReader = New MyTiledTileMapReader
+		Local tm:TileMap = reader.LoadMap("graphics/game9/game9_background1.tmx")
+		tilemap = MyTileMap(tm)
+		active = True
+	End
+	
+	Method Render:Void()
+		SetAlpha(1)
+		SetColor(255, 255, 255)
+		tilemap.RenderMap(scrollX, (tilemap.height*tilemap.tileHeight)-scrollY, SCREEN_WIDTH, SCREEN_HEIGHT)'boundsRight, boundsBottom)
+	End
+	
+	Method Update:Void(millis:Int)
+		scrollY += scrollSpeed * (Float(millis)/1000)
+	End
+End
+
+Class MyTileMap Extends TileMap
+	Method ConfigureLayer:Void(tileLayer:TileMapLayer)
+		SetAlpha(tileLayer.opacity)
+	End
+	
+	Method DrawTile:Void(tileLayer:TileMapTileLayer, mapTile:TileMapTile, x:Int, y:Int)
+		mapTile.image.DrawTile(x, y, mapTile.id, 0, 1, 1)
+	End
+End
+
+Class MyTiledTileMapReader Extends TiledTileMapReader
+	Method CreateMap:TileMap()
+		graphicsPath = "game9/"
+		Return New MyTileMap
+	End
+End
+
 Class Smh_Stage
 	Field currentSection:Int = 0
 	Field currentSectionStep:Int = 0
@@ -801,7 +845,7 @@ Class Smh_Player Extends Smh_Unit
 	Method New()
 		alive = True
 		active = True
-		alpha = 0.8
+		alpha = 1
 		boundsRestrict = True
 		boundsPurge = False
 		boundsInset = 20
@@ -813,6 +857,11 @@ Class Smh_Player Extends Smh_Unit
 		playerShot.scaleY = 4
 		playerShot.radius = 10
 		playerShot.blendMode = AdditiveBlend
+		
+		image = game.images.Find("game9_player")
+		rotation = 90
+		scaleX = 1.25
+		scaleY = 1.25
 	End
 	
 	Method Update:Void(millis%)
@@ -843,6 +892,7 @@ Class Smh_Player Extends Smh_Unit
 		End
 	End
 	
+	#Rem
 	Method Render:Void()
 		Local oldalpha:Float = GetAlpha()
 		If useHSL And recalcHSL Then RecalcHSL()
@@ -851,6 +901,7 @@ Class Smh_Player Extends Smh_Unit
 		DrawRect(-5,-5,10,10)
 		SetAlpha(oldalpha)
 	End
+	#End
 End
 
 Class Smh_Enemy Extends Smh_Unit
@@ -875,7 +926,12 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 	Field timeRemainingMillis:Int
 	Field bossIsLeaving:Bool = False
 	Field waitTimeMillis:Int
+	
+	
 	Field defeated:Bool = False
+	
+	' coordinates that boss was when it last interped out of the screen
+	Field lastX:Float, lastY:Float
 	
 	Method New()
 		active = True
@@ -890,10 +946,12 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 		useParentBounds = False
 	End
 	
-	Method Reset:Void()
-		timeRemainingMillis = 30000
-		maxHP = 100
-		currentHP = 100
+	Method Reset:Void(resetMillis:Bool=True,resetHealth:Bool=True)
+		If resetMillis Then timeRemainingMillis = 30000
+		If resetHealth Then
+			maxHP = 100
+			currentHP = 100
+		End
 		waitTimeMillis = 0
 	End
 	
@@ -921,6 +979,8 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 			
 			' if we've run out of time, interp off screen
 			If timeRemainingMillis <= 0 Then
+				lastX = x
+				lastY = y
 				If x < boundsLeft + (boundsRight-boundsLeft)/2 Then
 					SetInterpOverTime(x, y, boundsLeft, boundsTop - 100, 2000, 1)
 				Else
@@ -1103,6 +1163,7 @@ Class Smh_Stage1 Extends Smh_Stage
 		trash1.boundsInset = -50
 		trash1.boundsPurge = True
 		trash1.boundsRestrict = False
+		trash1.entityTypeId = 0
 	End
 	
 	Method DoLogic:Void(millis%)
@@ -1130,6 +1191,7 @@ Class Smh_Stage1 Extends Smh_Stage
 						' dead check
 						If enemies.AreAllDead() Then
 							boss = firstBoss
+							boss.Reset(True, False)
 							currentSectionStep = 2
 						End
 						
@@ -1163,16 +1225,14 @@ Class Smh_Stage1 Extends Smh_Stage
 	End
 End
 
-Class Smh_Stage1Enemy1 Extends Smh_Enemy
-End
-
-Class Smh_Stage1Boss1 Extends Smh_Boss
+Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
+	Const HOMING_BULLET:Int = 1
+	Const RIGHTANGLE_BULLET:Int = 2
+	
 	Field firstBullet:Smh_Bullet = New Smh_Bullet
 	Field secondBullet:Smh_Bullet = New Smh_Bullet
 	Field thirdBullet:Smh_Bullet = New Smh_Bullet
-	Field thirdBulletLogic:Smh_Stage1Boss1HomingBulletLogic = New Smh_Stage1Boss1HomingBulletLogic
 	Field fourthBullet:Smh_Bullet = New Smh_Bullet
-	Field fourthBulletLogic:Smh_Stage1Boss1RightAngleBulletLogic = New Smh_Stage1Boss1RightAngleBulletLogic
 	
 	Field bulletFireCount:Int = 0
 	
@@ -1206,7 +1266,8 @@ Class Smh_Stage1Boss1 Extends Smh_Boss
 		thirdBullet.blendMode = AdditiveBlend
 		thirdBullet.visibleWhileInactive = False
 		thirdBullet.fadeInTimeMillis = 1000
-		thirdBullet.logicHandler = thirdBulletLogic
+		thirdBullet.entityTypeId = HOMING_BULLET
+		thirdBullet.logicHandler = Self
 		
 		' phase 2
 		fourthBullet.image = game.images.Find("game9_bullet1")
@@ -1217,7 +1278,8 @@ Class Smh_Stage1Boss1 Extends Smh_Boss
 		fourthBullet.blendMode = AdditiveBlend
 		fourthBullet.visibleWhileInactive = False
 		fourthBullet.fadeInTimeMillis = 0
-		fourthBullet.logicHandler = fourthBulletLogic
+		fourthBullet.entityTypeId = RIGHTANGLE_BULLET
+		fourthBullet.logicHandler = Self
 		
 		'anim = New Smh_AnimStrip(images.Find("Ship1"))
 		' FIXME: first frame always skipped
@@ -1347,42 +1409,39 @@ Class Smh_Stage1Boss1 Extends Smh_Boss
 				End
 		End
 	End
-End
-
-Class Smh_Stage1Boss1HomingBulletLogic Implements Smh_EntityLogicHandler
-	Method Update:Void(entity:Smh_Entity, millis%)
-		If entity.logicVar1 = 0 Then
-			entity.polarVelocity -= 55 * Float(millis) / 1000.0
-			If entity.polarVelocity < 0 Then
-				entity.polarVelocity = 100
-				entity.polarAngle = ATan2(player.y-entity.y,player.x-entity.x)
-				entity.logicVar1 = 1
-			End
-			entity.recalcPolar = True
-		End
-	End
-End
-
-Class Smh_Stage1Boss1RightAngleBulletLogic Implements Smh_EntityLogicHandler
-	Method Update:Void(entity:Smh_Entity, millis%)
-		If entity.logicVar2 <= 0 Then entity.logicVar2 = entity.polarVelocity
-		If entity.logicVar1 = 0 Then
-			Local targetTime# = 2500
-			Local currentTime# = dt.currentticks - entity.activeTimeMillis
-			Local ratio:Float = Min(1.0, currentTime / targetTime)
-			ratio *= ratio
-			entity.polarVelocity = entity.logicVar2 * (1-ratio)
-			' assume they've all stopped at a certain life value
-			If currentTime >= targetTime Then
-				entity.polarVelocity = 40
-				If entity.polarAngle > 90 Then
-					entity.polarAngle -= 90
-				Else
-					entity.polarAngle += 90
+	
+	Method UpdateLogic:Void(entity:Smh_Entity, millis%)
+		' homing bullets
+		If entity.entityTypeId = HOMING_BULLET Then
+			If entity.logicVar1 = 0 Then
+				entity.polarVelocity -= 55 * Float(millis) / 1000.0
+				If entity.polarVelocity < 0 Then
+					entity.polarVelocity = 100
+					entity.polarAngle = ATan2(player.y-entity.y,player.x-entity.x)
+					entity.logicVar1 = 1
 				End
-				entity.logicVar1 = 1
+				entity.recalcPolar = True
 			End
-			entity.recalcPolar = True
+		Elseif entity.entityTypeId = RIGHTANGLE_BULLET Then
+			If entity.logicVar2 <= 0 Then entity.logicVar2 = entity.polarVelocity
+			If entity.logicVar1 = 0 Then
+				Local targetTime# = 2500
+				Local currentTime# = dt.currentticks - entity.activeTimeMillis
+				Local ratio:Float = Min(1.0, currentTime / targetTime)
+				ratio *= ratio
+				entity.polarVelocity = entity.logicVar2 * (1-ratio)
+				' assume they've all stopped at a certain life value
+				If currentTime >= targetTime Then
+					entity.polarVelocity = 40
+					If entity.polarAngle > 90 Then
+						entity.polarAngle -= 90
+					Else
+						entity.polarAngle += 90
+					End
+					entity.logicVar1 = 1
+				End
+				entity.recalcPolar = True
+			End
 		End
 	End
 End
