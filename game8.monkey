@@ -89,22 +89,23 @@ Class Game8Screen Extends Screen
 End
 
 Class TankEnemy Extends Enemy
-	Method New(img:GameImage, x:Float, y:Float)
-		Super.New(img, x, y)
-	End
-	
-	Method SetStats:Void()
-		Self.fireRate = 20
-		Self.damage = 10
-		Self.range = 70
-		Self.health = 100
-		Self.speed = 1
-		Self.alive = True
-		Self.score = 50
+	Method New(name:String, x:Float, y:Float)
+		Super.New(game.images.Find(gameScreen.enemyTemplateMap.Get(name.ToUpper()).imageName), x, y, name)
 	End
 End
 
-Class Enemy Extends Sprite 'Abstract
+Class EnemyTemplate
+	Field name:String
+	Field damage:Float
+	Field range:Float
+	Field fireRate:Int
+	Field health:Float
+	Field score:Int
+	Field imageName:String
+	Field speed:Float
+End
+
+Class Enemy Extends Sprite Abstract
 	Global list:ArrayList<Enemy> = New ArrayList<Enemy>
 	Field currentPath:Int = 0
 	Field damage:Float
@@ -115,14 +116,23 @@ Class Enemy Extends Sprite 'Abstract
 	Field route:Int[]
 	Field score:Int
 	
-	Method New(img:GameImage, x:Float, y:Float)
+	Method New(img:GameImage, x:Float, y:Float, name:String)
 		Super.New(img, x, y)
-		SetStats()
+		SetStats(name)
 		SetPath()
 		list.Add(Self)
 	End
 	
-	Method SetStats:Void() Abstract
+	Method SetStats:Void(name:String)
+		Local et:EnemyTemplate = gameScreen.enemyTemplateMap.Get(name.ToUpper())
+		Self.fireRate = et.fireRate
+		Self.damage = et.damage
+		Self.range = et.range
+		Self.health = et.health
+		Self.speed = et.speed
+		Self.alive = True
+		Self.score = et.score
+	End
 	
 	Method Kill:Void()
 		If Not list Return	
@@ -458,9 +468,31 @@ Class GameScreen Extends Screen
 	Field cash:Int
 	Field health:Int
 	Field gameScrollSpeed:Int = 5
+	Field enemyTemplateMap:StringMap<EnemyTemplate>
 	
 	Method New()
 		name = "Tower Defense GameScreen"
+	End
+	
+	Method LoadData:Void()
+		' load enemy data
+		Local file:String = "graphics/game8/enemies.xml"
+		Local xmlReader:XMLParser = New XMLParser
+		Local doc:XMLDocument = xmlReader.ParseFile(file)
+		Local rootElement:XMLElement = doc.Root
+		For Local xmlEnemy:XMLElement = Eachin rootElement.GetChildrenByName("enemy")
+			Local enemyTemplate:EnemyTemplate = New EnemyTemplate()
+			
+			enemyTemplate.name = xmlEnemy.GetFirstChildByName("name").Value
+			enemyTemplate.imageName = xmlEnemy.GetFirstChildByName("image").Value
+			enemyTemplate.damage = Int(xmlEnemy.GetFirstChildByName("damage").Value)
+			enemyTemplate.range = Float(xmlEnemy.GetFirstChildByName("range").Value)
+			enemyTemplate.health = Float(xmlEnemy.GetFirstChildByName("health").Value)
+			enemyTemplate.speed = Float(xmlEnemy.GetFirstChildByName("speed").Value)
+			enemyTemplate.score = Int(xmlEnemy.GetFirstChildByName("score").Value)
+			
+			enemyTemplateMap.Add(enemyTemplate.name.ToUpper(), enemyTemplate)
+		Next
 	End
 	
 	Method LoadMap:Void()
@@ -500,9 +532,11 @@ Class GameScreen Extends Screen
 	End
 	
 	Method Start:Void()
+		enemyTemplateMap = New StringMap<EnemyTemplate>
 		game.scrollX = TILE_SIZE
 		game.scrollY = TILE_SIZE
 		delay = maxDelay
+		LoadData()
 		LoadImages()
 		LoadMap()
 		cash = 1000
@@ -583,7 +617,7 @@ Class GameScreen Extends Screen
 			delay = maxDelay
 			Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
 			Local endPos:TileMapObject = tilemap.FindObjectByName("End")
-			New TankEnemy(enemyImage, startPos.x, startPos.y)
+			New TankEnemy("EasyTank", startPos.x, startPos.y)
 		End
 		Tower.UpdateAll()
 		Enemy.UpdateAll()
@@ -602,7 +636,7 @@ Class GameScreen Extends Screen
 			If KeyHit(KEY_SPACE)
 				Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
 				Local endPos:TileMapObject = tilemap.FindObjectByName("End")
-				New TankEnemy(enemyImage, startPos.x, startPos.y)
+				New TankEnemy("EasyTank", startPos.x, startPos.y)
 			End
 			If KeyHit(KEY_F2)
 				buildableLayerOn = Not buildableLayerOn
@@ -685,6 +719,8 @@ Class GameScreen Extends Screen
 	End
 	
 	Method ClearItems:Void()
+		enemyTemplateMap.Clear()
+		
 		If Enemy.list
 			Enemy.list.Clear()
 		End
@@ -726,7 +762,7 @@ Class Gui
 		override = 0
 		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 0, 20, True, HORIZONTAL)
 		local b:SimpleButton = menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png")
-		b.SetSelectedImage("game8/turretButtonSelected.png")
+		b.SetSelectedImage("game8/turretButtonSelected.png", "game8/turretButtonSelectedMO.png")
 		menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png", "2")
 		menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png", "3")
 
