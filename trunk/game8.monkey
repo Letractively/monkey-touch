@@ -449,6 +449,66 @@ Class Explosion Extends Sprite
 	End
 End
 
+Class Wave
+	Field sequence:Int
+	Field initialDelay:Int
+	Field initialDelayCounter:Float
+	Field enemyMap:IntMap<EnemyWave>
+	Field delay:Float
+	Field enemySeq:Int
+	Field currentEnemyWave:EnemyWave
+	Field firstTime:Bool
+	
+	Method New()
+		enemyMap = New IntMap<EnemyWave>
+		delay = 0
+		enemySeq = 1
+		firstTime = True
+		initialDelayCounter = 0
+	End
+	
+	Method Update:Int()
+		if firstTime
+			currentEnemyWave = enemyMap.Get(enemySeq)
+			firstTime = False
+		Else
+			if initialDelayCounter < initialDelay
+				initialDelayCounter += 1 * dt.delta
+			Else
+				if currentEnemyWave <> null Then
+					if currentEnemyWave.count < currentEnemyWave.amount Then
+						delay += 1 * dt.delta
+						if delay > currentEnemyWave.delay
+							delay = 0
+							Local startPos:TileMapObject = gameScreen.tilemap.FindObjectByName("Start")
+							Local endPos:TileMapObject = gameScreen.tilemap.FindObjectByName("End")
+							New TankEnemy(currentEnemyWave.type, startPos.x, startPos.y)
+							currentEnemyWave.count += 1
+						End
+					Else
+						enemySeq += 1
+						currentEnemyWave = enemyMap.Get(enemySeq)
+						if currentEnemyWave = null
+							Return 1
+						End
+					End
+				Else
+					Return 1
+				End
+			End
+		End
+		Return 0
+	End
+End
+
+Class EnemyWave
+	Field sequence:Int
+	Field type:String
+	Field delay:Int
+	Field amount:Int
+	Field count:Int
+End
+
 Class GameScreen Extends Screen
 	Const TILE_SIZE:Int = 20
 	Field tilemap:MyTileMap
@@ -469,12 +529,18 @@ Class GameScreen Extends Screen
 	Field health:Int
 	Field gameScrollSpeed:Int = 5
 	Field enemyTemplateMap:StringMap<EnemyTemplate>
+	Field level:Int
+	Field mapFileName:String
+	Field mapName:String
+	Field waveMap:IntMap<Wave>
+	Field waveCount:Int
+	Field currentWave:Wave
 	
 	Method New()
 		name = "Tower Defense GameScreen"
 	End
 	
-	Method LoadData:Void()
+	Method LoadEnemyData:Void()
 		' load enemy data
 		Local file:String = "graphics/game8/enemies.xml"
 		Local xmlReader:XMLParser = New XMLParser
@@ -492,12 +558,53 @@ Class GameScreen Extends Screen
 			enemyTemplate.score = Int(xmlEnemy.GetFirstChildByName("score").Value)
 			
 			enemyTemplateMap.Add(enemyTemplate.name.ToUpper(), enemyTemplate)
+		Next	
+	End
+	
+	Method LoadLevelData:Void(level:Int)
+		' load level data
+		Local file:String = "graphics/game8/level" + level + ".xml"
+		Local xmlReader:XMLParser = New XMLParser
+		Local doc:XMLDocument = xmlReader.ParseFile(file)
+		Local rootElement:XMLElement = doc.Root
+		
+		For Local xml:XMLElement = Eachin rootElement.GetChildrenByName("data")
+			mapName = xml.GetFirstChildByName("name").Value
+			cash = Int(xml.GetFirstChildByName("cash").Value)
+			mapFileName = xml.GetFirstChildByName("map").Value
+			
+			For Local waveXml:XMLElement = Eachin xml.GetChildrenByName("wave")
+				Local wave:Wave = New Wave()
+				wave.sequence = Int(waveXml.GetFirstChildByName("sequence").Value)
+				wave.initialDelay = Int(waveXml.GetFirstChildByName("initialDelay").Value)
+				For Local enemiesXml:XMLElement = Eachin waveXml.GetChildrenByName("enemies")
+				
+					For Local enemyXml:XMLElement = Eachin enemiesXml.GetChildrenByName("enemy")
+						Local ew:EnemyWave = New EnemyWave()
+						ew.sequence = Int(enemyXml.GetFirstChildByName("sequence").Value)
+						ew.type = enemyXml.GetFirstChildByName("type").Value
+						ew.amount = Int(enemyXml.GetFirstChildByName("amount").Value)
+						ew.delay = Int(enemyXml.GetFirstChildByName("delay").Value)
+						wave.enemyMap.Add(ew.sequence, ew)
+					Next
+					
+				Next
+				
+				waveMap.Add(wave.sequence, wave)
+				
+			Next
+			
 		Next
+	End
+	
+	Method LoadData:Void()
+		LoadEnemyData()
+		LoadLevelData(1)
 	End
 	
 	Method LoadMap:Void()
 		Local reader:MyTiledTileMapReader = New MyTiledTileMapReader
-		Local tm:TileMap = reader.LoadMap("graphics/game8/level1.tmx")
+		Local tm:TileMap = reader.LoadMap("graphics/game8/" + mapFileName + ".tmx")
 		tilemap = MyTileMap(tm)
 		Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
 		Local endPos:TileMapObject = tilemap.FindObjectByName("End")
@@ -517,6 +624,7 @@ Class GameScreen Extends Screen
 	Method LoadImages:Void()
 		Local tmpImage:Image
 		game.images.LoadAnim("game8/tank7.png", 20, 20, 9, tmpImage)
+		game.images.LoadAnim("game8/Tank5b.png", 20, 20, 9, tmpImage)
 		game.images.LoadAnim("game8/turretBase.png", 40, 28, 2, tmpImage, False)
 		game.images.LoadAnim("game8/turretGun.png", 52, 45, 8, tmpImage)
 		game.images.LoadAnim("game8/explosn.png", 20, 20, 9, tmpImage)
@@ -533,15 +641,19 @@ Class GameScreen Extends Screen
 	
 	Method Start:Void()
 		enemyTemplateMap = New StringMap<EnemyTemplate>
+		waveMap = New IntMap<Wave>
+		
 		game.scrollX = TILE_SIZE
 		game.scrollY = TILE_SIZE
 		delay = maxDelay
 		LoadData()
 		LoadImages()
 		LoadMap()
-		cash = 1000
 		health = 100
 		gui = New Gui
+		waveCount = 1
+		currentWave = waveMap.Get(waveCount)
+		
 	End
 	
 	Method Render:Void()
@@ -610,15 +722,17 @@ Class GameScreen Extends Screen
 		SetAlpha 1
 	End
 
+	Method UpdateWave:Void()
+		if currentWave <> null Then
+			if currentWave.Update()
+				waveCount += 1
+				currentWave = waveMap.Get(waveCount)
+			End
+		End	
+	End
+	
 	Method Update:Void()
-		If delay > 0
-			delay -= 1 * dt.delta
-		Else
-			delay = maxDelay
-			Local startPos:TileMapObject = tilemap.FindObjectByName("Start")
-			Local endPos:TileMapObject = tilemap.FindObjectByName("End")
-			New TankEnemy("EasyTank", startPos.x, startPos.y)
-		End
+		UpdateWave()
 		Tower.UpdateAll()
 		Enemy.UpdateAll()
 		Explosion.UpdateAll()
@@ -720,6 +834,7 @@ Class GameScreen Extends Screen
 	
 	Method ClearItems:Void()
 		enemyTemplateMap.Clear()
+		waveMap.Clear()
 		
 		If Enemy.list
 			Enemy.list.Clear()
