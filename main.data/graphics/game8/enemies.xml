@@ -5,16 +5,16 @@
 		<damage>10</damage>
 		<range>70</range>
 		<health>100</health>
-		<speed>1</speed>
+		<speed>1.5</speed>
 		<score>50</score>
 	</enemy>
 	<enemy>
 		<name>MediumTank</name>
-		<image>tank7</image>
+		<image>Tank5b</image>
 		<damage>20</damage>
 		<range>100</range>
 		<health>150</health>
-		<speed>2</speed>
+		<speed>.5</speed>
 		<score>100</score>
 	</enemy>
 </enemies>
