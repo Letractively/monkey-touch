@@ -22,8 +22,20 @@
 				<enemy>
 					<sequence>1</sequence>
 					<type>MediumTank</type>
-					<amount>5</amount>
-					<delay>100</delay>
+					<amount>10</amount>
+					<delay>50</delay>
+				</enemy>
+			</enemies>
+		</wave>
+		<wave>
+			<sequence>3</sequence>
+			<initialDelay>50</initialDelay>
+			<enemies>
+				<enemy>
+					<sequence>1</sequence>
+					<type>HardTank</type>
+					<amount>10</amount>
+					<delay>50</delay>
 				</enemy>
 			</enemies>
 		</wave>

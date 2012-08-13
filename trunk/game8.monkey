@@ -625,6 +625,7 @@ Class GameScreen Extends Screen
 		Local tmpImage:Image
 		game.images.LoadAnim("game8/tank7.png", 20, 20, 9, tmpImage)
 		game.images.LoadAnim("game8/Tank5b.png", 20, 20, 9, tmpImage)
+		game.images.LoadAnim("game8/hardtank.png", 40, 40, 9, tmpImage)
 		game.images.LoadAnim("game8/turretBase.png", 40, 28, 2, tmpImage, False)
 		game.images.LoadAnim("game8/turretGun.png", 52, 45, 8, tmpImage)
 		game.images.LoadAnim("game8/explosn.png", 20, 20, 9, tmpImage)
