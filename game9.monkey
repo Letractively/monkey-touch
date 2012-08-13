@@ -13,21 +13,6 @@ Touhou Clone
 Public
 Import main
 
-Private
-'Global spriteSheet:GameImage
-'Global bossSheet:GameImage
-Global smhGameScreen:Smh_GameScreen
-
-Global background:Smh_Background
-Global enemyBullets:Smh_BulletPool
-Global playerBullets:Smh_BulletPool
-Global enemies:Smh_EnemyPool
-Global player:Smh_Player
-Global boss:Smh_Boss
-
-Global currentStage:Smh_Stage
-
-Public
 #rem
 summary:Title Screen Class.
 Used to manage and deal with all Title Page stuff.
@@ -82,7 +67,25 @@ Class Game9Screen Extends Screen
 	End
 End
 
+Private
+
+'Global spriteSheet:GameImage
+'Global bossSheet:GameImage
+Global smhGameScreen:Smh_GameScreen
+
+Global background:Smh_Background
+Global enemyBullets:Smh_BulletPool
+Global playerBullets:Smh_BulletPool
+Global powerups:Smh_PowerupPool
+Global enemies:Smh_EnemyPool
+Global player:Smh_Player
+Global boss:Smh_Boss
+
+Global currentStage:Smh_Stage
+
 Class Smh_GameScreen Extends Screen
+	Field grazeCount:Int = 0
+	
 	Method Start:Void()
 		background = New Smh_Background("game9_background1.tmx")
 		background.scissor = True
@@ -96,6 +99,9 @@ Class Smh_GameScreen Extends Screen
 		
 		playerBullets = New Smh_BulletPool
 		playerBullets.parent = background
+		
+		powerups = New Smh_PowerupPool
+		powerups.parent = background
 		
 		player = New Smh_Player
 		player.parent = background
@@ -122,36 +128,7 @@ Class Smh_GameScreen Extends Screen
 		If KeyHit(KEY_ESCAPE) Then
 			FadeToScreen(Game9Scr)
 		End
-		#Rem
-		If KeyHit(KEY_SPACE) Or MouseHit() Then
-			If KeyDown(KEY_SHIFT) Then
-				enemyBullets.FireBulletSpray(
-					defaultBullet, Null,
-					MouseX(), MouseY(), 5,
-					0, 360,
-					1, 16,
-					60, 120,
-					50)
-			Else
-				Local direction:Float = ATan2(player.y-MouseY(),player.x-MouseX())
-				Local intervalAngle:Float = 35.0/8.0
-				Local firstAngle:Float = direction - intervalAngle
-				Local speed:Float = 100
-				Local intervalSpeed:Float = 10
-				Local delay:Int = 20
-				For Local i:Int = 3 To 8
-					enemyBullets.FireBulletSpray(
-						defaultBullet, Null,
-						MouseX(), MouseY(), 0,
-						firstAngle, firstAngle+intervalAngle*(i-1),
-						1+delay*(i-3), 0,
-						speed-(i-3)*intervalSpeed, speed-(i-3)*intervalSpeed,
-						i)
-					firstAngle -= intervalAngle/2
-				Next
-			End
-		End
-		#End
+
 		' update everything
 		currentStage.Update(dt.frametime)
 		
@@ -160,6 +137,7 @@ Class Smh_GameScreen Extends Screen
 		If boss Then boss.DoUpdate(dt.frametime)
 		enemyBullets.DoUpdate(dt.frametime)
 		playerBullets.DoUpdate(dt.frametime)
+		powerups.DoUpdate(dt.frametime)
 		player.DoUpdate(dt.frametime)
 		
 		ResolveCollisions()
@@ -171,46 +149,75 @@ Class Smh_GameScreen Extends Screen
 		enemies.DoRender()
 		If boss Then boss.DoRender()
 		playerBullets.DoRender()
+		powerups.DoRender()
 		player.DoRender()
 		enemyBullets.DoRender()
 		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
 		DrawText("Player Bullet Count: " + playerBullets.aliveCount, 0, 30)
+		DrawText("Graze Count: " + grazeCount, 0, 45)
 		If boss Then
-			DrawText("Boss Health: " + boss.currentHP, 0, 45)
-			DrawText("Boss Phase: " + boss.currentPhase, 0, 60)
-			DrawText("Time Remaining: " + Max(0,Int(Ceil(Float(boss.timeRemainingMillis) / 1000.0))), 0, 75)
+			DrawText("Boss Health: " + boss.currentHP, 0, 60)
+			DrawText("Boss Phase: " + boss.currentPhase, 0, 75)
+			DrawText("Time Remaining: " + Max(0,Int(Ceil(Float(boss.timeRemainingMillis) / 1000.0))), 0, 90)
 		End
 		DrawRectOutline(background.boundsLeft, background.boundsTop, background.boundsRight-background.boundsLeft, background.boundsBottom-background.boundsTop)
 	End
 	
 	Method ResolveCollisions:Void()
 		Local bullet:Smh_Bullet = Null
+		Local enemy:Smh_Enemy = Null
+		
 		' resolve collisions of boss with player
-		' TODO
+		If boss Then
+			Local dx:Float = player.x-boss.x
+			local dy:Float = player.y-boss.y
+			If dx*dx + dy*dy <= boss.radius + player.radius Then
+				' player death
+			End
+		End
 		
 		' resolve collisions of enemies with player
-		'bullet = enemies.FindFirstCollision(player)
-		If bullet Then bullet.red = 0
+		enemy = enemies.FindFirstCollision(player)
+		If enemy Then
+			bullet.red = 0
+			' player death
+		End
 		
 		' resolve collisions of enemy bullets with player
 		bullet = enemyBullets.FindFirstCollision(player)
-		If bullet Then bullet.green = 0
+		If bullet Then
+			bullet.green = 0
+			' player death
+		End
 		
 		' resolve collisions of player bullets with boss
 		If boss Then
 			bullet = playerBullets.FindFirstCollision(boss)
 			If bullet Then
-				bullet.red = 128
-				boss.currentHP -= 2
+				' damage
+				bullet.alive = False
+				bullet.active = False
+				boss.currentHP -= 5
 				If boss.currentHP < 0 Then boss.currentHP = 0
 			End
 		End
 		
 		' resolve collisions of player bullets with enemies
-		'For Local i:Int = 0 Until enemies.aliveCount
-		'	bullet = playerBullets.FindFirstCollision(enemies.children[i])
-		'	If bullet Then bullet.blue = 0
-		'Next
+		For Local i:Int = 0 Until enemies.aliveCount
+			bullet = playerBullets.FindFirstCollision(enemies.children[i])
+			If bullet Then
+				' damage
+				bullet.alive = False
+				bullet.active = False
+				enemies.children[i].currentHP -= 5
+				If enemies.children[i].currentHP < 0 Then
+					enemies.children[i].currentHP = 0
+				End
+			End
+		Next
+		
+		' find graze count
+		grazeCount += enemyBullets.GetGrazeCount(player, 5)
 	End
 End
 
@@ -487,12 +494,14 @@ Class Smh_Entity
 			End
 			If image Then
 				DrawImage(image.image, 0, 0)
-			ElseIf anim Then
+			Elseif anim Then
 				anim.Render(Self, 0, 0)
 			End
 			SetBlend(oldblend)
 			If blendMode = AlphaBlend Then
 				SetAlpha(oldalpha)
+			Else
+				SetColor(red, green, blue)
 			End
 		End
 	End
@@ -568,6 +577,13 @@ Class Smh_Entity
 		animDirection = source.animDirection
 		animForcedDirection = source.animForcedDirection
 		Return Self
+	End
+	
+	Method SuckToPlayer:Void(template:Smh_Entity, millis:Int)
+		Local oldX:Int = x
+		Local oldY:Int = y
+		If template Then CopyFrom(template)
+		SetInterpOverTime(oldX, oldY, player.x, player.y, millis, 1)
 	End
 End
 
@@ -727,6 +743,19 @@ Class Smh_Pool<T> Extends Smh_Entity
 		Return Null
 	End
 	
+	Method GetGrazeCount:Int(other:Smh_Entity, grazeProximity:Float)
+		Local count:Int = 0
+		For Local i% = 0 Until aliveCount
+			If children[i].alive Then
+				Local dx# = other.x-children[i].x
+				Local dy# = other.y-children[i].y
+				Local dist# = other.radius+children[i].radius+grazeProximity
+				If dx*dx + dy*dy < dist*dist Then count += 1
+			End
+		Next
+		Return count
+	End
+	
 	Method Update:Void(millis%)
 		For Local i:Int = 0 Until aliveCount
 			If children[i].alive Then children[i].DoUpdate(millis)
@@ -841,6 +870,7 @@ Class Smh_Player Extends Smh_Unit
 	Field firingSpeed:Int = 100
 	Field nextShotAvailableMillis:Int = 0
 	Field playerShot:Smh_Bullet
+	Field bulletPowerup:Smh_Powerup
 	
 	Method New()
 		alive = True
@@ -857,6 +887,12 @@ Class Smh_Player Extends Smh_Unit
 		playerShot.scaleY = 4
 		playerShot.radius = 10
 		playerShot.blendMode = AdditiveBlend
+		
+		bulletPowerup = New Smh_Powerup
+		bulletPowerup.CopyFrom(playerShot)
+		bulletPowerup.scaleX = 1
+		bulletPowerup.scaleY = 1
+		bulletPowerup.playerInterp = True
 		
 		image = game.images.Find("game9_player")
 		rotation = 90
@@ -890,6 +926,11 @@ Class Smh_Player Extends Smh_Unit
 			' update next available
 			nextShotAvailableMillis = dt.currentticks + firingSpeed
 		End
+		
+		' bomb
+		If KeyHit(KEY_X) Then
+			enemyBullets.ConvertToPowerups()
+		End
 	End
 	
 	#Rem
@@ -917,6 +958,12 @@ Class Smh_Enemy Extends Smh_Unit
 		DrawRect(-5,-5,10,10)
 		SetAlpha(oldalpha)
 	End
+	
+	Method Died:Void()
+		Print "enemy died"
+		alive = False
+		' TODO: explosion
+	End
 End
 
 Class Smh_Boss Extends Smh_Enemy Abstract
@@ -924,10 +971,8 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 	Field currentPhase:Int = -1
 	Field currentPhaseStep:Int = 0
 	Field timeRemainingMillis:Int
-	Field bossIsLeaving:Bool = False
+	Field bossInterping:Bool = False
 	Field waitTimeMillis:Int
-	
-	
 	Field defeated:Bool = False
 	
 	' coordinates that boss was when it last interped out of the screen
@@ -960,7 +1005,7 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 		Super.Update(millis)
 		
 		' if leaving just die
-		If Not bossIsLeaving Then
+		If Not bossInterping Then
 			' if the boss has run out of health, we go to the next phase
 			If currentPhase < 0 Or currentHP <= 0 Then
 				currentPhase += 1
@@ -970,6 +1015,7 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 					defeated = True
 				Else
 					Reset()
+					enemyBullets.ConvertToPowerups()
 				End
 				Return
 			End
@@ -979,16 +1025,10 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 			
 			' if we've run out of time, interp off screen
 			If timeRemainingMillis <= 0 Then
-				lastX = x
-				lastY = y
-				If x < boundsLeft + (boundsRight-boundsLeft)/2 Then
-					SetInterpOverTime(x, y, boundsLeft, boundsTop - 100, 2000, 1)
-				Else
-					SetInterpOverTime(x, y, boundsRight, boundsTop - 100, 2000, 1)
-				End
+				InterpOut()
 				timeRemainingMillis = 0
-				waitTimeMillis = 2000
-				bossIsLeaving = True
+				bossInterping = True
+				' TODO: bullets to powerups
 				Return
 			End
 		End
@@ -1004,10 +1044,19 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 		End
 		
 		' if we have no millis left, die
-		If millis = 0 Then Return
+		If millis = 0 Then
+			If bossInterping Then
+				If timeRemainingMillis <= 0 Then
+					' boss is gone
+					boss = Null
+				End
+				bossInterping = False
+			End
+			Return
+		End
 		
-		' time left, do the main boss logic if we're not leaving
-		If Not bossIsLeaving Then DoLogic(millis)
+		' time left, do the main boss logic if we're not interping
+		If Not bossInterping Then DoLogic(millis)
 	End
 	
 	Method DoLogic:Void(millis%) Abstract
@@ -1019,6 +1068,55 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 		SetAlpha(alpha)
 		DrawRect(-5,-5,10,10)
 		SetAlpha(oldalpha)
+	End
+	
+	Method InterpOut:Void()
+		lastX = x
+		lastY = y
+		If x < boundsLeft + (boundsRight-boundsLeft)/2 Then
+			SetInterpOverTime(x, y, boundsLeft, boundsTop - 100, 2000, 1)
+		Else
+			SetInterpOverTime(x, y, boundsRight, boundsTop - 100, 2000, 1)
+		End
+		waitTimeMillis = 2000
+	End
+	
+	Method InterpIn:Void()
+		If lastX < -1000 Or lastY < -1000 Then
+			lastX = boundsLeft+(boundsRight-boundsLeft)/2
+			lastY = boundsTop+(boundsBottom-boundsTop)/2
+		End
+		InterpIn(lastX, lastY)
+	End
+	
+	Method InterpIn:Void(targetX:Float, targetY:Float)
+		' interp from a random point
+		If targetX < boundsLeft + (boundsRight-boundsLeft)/2 Then
+			SetInterpOverTime(Rnd(boundsLeft,(boundsRight-boundsLeft)/2), -100, targetX, targetY, 2000, 1)
+		Else
+			SetInterpOverTime(Rnd((boundsRight-boundsLeft)/2,boundsRight), -100, targetX, targetY, 2000, 1)
+		End
+		waitTimeMillis = 2000
+	End
+End
+
+Class Smh_PowerupPool Extends Smh_Pool<Smh_Powerup>
+	Method New(capacity:Int=2000)
+		Super.New(capacity)
+	End
+	
+	Method CreateBulletPowerup:Smh_Powerup(template:Smh_Powerup, parent:Smh_Entity, bullet:Smh_Bullet, millis%)
+		Purge()
+		Local powerup:Smh_Powerup = Null
+		If Not parent Then parent = Self
+		powerup = GetEntity(template)
+		If Not powerup Then Return Null
+		powerup.parent = parent
+		powerup.active = True
+		powerup.x = bullet.x
+		powerup.y = bullet.y
+		powerup.SetInterpOverTime(bullet.x, bullet.y, player.x, player.y, millis, 1)
+		Return powerup
 	End
 End
 
@@ -1098,6 +1196,16 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 		Next
 		Return bullet
 	End
+	
+	Method ConvertToPowerups:Void(template:Smh_Powerup=Null, millis:Int=1000)
+		For Local i:Int = 0 Until aliveCount
+			If children[i].alive Then
+				If Not template Then template = player.bulletPowerup
+				powerups.CreateBulletPowerup(template, Null, children[i], millis)
+				children[i].alive = False
+			End
+		Next
+	End
 End
 
 Class Smh_EnemyPool Extends Smh_Pool<Smh_Enemy>
@@ -1151,19 +1259,68 @@ Class Smh_Bullet Extends Smh_Entity
 	End
 End
 
+Class Smh_Powerup Extends Smh_Entity
+	Field playerInterp:Bool = False
+	
+	Method New()
+		alive = False
+		active = True
+		boundsRestrict = False
+		boundsPurge = True
+		boundsInset = -30
+	End
+	
+	Method Update:Void(millis%)
+		Super.Update(millis)
+		If playerInterp Then
+			targetX = player.x
+			targetY = player.y
+			If Not interping Then
+				' collect it
+				Print "collect"
+				active = False
+				alive = False
+			End
+		End
+	End
+	
+	Method Render:Void()
+		#Rem
+		Local oldalpha:Float = GetAlpha()
+		If useHSL And recalcHSL Then RecalcHSL()
+		SetColor(red, green, blue)
+		SetAlpha(alpha)
+		DrawCircle(0,0,3)
+		SetAlpha(oldalpha)
+		#End
+		Super.Render()
+	End
+	
+	Method CopyFrom:Smh_Entity(source:Smh_Entity)
+		Super.CopyFrom(source)
+		Local other:Smh_Powerup = Smh_Powerup(source)
+		If Not other Then Return Self
+		playerInterp = other.playerInterp
+		Return Self
+	End
+End
+
 ''''''''''''''''''''''''' BOSSES '''''''''''''''''''''''''
-Class Smh_Stage1 Extends Smh_Stage
+Class Smh_Stage1 Extends Smh_Stage Implements Smh_EntityLogicHandler
 	Field firstBoss:Smh_Boss = New Smh_Stage1Boss1
 	Field trash1:Smh_Enemy
 	
 	Method New()
 		trash1 = New Smh_Enemy
-		trash1.currentHP = 30
-		trash1.maxHP = 30
+		trash1.currentHP = 10
+		trash1.maxHP = 10
 		trash1.boundsInset = -50
 		trash1.boundsPurge = True
 		trash1.boundsRestrict = False
 		trash1.entityTypeId = 0
+		trash1.logicHandler = Self
+		trash1.logicVar1 = 1500 ' time until next fire
+		trash1.logicVar2 = 500 ' firing frequency
 	End
 	
 	Method DoLogic:Void(millis%)
@@ -1192,6 +1349,7 @@ Class Smh_Stage1 Extends Smh_Stage
 						If enemies.AreAllDead() Then
 							boss = firstBoss
 							boss.Reset(True, False)
+							boss.InterpIn()
 							currentSectionStep = 2
 						End
 						
@@ -1201,9 +1359,10 @@ Class Smh_Stage1 Extends Smh_Stage
 								boss = Null
 								currentSection = 1
 								currentSectionStep = 0
-							Elseif boss.timeRemainingMillis <= 0 Then
-								currentSectionStep = 0
 							End
+						Else
+							currentSectionStep = 0
+							waitTimeMillis = 1000
 						End
 				End
 				
@@ -1223,6 +1382,25 @@ Class Smh_Stage1 Extends Smh_Stage
 				End
 		End
 	End
+	
+	Method UpdateLogic:Void(entity:Smh_Entity, millis%)
+		Select entity.entityTypeId
+			' first trash mob will wait for a certain number of millis, then fire a bullet regularly until dead or offscreen
+			Case 0
+				If entity.alive Then
+					While millis > 0
+						entity.logicVar1 -= millis
+						millis = 0
+						If entity.logicVar1 <= 0 Then
+							millis = -entity.logicVar1
+							entity.logicVar1 = entity.logicVar2
+							' TODO: fire
+							Print "entity firing"
+						End
+					End
+				End
+		End
+	End
 End
 
 Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
@@ -1238,6 +1416,9 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 	
 	Method New()
 		radius = 20
+		lastX = -10000
+		lastY = -10000
+		phaseCount = 3
 		
 		' phase 1
 		firstBullet.image = game.images.Find("game9_bullet1")
@@ -1292,13 +1473,11 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 			Case 0 ' first phase
 				Select currentPhaseStep
 					Case 0
-						' interp to the centre from a random point
-						SetInterpOverTime(Rnd(boundsLeft,boundsRight), -100, boundsLeft+boundsWidth/2, boundsTop+boundsHeight/2, 2000, 1)
+						'Reset()
 						currentPhaseStep = 1
-						waitTimeMillis = 2000
 						
 					Case 1
-						' fire and wait, then loop to 1
+						' fire and wait
 						Local direction:Float = ATan2(player.y-y,player.x-x)
 						Local srcX:Float = x - Cos(direction)*5
 						Local srcY:Float = y - Sin(direction)*5
@@ -1318,15 +1497,38 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 							firstAngle -= intervalAngle/2
 						Next
 						waitTimeMillis = 3000
-						bulletFireCount += 1
-						If bulletFireCount = 1'3 Then
-							bulletFireCount = 0
-							currentPhaseStep = 2
-						End
+				End
+				
+			Case 1 ' second phase
+				Select currentPhaseStep
+					Case 0
+						' interp to top right
+						'Reset()
+						SetInterpOverTime(x, y, boundsLeft+boundsWidth*0.75, boundsHeight/2, 3000, 1)
+						waitTimeMillis = 1000
+						currentPhaseStep = 1
+						
+					Case 1
+						' fire second bullet type (while moving)
+						enemyBullets.FireBulletSpray(
+							secondBullet, Null,
+							x, y, 0,
+							0, 360*(19.0/20.0),
+							1, 0,
+							50, 50,
+							20)
+						waitTimeMillis = 1000
+						currentPhaseStep = 2
 						
 					Case 2
-						' interp to top right
-						SetInterpOverTime(x, y, boundsLeft+boundsWidth*0.75, boundsHeight/2, 3000, 1)
+						' fire third bullet type (while moving)
+						enemyBullets.FireBulletSpray(
+							thirdBullet, Null,
+							x, y, 0,
+							0, 360*(39.0/40.0),
+							1, 0,
+							100, 100,
+							40)
 						waitTimeMillis = 1000
 						currentPhaseStep = 3
 						
@@ -1339,55 +1541,22 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 							1, 0,
 							50, 50,
 							20)
-						waitTimeMillis = 1000
 						currentPhaseStep = 4
-						
-					Case 4
-						' fire third bullet type (while moving)
-						enemyBullets.FireBulletSpray(
-							thirdBullet, Null,
-							x, y, 0,
-							0, 360*(39.0/40.0),
-							1, 0,
-							100, 100,
-							40)
-						waitTimeMillis = 1000
-						currentPhaseStep = 5
-						
-					Case 5
-						' fire second bullet type (while moving)
-						enemyBullets.FireBulletSpray(
-							secondBullet, Null,
-							x, y, 0,
-							0, 360*(19.0/20.0),
-							1, 0,
-							50, 50,
-							20)
-						
-						bulletFireCount += 1
-						If bulletFireCount = 1'3 Then
-							Reset() ' TODO: convert bullets to powerups
-							bulletFireCount = 0
-							currentPhase = 1
-							currentPhaseStep = 0
-						Else
-							currentPhaseStep = 6
-						End If
-						
 						waitTimeMillis = 2000
 						
-					Case 6
-						' random interp, loop to 3
+					Case 4
+						' random interp, loop to 1
 						SetInterpRandomOverTime(x, y, 80, 110, 2000, 1)
-						currentPhaseStep = 3
+						currentPhaseStep = 1
 				End
 				
-			Case 1 ' second phase
+			Case 2 ' third phase
 				Select currentPhaseStep
 					Case 0
 						' interp to the middle
-						SetInterpOverTime(x, y, boundsLeft+(boundsRight-boundsLeft)/2, boundsTop+(boundsBottom-boundsTop)/2, 1000, 1)
-						waitTimeMillis = 2000
+						'Reset()
+						SetInterpOverTime(x, y, boundsLeft+(boundsRight-boundsLeft)/2, boundsTop+(boundsBottom-boundsTop)/2, 2000, 1)
+						waitTimeMillis = 3000
 						currentPhaseStep = 1
 						bulletFireCount = 0
 						
