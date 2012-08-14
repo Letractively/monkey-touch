@@ -1,0 +1,15 @@
+<towers>
+	<tower>
+		<name>Turret</name>
+		<image>turretBase</image>
+		<gunImage>turretGun</gunImage>
+		<damage>10</damage>
+		<damageBonus>2</damageBonus>
+		<range>100</range>
+		<health>100</health>
+		<fireRate>25</fireRate>
+		<cost>250</cost>
+		<firePosX>0</firePosX>
+		<firePosY>-7</firePosY>
+	</tower>
+</towers>
