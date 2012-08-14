@@ -13,28 +13,8 @@ Import main
 
 Global gameScreen:GameScreen
 Global gameOverScreen:GameOverScreen
+Global nextLevelScreen:NextLevelScreen
 Global debugOn:Bool = True
-
-Class GameOverScreen Extends Screen
-	Method New()
-		name = "GameOverScreen"
-	End
-	
-	Method Start:Void()
-		
-	End
-	
-	Method Render:Void()
-		Cls
-		TitleFont.DrawText("GAME OVER!", 320, 240, 2)
-	End
-	
-	Method Update:Void()
-		If KeyHit(KEY_SPACE) or KeyHit(KEY_ESCAPE) Or MouseHit() Then
-			FadeToScreen(Game8Scr)
-		End
-	End
-End
 
 #rem
 summary:Title Screen Class.
@@ -62,6 +42,7 @@ Class Game8Screen Extends Screen
 	Method Start:Void()
 		gameScreen = New GameScreen
 		gameOverScreen = New GameOverScreen
+		nextLevelScreen = New NextLevelScreen
 	End
 	
 	#rem
@@ -88,21 +69,26 @@ Class Game8Screen Extends Screen
 	End
 End
 
-Class TankEnemy Extends Enemy
-	Method New(name:String, x:Float, y:Float)
-		Super.New(game.images.Find(gameScreen.enemyTemplateMap.Get(name.ToUpper()).imageName), x, y, name)
-	End
-End
-
-Class EnemyTemplate
+Class UnitTemplate
 	Field name:String
+	Field gunImageName:String
 	Field damage:Float
+	Field damageBonus:Float
 	Field range:Float
 	Field fireRate:Int
 	Field health:Float
 	Field score:Int
 	Field imageName:String
 	Field speed:Float
+	Field cost:Int
+	Field firePosX:Float
+	Field firePosY:Float
+End
+
+Class TankEnemy Extends Enemy
+	Method New(name:String, x:Float, y:Float)
+		Super.New(game.images.Find(gameScreen.enemyTemplateMap.Get(name.ToUpper()).imageName), x, y, name)
+	End
 End
 
 Class Enemy Extends Sprite Abstract
@@ -124,7 +110,7 @@ Class Enemy Extends Sprite Abstract
 	End
 	
 	Method SetStats:Void(name:String)
-		Local et:EnemyTemplate = gameScreen.enemyTemplateMap.Get(name.ToUpper())
+		Local et:UnitTemplate = gameScreen.enemyTemplateMap.Get(name.ToUpper())
 		Self.fireRate = et.fireRate
 		Self.damage = et.damage
 		Self.range = et.range
@@ -221,21 +207,8 @@ Class Enemy Extends Sprite Abstract
 End
 
 Class TurretTower Extends Tower
-	Global cost:Int = 250
-	
-	Method New(img:GameImage, x:Float, y:Float)
-		Super.New(img, x, y)
-	End
-	
-	Method SetStats:Void()
-		Self.fireRate = 30
-		Self.damage = 25
-		Self.damageBonus = 2
-		Self.range = 100
-		Self.health = 100
-		Self.firePosX = x + Self.image.w2
-		Self.firePosY = y + Self.image.h2
-		Self.selected = False		
+	Method New(name:String, x:Float, y:Float)
+		Super.New(game.images.Find(gameScreen.towerTemplateMap.Get(name.ToUpper()).imageName), x, y, name)
 	End
 End
 
@@ -253,6 +226,7 @@ Class Tower Extends Sprite Abstract
 	Field firePosX:Int, firePosY:Int
 	Field drawLine:Bool
 	Field drawLineTime:Float
+	Field cost:Int
 	
 	Field dx1:Int, dy1:Int, dx2:Int, dy2:Int
 	Field selected:Bool
@@ -260,13 +234,25 @@ Class Tower Extends Sprite Abstract
 	Field gunFrame:Int
 	Field gunAngle:Float
 	
-	Method New(img:GameImage, x:Float, y:Float)
+	Method New(img:GameImage, x:Float, y:Float, name:String)
 		Super.New(img, x, y)
-		SetStats()
+		SetStats(name)
 		list.Add(Self)
 	End
 	
-	Method SetStats:Void() Abstract
+	Method SetStats:Void(name:String)
+		Local t:UnitTemplate = gameScreen.towerTemplateMap.Get(name.ToUpper())
+		Self.damage = t.damage
+		Self.damageBonus = t.damageBonus
+		Self.range = t.range
+		Self.health = t.health
+		Self.fireRate = t.fireRate
+		Self.cost = t.cost
+		Self.firePosX = x + Self.image.w2 + t.firePosX
+		Self.firePosY = y + Self.image.h2 + t.firePosY
+		self.gunImage = game.images.Find(t.gunImageName)
+		Self.selected = False
+	End
 	
 	Method Kill:Void()
 		If Not list Return
@@ -528,7 +514,8 @@ Class GameScreen Extends Screen
 	Field cash:Int
 	Field health:Int
 	Field gameScrollSpeed:Int = 5
-	Field enemyTemplateMap:StringMap<EnemyTemplate>
+	Field enemyTemplateMap:StringMap<UnitTemplate>
+	Field towerTemplateMap:StringMap<UnitTemplate>
 	Field level:Int
 	Field mapFileName:String
 	Field mapName:String
@@ -547,18 +534,43 @@ Class GameScreen Extends Screen
 		Local doc:XMLDocument = xmlReader.ParseFile(file)
 		Local rootElement:XMLElement = doc.Root
 		For Local xmlEnemy:XMLElement = Eachin rootElement.GetChildrenByName("enemy")
-			Local enemyTemplate:EnemyTemplate = New EnemyTemplate()
+			Local t:UnitTemplate = New UnitTemplate()
 			
-			enemyTemplate.name = xmlEnemy.GetFirstChildByName("name").Value
-			enemyTemplate.imageName = xmlEnemy.GetFirstChildByName("image").Value
-			enemyTemplate.damage = Int(xmlEnemy.GetFirstChildByName("damage").Value)
-			enemyTemplate.range = Float(xmlEnemy.GetFirstChildByName("range").Value)
-			enemyTemplate.health = Float(xmlEnemy.GetFirstChildByName("health").Value)
-			enemyTemplate.speed = Float(xmlEnemy.GetFirstChildByName("speed").Value)
-			enemyTemplate.score = Int(xmlEnemy.GetFirstChildByName("score").Value)
+			t.name = xmlEnemy.GetFirstChildByName("name").Value
+			t.imageName = xmlEnemy.GetFirstChildByName("image").Value
+			t.damage = Int(xmlEnemy.GetFirstChildByName("damage").Value)
+			t.range = Float(xmlEnemy.GetFirstChildByName("range").Value)
+			t.health = Float(xmlEnemy.GetFirstChildByName("health").Value)
+			t.speed = Float(xmlEnemy.GetFirstChildByName("speed").Value)
+			t.score = Int(xmlEnemy.GetFirstChildByName("score").Value)
 			
-			enemyTemplateMap.Add(enemyTemplate.name.ToUpper(), enemyTemplate)
+			enemyTemplateMap.Add(t.name.ToUpper(), t)
 		Next	
+	End
+	
+	Method LoadTowerData:Void()
+		' load enemy data
+		Local file:String = "graphics/game8/towers.xml"
+		Local xmlReader:XMLParser = New XMLParser
+		Local doc:XMLDocument = xmlReader.ParseFile(file)
+		Local rootElement:XMLElement = doc.Root
+		For Local xmlEnemy:XMLElement = Eachin rootElement.GetChildrenByName("tower")
+			Local t:UnitTemplate = New UnitTemplate()
+			
+			t.name = xmlEnemy.GetFirstChildByName("name").Value
+			t.imageName = xmlEnemy.GetFirstChildByName("image").Value
+			t.gunImageName = xmlEnemy.GetFirstChildByName("gunImage").Value
+			t.damage = Float(xmlEnemy.GetFirstChildByName("damage").Value)
+			t.damageBonus = Float(xmlEnemy.GetFirstChildByName("damageBonus").Value)
+			t.range = Float(xmlEnemy.GetFirstChildByName("range").Value)
+			t.health = Float(xmlEnemy.GetFirstChildByName("health").Value)
+			t.fireRate = Float(xmlEnemy.GetFirstChildByName("fireRate").Value)
+			t.cost = Int(xmlEnemy.GetFirstChildByName("cost").Value)
+			t.firePosX = Float(xmlEnemy.GetFirstChildByName("firePosX").Value)
+			t.firePosY = Float(xmlEnemy.GetFirstChildByName("firePosY").Value)
+			
+			towerTemplateMap.Add(t.name.ToUpper(), t)
+		Next
 	End
 	
 	Method LoadLevelData:Void(level:Int)
@@ -599,6 +611,7 @@ Class GameScreen Extends Screen
 	
 	Method LoadData:Void()
 		LoadEnemyData()
+		LoadTowerData()
 		LoadLevelData(1)
 	End
 	
@@ -641,7 +654,8 @@ Class GameScreen Extends Screen
 	End
 	
 	Method Start:Void()
-		enemyTemplateMap = New StringMap<EnemyTemplate>
+		enemyTemplateMap = New StringMap<UnitTemplate>
+		towerTemplateMap = New StringMap<UnitTemplate>
 		waveMap = New IntMap<Wave>
 		
 		game.scrollX = TILE_SIZE
@@ -740,8 +754,14 @@ Class GameScreen Extends Screen
 		Controls()
 		
 		' game over
-		if health < 0 Then
+		if health <= 0 Then
+			health = 0
 			FadeToScreen(gameOverScreen, defaultFadeTime, True, True, False)
+		End
+		
+		' win
+		if Enemy.list.Size() = 0 And currentWave = null Then
+			FadeToScreen(nextLevelScreen, defaultFadeTime, True, True, False)
 		End
 	End
 	
@@ -802,10 +822,8 @@ Class GameScreen Extends Screen
 					if gui.mode = gui.TURRET
 						Local nx:Float = Floor(mx / TILE_SIZE)
 						Local ny:Float = Floor(my / TILE_SIZE)
-						Local t:TurretTower = New TurretTower(turretBaseImage, nx * TILE_SIZE, ny * TILE_SIZE)
-						cash -= TurretTower.cost
-						t.gunImage = turretGunImage
-						t.firePosY -= 7
+						Local t:TurretTower = New TurretTower("turret", nx * TILE_SIZE, ny * TILE_SIZE)
+						cash -= t.cost
 						
 						gameScreen.tilemap.SetTile(mx, my, 1, gameScreen.tilemap.BUILD_LAYER)
 						gameScreen.tilemap.SetTile(mx + TILE_SIZE, my, 1, gameScreen.tilemap.BUILD_LAYER)
@@ -835,6 +853,7 @@ Class GameScreen Extends Screen
 	
 	Method ClearItems:Void()
 		enemyTemplateMap.Clear()
+		towerTemplateMap.Clear()
 		waveMap.Clear()
 		
 		If Enemy.list
@@ -929,7 +948,7 @@ Class Gui
 		menu.Update()
 		menu.SetY(y + menuOffsetY)
 
-		if menu.Clicked("turretButton") And gameScreen.cash >= TurretTower.cost
+		if menu.Clicked("turretButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("TURRET").cost
 			Local sb:SimpleButton = menu.FindButton("turretButton")
 			if sb.selected = True
 				mode = NONE
@@ -972,6 +991,49 @@ Class MyTileMap Extends TileMap
 	
 	Method DrawTile:Void(tileLayer:TileMapTileLayer, mapTile:TileMapTile, x:Int, y:Int)
 		mapTile.image.DrawTile(x, y, mapTile.id, 0, 1, 1)
+	End
+End
+
+
+Class GameOverScreen Extends Screen
+	Method New()
+		name = "GameOverScreen"
+	End
+	
+	Method Start:Void()
+		
+	End
+	
+	Method Render:Void()
+		Cls
+		TitleFont.DrawText("GAME OVER!", 320, 240, 2)
+	End
+	
+	Method Update:Void()
+		If KeyHit(KEY_SPACE) or KeyHit(KEY_ESCAPE) Or MouseHit() Then
+			FadeToScreen(Game8Scr)
+		End
+	End
+End
+
+Class NextLevelScreen Extends Screen
+	Method New()
+		name = "NextlevelScreen"
+	End
+	
+	Method Start:Void()
+		
+	End
+	
+	Method Render:Void()
+		Cls
+		TitleFont.DrawText("WELL DONE!", 320, 240, 2)
+	End
+	
+	Method Update:Void()
+		If KeyHit(KEY_SPACE) or KeyHit(KEY_ESCAPE) Or MouseHit() Then
+			FadeToScreen(gameScreen)
+		End
 	End
 End
 
