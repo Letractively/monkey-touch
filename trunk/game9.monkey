@@ -39,6 +39,9 @@ Class Game9Screen Extends Screen
 		game.images.LoadAtlas("game9/game9_bullets1.txt", ImageBank.LIBGDX_ATLAS, True)
 		game.images.LoadAtlas("game9/game9_ships.txt", ImageBank.LIBGDX_ATLAS, True)
 		Local tmpImage:GameImage = Null
+		game.images.Load("game9/game9_ship2.png",,False).image.SetHandle(9, 12)
+		game.images.LoadAnim("game9/game9_ship6.png", 39, 39, 3, Null)
+		
 		'game.images.LoadAnim("Ship1.png", 64, 64, 7, tmpImage)
 		smhGameScreen = New Smh_GameScreen
 	End
@@ -88,7 +91,6 @@ Class Smh_GameScreen Extends Screen
 	
 	Method Start:Void()
 		background = New Smh_Background("game9_background1.tmx")
-		background.scissor = True
 		background.boundsLeft = 20
 		background.boundsTop = 20
 		background.boundsRight = background.boundsLeft + 400
@@ -145,6 +147,9 @@ Class Smh_GameScreen Extends Screen
 	
 	Method Render:Void()
 		Cls
+		' we have to manually do the scissor here since backround has no children
+		SetScissor(background.boundsLeft, background.boundsTop, background.boundsRight-background.boundsLeft, background.boundsBottom-background.boundsTop)
+		
 		background.DoRender()
 		enemies.DoRender()
 		If boss Then boss.DoRender()
@@ -152,6 +157,10 @@ Class Smh_GameScreen Extends Screen
 		powerups.DoRender()
 		player.DoRender()
 		enemyBullets.DoRender()
+		
+		' reset scissor
+		SetScissor(0, 0, DEVICE_WIDTH, DEVICE_HEIGHT)
+		
 		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
 		DrawText("Player Bullet Count: " + playerBullets.aliveCount, 0, 30)
 		DrawText("Graze Count: " + grazeCount, 0, 45)
@@ -243,7 +252,10 @@ Class Smh_Entity
 	' position/velocities (velocity in units per second)
 	Field x#, y# ' position
 	Field dx#, dy# ' cartesian velocity if usePolar = False
+	Field accelX#, accelY# ' cartesian acceleration if usePolar = False
 	Field polarAngle#, polarVelocity# ' polar velocity if usePolar = True
+	Field polarAccel# ' polar acceleration if usePolar = True
+	Field terminalVelocity# ' can never move faster than this (if not interping)
 	Field usePolar?
 	Field recalcPolar?
 	Field boundsRestrict? = False
@@ -407,9 +419,31 @@ Class Smh_Entity
 				Next
 				x = sourceX + (targetX-sourceX)*alpha
 				y = sourceY + (targetY-sourceY)*alpha
+				If usePolar Then polarAngle = ATan2(targetY-y, targetX-x)
 			End
 		Else
-			If usePolar And recalcPolar Then RecalcPolar()
+			' update polar accel
+			If usePolar Then
+				If polarAccel <> 0 Then
+					polarVelocity += polarAccel * millis / 1000.0
+					recalcPolar = True
+				End
+				If recalcPolar Then RecalcPolar()
+			' update cartesian accel
+			Else
+				dx += accelX * millis / 1000.0
+				dy += accelY * millis / 1000.0
+			End
+			
+			' do terminal velocity
+			If terminalVelocity > 0 And dx*dx + dy*dy > terminalVelocity*terminalVelocity Then
+				Local length:Float = Sqrt(dx*dx + dy*dy)
+				dx *= terminalVelocity / length
+				dy *= terminalVelocity / length
+				polarVelocity = terminalVelocity
+			End
+			
+			' update position
 			x += dx * millis / 1000.0
 			y += dy * millis / 1000.0
 		End
@@ -461,12 +495,13 @@ Class Smh_Entity
 		Translate x, y
 		Scale scaleX, scaleY
 		Rotate rot
-		'If scissor Then SetScissor(boundsLeft, boundsTop, boundsRight-boundsLeft, boundsBottom-boundsTop)
+		If scissor Then SetScissor(boundsLeft, boundsTop, boundsRight-boundsLeft, boundsBottom-boundsTop)
 		Return True
 	End
 	
 	Method PostRender:Void()
-		'If scissor Then SetScissor(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+		' we have to use device width/height rather than screen width/height as the scissor is not affected by scaling
+		If scissor Then SetScissor(0, 0, DEVICE_WIDTH, DEVICE_HEIGHT)
 		PopMatrix
 	End
 	
@@ -532,8 +567,12 @@ Class Smh_Entity
 		y = source.y
 		dx = source.dx
 		dy = source.dy
+		accelX = source.accelX
+		accelY = source.accelY
 		polarAngle = source.polarAngle
 		polarVelocity = source.polarVelocity
+		polarAccel = source.polarAccel
+		terminalVelocity = source.terminalVelocity
 		usePolar = source.usePolar
 		recalcPolar = source.recalcPolar
 		boundsLeft = source.boundsLeft
@@ -688,7 +727,7 @@ Class Smh_Pool<T> Extends Smh_Entity
 		Next
 	End
 	
-	Method GetEntity:T(template:Smh_Entity)
+	Method GetEntity:T(template:Smh_Entity=Null)
 		If aliveCount = children.Length Then Purge()
 		If aliveCount = children.Length Then Return Null
 		aliveCount += 1
@@ -863,6 +902,7 @@ Class Smh_Unit Extends Smh_Entity
 		Super.CopyFrom(source)
 		currentHP = unit.currentHP
 		maxHP = unit.maxHP
+		died = unit.died
 	End
 End
 
@@ -932,17 +972,6 @@ Class Smh_Player Extends Smh_Unit
 			enemyBullets.ConvertToPowerups()
 		End
 	End
-	
-	#Rem
-	Method Render:Void()
-		Local oldalpha:Float = GetAlpha()
-		If useHSL And recalcHSL Then RecalcHSL()
-		SetColor(red, green, blue)
-		SetAlpha(alpha)
-		DrawRect(-5,-5,10,10)
-		SetAlpha(oldalpha)
-	End
-	#End
 End
 
 Class Smh_Enemy Extends Smh_Unit
@@ -950,19 +979,23 @@ Class Smh_Enemy Extends Smh_Unit
 		Super.Update(millis)
 	End
 	
-	Method Render:Void()
-		Local oldalpha:Float = GetAlpha()
-		If useHSL And recalcHSL Then RecalcHSL()
-		SetColor(red, green, blue)
-		SetAlpha(alpha)
-		DrawRect(-5,-5,10,10)
-		SetAlpha(oldalpha)
-	End
-	
 	Method Died:Void()
 		Print "enemy died"
 		alive = False
 		' TODO: explosion
+		Local pu:Smh_Powerup = Smh_Powerup(powerups.GetEntity(player.bulletPowerup))
+		pu.parent = background
+		pu.x = x
+		pu.y = y
+		pu.dx = 0
+		pu.dy = -50
+		pu.accelX = 0
+		pu.accelY = 50
+		pu.terminalVelocity = 75
+		pu.playerInterp = False
+		pu.active = True
+		pu.boundsPurge = True
+		pu.radius = 20
 	End
 End
 
@@ -982,6 +1015,8 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 		active = True
 		boundsRestrict = False
 		boundsPurge = False
+		rotateWithHeading = True
+		usePolar = True
 		
 		boundsLeft = background.boundsLeft
 		boundsRight = background.boundsRight
@@ -1060,15 +1095,6 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 	End
 	
 	Method DoLogic:Void(millis%) Abstract
-	
-	Method Render:Void()
-		Local oldalpha:Float = GetAlpha()
-		If useHSL And recalcHSL Then RecalcHSL()
-		SetColor(red, green, blue)
-		SetAlpha(alpha)
-		DrawRect(-5,-5,10,10)
-		SetAlpha(oldalpha)
-	End
 	
 	Method InterpOut:Void()
 		lastX = x
@@ -1272,14 +1298,30 @@ Class Smh_Powerup Extends Smh_Entity
 	
 	Method Update:Void(millis%)
 		Super.Update(millis)
-		If playerInterp Then
+		
+		' update the interp position
+		If playerInterp And interping Then
 			targetX = player.x
 			targetY = player.y
-			If Not interping Then
-				' collect it
-				Print "collect"
-				active = False
-				alive = False
+			polarAngle = ATan2(targetY-y, targetX-x)
+		End
+		
+		' check if we've collected it
+		Local pdx# = x-player.x
+		Local pdy# = y-player.y
+		If pdx*pdx + pdy*pdy <= radius*radius Or playerInterp And Not interping Then
+			' collect it
+			Print "collect"
+			active = False
+			alive = False
+			interping = False
+			' trigger a collect on all other powerups if we collected near the top
+			If Not playerInterp And player.y < boundsTop+(background.boundsBottom-background.boundsTop)*0.25 Then
+				For Local i:Int = 0 Until powerups.aliveCount
+					If powerups.children[i].alive And Not powerups.children[i].playerInterp Then
+						powerups.children[i].SuckToPlayer(Null, 1000)
+					End
+				Next
 			End
 		End
 	End
@@ -1321,6 +1363,7 @@ Class Smh_Stage1 Extends Smh_Stage Implements Smh_EntityLogicHandler
 		trash1.logicHandler = Self
 		trash1.logicVar1 = 1500 ' time until next fire
 		trash1.logicVar2 = 500 ' firing frequency
+		trash1.image = game.images.Find("game9_ship2")
 	End
 	
 	Method DoLogic:Void(millis%)
@@ -1462,6 +1505,8 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		fourthBullet.entityTypeId = RIGHTANGLE_BULLET
 		fourthBullet.logicHandler = Self
 		
+		image = game.images.Find("game9_ship6")
+		rotation = 90
 		'anim = New Smh_AnimStrip(images.Find("Ship1"))
 		' FIXME: first frame always skipped
 	End
@@ -1475,6 +1520,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 					Case 0
 						'Reset()
 						currentPhaseStep = 1
+						polarAngle = 90
 						
 					Case 1
 						' fire and wait
@@ -1496,6 +1542,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 								i)
 							firstAngle -= intervalAngle/2
 						Next
+						polarAngle = direction
 						waitTimeMillis = 3000
 				End
 				
@@ -1561,6 +1608,8 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 						bulletFireCount = 0
 						
 					Case 1
+						' face down
+						polarAngle = 90
 						' fire bullet 4
 						enemyBullets.FireBulletLinear(
 							fourthBullet, Null,
