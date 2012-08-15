@@ -1,3 +1,5 @@
+Strict
+
 #rem
 header:
 [quote]
@@ -69,6 +71,63 @@ Class Game8Screen Extends Screen
 	End
 End
 
+Class Rocket Extends Sprite
+	Global list:ArrayList<Rocket> = New ArrayList<Rocket>
+	Field damage:Float
+	Field range:Float
+	Field target:Enemy
+	Field angle:Float
+	
+	Method New(img:GameImage, x:Float, y:Float)
+		Super.New(img, x, y)
+		speed = 4
+		list.Add(Self)
+	End
+	
+	Method Kill:Void()
+		If Not list Return	
+		list.Remove(Self)
+	End
+	
+	Function DrawAll:Void()
+		If Not list Return
+		Local r:Rocket
+		For Local i:Int = 0 Until list.Size
+			r = list.Get(i)
+			r.Draw(game.scrollX, game.scrollY)
+		Next
+	End
+		
+	Function UpdateAll:Void()
+		If Not list Return
+		Local r:Rocket
+		For Local i:Int = 0 Until list.Size
+			r = list.Get(i)
+			r.Update()
+		Next
+	End
+	
+	Method Update:Void()
+		Local xDist:Float = target.x - x
+		Local yDist:Float = target.y - y
+		Local angle:Float = ATan2(yDist, xDist)
+		if angle < 0 angle += 360
+		rotation = -angle - 90
+		MoveForward()
+		range -= speed
+		
+		if Collide(target) Then
+			target.health -= Self.damage
+			New Explosion(gameScreen.explosionSmallImage, Self.x, Self.y, 6, 100)
+			Kill()
+		End
+		
+		if range < 0
+			Kill()
+		End
+	End
+End
+
 Class UnitTemplate
 	Field name:String
 	Field gunImageName:String
@@ -83,6 +142,7 @@ Class UnitTemplate
 	Field cost:Int
 	Field firePosX:Float
 	Field firePosY:Float
+	Field fireType:Int
 End
 
 Class TankEnemy Extends Enemy
@@ -227,12 +287,15 @@ Class Tower Extends Sprite Abstract
 	Field drawLine:Bool
 	Field drawLineTime:Float
 	Field cost:Int
-	
+	Field fireType:Int
 	Field dx1:Int, dy1:Int, dx2:Int, dy2:Int
 	Field selected:Bool
 	Field gunImage:GameImage
 	Field gunFrame:Int
 	Field gunAngle:Float
+	
+	Const LAZER:Int = 0
+	Const ROCKET:Int = 1
 	
 	Method New(img:GameImage, x:Float, y:Float, name:String)
 		Super.New(img, x, y)
@@ -250,7 +313,10 @@ Class Tower Extends Sprite Abstract
 		Self.cost = t.cost
 		Self.firePosX = x + Self.image.w2 + t.firePosX
 		Self.firePosY = y + Self.image.h2 + t.firePosY
-		self.gunImage = game.images.Find(t.gunImageName)
+		if t.gunImageName <> "" Then
+			self.gunImage = game.images.Find(t.gunImageName)
+		End
+		Self.fireType = t.fireType
 		Self.selected = False
 	End
 	
@@ -279,7 +345,9 @@ Class Tower Extends Sprite Abstract
 		If drawLine
 			DrawLine dx1 - game.scrollX, dy1 - game.scrollY, dx2 - game.scrollX, dy2 - game.scrollY
 		End
-		gunImage.Draw(firePosX - game.scrollX, firePosY - game.scrollY, gunAngle, 1, 1, gunFrame)
+		if gunImage <> Null
+			gunImage.Draw(firePosX - game.scrollX, firePosY - game.scrollY, gunAngle, 1, 1, gunFrame)
+		End
 	End
 	
 	Function UpdateAll:Void()
@@ -339,13 +407,23 @@ Class Tower Extends Sprite Abstract
 			If lastFire > fireRate
 				SetGunAngle(angle)
 				lastFire = 0
-				Self.drawLine = True
-				dx1 = Self.firePosX
-				dy1 = Self.firePosY
-				dx2 = Self.target.x
-				dy2 = Self.target.y
-				Self.target.health -= Self.damage + Rnd(0, Self.damageBonus)
-				New Explosion(gameScreen.explosionSmallImage, Self.target.x, Self.target.y, 6, 100)
+				select fireType
+					Case LAZER
+						Self.drawLine = True
+						dx1 = Self.firePosX
+						dy1 = Self.firePosY
+						dx2 = Self.target.x
+						dy2 = Self.target.y
+						Self.target.health -= Self.damage + Rnd(0, Self.damageBonus)
+						New Explosion(gameScreen.explosionSmallImage, Self.target.x, Self.target.y, 6, 100)
+					Case ROCKET
+						local r:Rocket = New Rocket(game.images.Find("Rocket"), Self.firePosX, Self.firePosY)
+						r.rotation = -angle - 90
+						r.damage = Self.damage + Rnd(0, Self.damageBonus)
+						r.range = Self.range
+						r.target = target
+				 End
+				
 				If Self.target.health <= 0
 					Self.target = Null
 				End
@@ -533,16 +611,16 @@ Class GameScreen Extends Screen
 		Local xmlReader:XMLParser = New XMLParser
 		Local doc:XMLDocument = xmlReader.ParseFile(file)
 		Local rootElement:XMLElement = doc.Root
-		For Local xmlEnemy:XMLElement = Eachin rootElement.GetChildrenByName("enemy")
+		For Local xml:XMLElement = Eachin rootElement.GetChildrenByName("enemy")
 			Local t:UnitTemplate = New UnitTemplate()
 			
-			t.name = xmlEnemy.GetFirstChildByName("name").Value
-			t.imageName = xmlEnemy.GetFirstChildByName("image").Value
-			t.damage = Int(xmlEnemy.GetFirstChildByName("damage").Value)
-			t.range = Float(xmlEnemy.GetFirstChildByName("range").Value)
-			t.health = Float(xmlEnemy.GetFirstChildByName("health").Value)
-			t.speed = Float(xmlEnemy.GetFirstChildByName("speed").Value)
-			t.score = Int(xmlEnemy.GetFirstChildByName("score").Value)
+			t.name = xml.GetFirstChildByName("name").Value
+			t.imageName = xml.GetFirstChildByName("image").Value
+			t.damage = Int(xml.GetFirstChildByName("damage").Value)
+			t.range = Float(xml.GetFirstChildByName("range").Value)
+			t.health = Float(xml.GetFirstChildByName("health").Value)
+			t.speed = Float(xml.GetFirstChildByName("speed").Value)
+			t.score = Int(xml.GetFirstChildByName("score").Value)
 			
 			enemyTemplateMap.Add(t.name.ToUpper(), t)
 		Next	
@@ -554,21 +632,27 @@ Class GameScreen Extends Screen
 		Local xmlReader:XMLParser = New XMLParser
 		Local doc:XMLDocument = xmlReader.ParseFile(file)
 		Local rootElement:XMLElement = doc.Root
-		For Local xmlEnemy:XMLElement = Eachin rootElement.GetChildrenByName("tower")
+		For Local xml:XMLElement = Eachin rootElement.GetChildrenByName("tower")
 			Local t:UnitTemplate = New UnitTemplate()
 			
-			t.name = xmlEnemy.GetFirstChildByName("name").Value
-			t.imageName = xmlEnemy.GetFirstChildByName("image").Value
-			t.gunImageName = xmlEnemy.GetFirstChildByName("gunImage").Value
-			t.damage = Float(xmlEnemy.GetFirstChildByName("damage").Value)
-			t.damageBonus = Float(xmlEnemy.GetFirstChildByName("damageBonus").Value)
-			t.range = Float(xmlEnemy.GetFirstChildByName("range").Value)
-			t.health = Float(xmlEnemy.GetFirstChildByName("health").Value)
-			t.fireRate = Float(xmlEnemy.GetFirstChildByName("fireRate").Value)
-			t.cost = Int(xmlEnemy.GetFirstChildByName("cost").Value)
-			t.firePosX = Float(xmlEnemy.GetFirstChildByName("firePosX").Value)
-			t.firePosY = Float(xmlEnemy.GetFirstChildByName("firePosY").Value)
-			
+			t.name = xml.GetFirstChildByName("name").Value
+			t.imageName = xml.GetFirstChildByName("image").Value
+			t.gunImageName = xml.GetFirstChildByName("gunImage").Value
+			t.damage = Float(xml.GetFirstChildByName("damage").Value)
+			t.damageBonus = Float(xml.GetFirstChildByName("damageBonus").Value)
+			t.range = Float(xml.GetFirstChildByName("range").Value)
+			t.health = Float(xml.GetFirstChildByName("health").Value)
+			t.fireRate = Float(xml.GetFirstChildByName("fireRate").Value)
+			t.cost = Int(xml.GetFirstChildByName("cost").Value)
+			t.firePosX = Float(xml.GetFirstChildByName("firePosX").Value)
+			t.firePosY = Float(xml.GetFirstChildByName("firePosY").Value)
+			Local fireType:String = xml.GetFirstChildByName("fireType").Value
+			Select fireType.ToUpper()
+				Case "ROCKET"
+					t.fireType = Tower.ROCKET
+				Case "LAZER"
+					t.fireType = Tower.LAZER
+			End
 			towerTemplateMap.Add(t.name.ToUpper(), t)
 		Next
 	End
@@ -640,6 +724,10 @@ Class GameScreen Extends Screen
 		game.images.LoadAnim("game8/Tank5b.png", 20, 20, 9, tmpImage)
 		game.images.LoadAnim("game8/hardtank.png", 40, 40, 9, tmpImage)
 		game.images.LoadAnim("game8/turretBase.png", 40, 28, 2, tmpImage, False)
+		
+		game.images.LoadAnim("game8/Artil3.png", 40, 40, 9, tmpImage, False)
+		
+		game.images.Load("game8/rocket.png")
 		game.images.LoadAnim("game8/turretGun.png", 52, 45, 8, tmpImage)
 		game.images.LoadAnim("game8/explosn.png", 20, 20, 9, tmpImage)
 		game.images.LoadAnim("game8/exploBig.png", 40, 40, 14, tmpImage)
@@ -704,6 +792,7 @@ Class GameScreen Extends Screen
 		
 		Tower.DrawAll()
 		Enemy.DrawAll()
+		Rocket.DrawAll()
 		Explosion.DrawAll()
 		
 		if gui.mode = gui.TURRET
@@ -750,6 +839,7 @@ Class GameScreen Extends Screen
 		UpdateWave()
 		Tower.UpdateAll()
 		Enemy.UpdateAll()
+		Rocket.UpdateAll()
 		Explosion.UpdateAll()
 		Controls()
 		
@@ -761,7 +851,7 @@ Class GameScreen Extends Screen
 		
 		' win
 		if Enemy.list.Size() = 0 And currentWave = null Then
-			FadeToScreen(nextLevelScreen, defaultFadeTime, True, True, False)
+			FadeToScreen(nextLevelScreen, defaultFadeTime, True, True, True)
 		End
 	End
 	
@@ -822,7 +912,7 @@ Class GameScreen Extends Screen
 					if gui.mode = gui.TURRET
 						Local nx:Float = Floor(mx / TILE_SIZE)
 						Local ny:Float = Floor(my / TILE_SIZE)
-						Local t:TurretTower = New TurretTower("turret", nx * TILE_SIZE, ny * TILE_SIZE)
+						Local t:TurretTower = New TurretTower(gui.selectedButton, nx * TILE_SIZE, ny * TILE_SIZE)
 						cash -= t.cost
 						
 						gameScreen.tilemap.SetTile(mx, my, 1, gameScreen.tilemap.BUILD_LAYER)
@@ -856,6 +946,9 @@ Class GameScreen Extends Screen
 		towerTemplateMap.Clear()
 		waveMap.Clear()
 		
+		If Rocket.list
+			Rocket.list.Clear()
+		End
 		If Enemy.list
 			Enemy.list.Clear()
 		End
@@ -875,6 +968,7 @@ Class Gui
 	Const HIDE:Int = 0
 	Const NONE:Int = 0
 	Const TURRET:Int = 1
+	Field selectedButton:String
 	
 	Field showGUI:Int
 	Field x:Float
@@ -898,8 +992,8 @@ Class Gui
 		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 0, 20, True, HORIZONTAL)
 		local b:SimpleButton = menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png")
 		b.SetSelectedImage("game8/turretButtonSelected.png", "game8/turretButtonSelectedMO.png")
-		menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png", "2")
-		menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png", "3")
+		b = menu.AddButton("game8/rocketButton.png", "game8/rocketButtonMO.png")
+		b.SetSelectedImage("game8/rocketButtonSelected.png", "game8/rocketButtonSelectedMO.png")
 
 		backgroundImage = game.images.Find("gui")
 		limit = backgroundImage.h
@@ -944,7 +1038,13 @@ Class Gui
 		Next
 	End
 	
-	Method Update()
+	Method DeselectAllButtons:Void()
+		For Local b:SimpleButton = eachin menu
+			b.selected = False
+		Next
+	End
+	
+	Method Update:Void()
 		menu.Update()
 		menu.SetY(y + menuOffsetY)
 
@@ -954,17 +1054,30 @@ Class Gui
 				mode = NONE
 				sb.selected = False
 			Else
+				DeselectAllButtons()
+				selectedButton = "TURRET"
 				mode = TURRET
 				sb.selected = True
 			End
-			
 		End
 		
+		if menu.Clicked("rocketButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("ROCKET").cost
+			Local sb:SimpleButton = menu.FindButton("rocketButton")
+			if sb.selected = True
+				mode = NONE
+				sb.selected = False
+			Else
+				DeselectAllButtons()
+				selectedButton = "ROCKET"
+				mode = TURRET
+				sb.selected = True
+			End
+		End
 		
 		ShowHideGUI()
 	End
 	
-	Method Draw()
+	Method Draw:Void()
 		backgroundImage.Draw(x, y)
 		menu.Draw()
 		DrawText("CASH:" + gameScreen.cash, SCREEN_WIDTH, y + 10, 1, 0)
