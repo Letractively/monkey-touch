@@ -11,5 +11,20 @@
 		<cost>250</cost>
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
+		<fireType>lazer</fireType>
+	</tower>
+	<tower>
+		<name>Rocket</name>
+		<image>Artil3</image>
+		<gunImage></gunImage>
+		<damage>40</damage>
+		<damageBonus>2</damageBonus>
+		<range>150</range>
+		<health>100</health>
+		<fireRate>70</fireRate>
+		<cost>250</cost>
+		<firePosX>0</firePosX>
+		<firePosY>-7</firePosY>
+		<fireType>rocket</fireType>
 	</tower>
 </towers>
