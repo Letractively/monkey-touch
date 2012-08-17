@@ -77,10 +77,12 @@ Class Rocket Extends Sprite
 	Field range:Float
 	Field target:Enemy
 	Field angle:Float
+	Field smokeDelay:Float
 	
 	Method New(img:GameImage, x:Float, y:Float)
 		Super.New(img, x, y)
 		speed = 4
+		Self.SetHitBox(-2, -2, 2, 2)
 		list.Add(Self)
 	End
 	
@@ -113,7 +115,16 @@ Class Rocket Extends Sprite
 		Local angle:Float = ATan2(yDist, xDist)
 		if angle < 0 angle += 360
 		rotation = -angle - 90
+				
 		MoveForward()
+		if smokeDelay > 1
+			smokeDelay = 0
+			local p:Particle = Particle.Create(gameScreen.smokeImage, x, y, -dx / 10, -dy / 10, 0, 500)
+			p.SetupRotation(1, 300, True, True)
+		Else
+			smokeDelay += 1 * dt.delta
+		End
+		
 		range -= speed
 		
 		if Collide(target) Then
@@ -588,6 +599,7 @@ Class GameScreen Extends Screen
 	Field explosionImage:GameImage
 	Field explosionBigImage:GameImage
 	Field explosionSmallImage:GameImage
+	Field smokeImage:GameImage
 	Field gui:Gui
 	Field cash:Int
 	Field health:Int
@@ -720,19 +732,29 @@ Class GameScreen Extends Screen
 	
 	Method LoadImages:Void()
 		Local tmpImage:Image
-		game.images.LoadAnim("game8/tank7.png", 20, 20, 9, tmpImage)
-		game.images.LoadAnim("game8/Tank5b.png", 20, 20, 9, tmpImage)
-		game.images.LoadAnim("game8/hardtank.png", 40, 40, 9, tmpImage)
-		game.images.LoadAnim("game8/turretBase.png", 40, 28, 2, tmpImage, False)
+		Local path:String = "game8/"
 		
-		game.images.LoadAnim("game8/Artil3.png", 40, 40, 9, tmpImage, False)
+		game.images.LoadAnim(path + "tank7.png", 20, 20, 9, tmpImage)
+		game.images.LoadAnim(path + "Tank5b.png", 20, 20, 9, tmpImage)
+		game.images.LoadAnim(path + "hardtank.png", 40, 40, 9, tmpImage)
+		game.images.LoadAnim(path + "turretBase.png", 40, 28, 2, tmpImage, False)
 		
-		game.images.Load("game8/rocket.png")
-		game.images.LoadAnim("game8/turretGun.png", 52, 45, 8, tmpImage)
-		game.images.LoadAnim("game8/explosn.png", 20, 20, 9, tmpImage)
-		game.images.LoadAnim("game8/exploBig.png", 40, 40, 14, tmpImage)
-		game.images.LoadAnim("game8/expSmall.png", 20, 20, 7, tmpImage)
+		game.images.LoadAnim(path + "Artil3.png", 40, 40, 9, tmpImage, False)
+		
+		game.images.Load(path + "rocket.png")
+		game.images.Load(path + "smoke.png")
+		game.images.Load(path + "empty.png")
+		
+		game.images.Load(path + "ArtilBase.png", "", False)
+		game.images.LoadAnim(path + "ArtilGun.png", 40, 40, 8, tmpImage)
+		
+		game.images.LoadAnim(path + "turretGun.png", 52, 45, 8, tmpImage)
+		game.images.LoadAnim(path + "explosn.png", 20, 20, 9, tmpImage)
+		game.images.LoadAnim(path + "exploBig.png", 40, 40, 14, tmpImage)
+		game.images.LoadAnim(path + "expSmall.png", 20, 20, 7, tmpImage)
+		
 		game.images.Load("game8/gui.png", "", False)
+		smokeImage = game.images.Find("smoke")
 		turretBaseImage = game.images.Find("turretBase")
 		turretGunImage = game.images.Find("turretGun")
 		enemyImage = game.images.Find("tank7")
@@ -794,6 +816,7 @@ Class GameScreen Extends Screen
 		Enemy.DrawAll()
 		Rocket.DrawAll()
 		Explosion.DrawAll()
+		Particle.DrawAll(game.scrollX, game.scrollY)
 		
 		if gui.mode = gui.TURRET
 			Local nx:Float = Floor((game.mouseX + game.scrollX)/ TILE_SIZE)
@@ -841,6 +864,7 @@ Class GameScreen Extends Screen
 		Enemy.UpdateAll()
 		Rocket.UpdateAll()
 		Explosion.UpdateAll()
+		Particle.UpdateAll()
 		Controls()
 		
 		' game over
@@ -942,6 +966,7 @@ Class GameScreen Extends Screen
 	End
 	
 	Method ClearItems:Void()
+		Particle.Clear()
 		enemyTemplateMap.Clear()
 		towerTemplateMap.Clear()
 		waveMap.Clear()
