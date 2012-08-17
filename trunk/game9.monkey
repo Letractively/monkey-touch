@@ -9,6 +9,7 @@ Touhou Clone
 [/quote]
 #End
 
+Strict
 
 Public
 Import main
@@ -40,7 +41,9 @@ Class Game9Screen Extends Screen
 		game.images.LoadAtlas("game9/game9_ships.txt", ImageBank.LIBGDX_ATLAS, True)
 		Local tmpImage:GameImage = Null
 		game.images.Load("game9/game9_ship2.png",,False).image.SetHandle(9, 12)
+		game.images.Load("game9/game9_speck.png")
 		game.images.LoadAnim("game9/game9_ship6.png", 39, 39, 3, Null)
+		game.images.Load("game9/game9_starfield.jpg",,False)
 		
 		'game.images.LoadAnim("Ship1.png", 64, 64, 7, tmpImage)
 		smhGameScreen = New Smh_GameScreen
@@ -72,9 +75,11 @@ End
 
 Private
 
-'Global spriteSheet:GameImage
-'Global bossSheet:GameImage
 Global smhGameScreen:Smh_GameScreen
+
+Global psys:ParticleSystem
+Global explosions:ParticleGroup
+Global explode1:Emitter
 
 Global background:Smh_Background
 Global enemyBullets:Smh_BulletPool
@@ -87,14 +92,21 @@ Global boss:Smh_Boss
 Global currentStage:Smh_Stage
 
 Class Smh_GameScreen Extends Screen
-	Field grazeCount:Int = 0
+	Const GRAZE_INTERVAL:Int = 200
+	Field nextGrazeBonus:Int = -1
 	
 	Method Start:Void()
+		CreateParticleSystem()
+		
 		background = New Smh_Background("game9_background1.tmx")
-		background.boundsLeft = 20
-		background.boundsTop = 20
-		background.boundsRight = background.boundsLeft + 400
-		background.boundsBottom = SCREEN_HEIGHT - 20
+		background.x = 20
+		background.y = 20
+		background.height = SCREEN_HEIGHT - background.y*2
+		background.width = 400
+		background.boundsLeft = 0
+		background.boundsTop = 0
+		background.boundsRight = background.width
+		background.boundsBottom = background.height
 		
 		enemyBullets = New Smh_BulletPool
 		enemyBullets.parent = background
@@ -107,8 +119,8 @@ Class Smh_GameScreen Extends Screen
 		
 		player = New Smh_Player
 		player.parent = background
-		player.x = background.boundsLeft + (background.boundsRight - background.boundsLeft) * 0.5
-		player.y = background.boundsTop + (background.boundsBottom - background.boundsTop) * 0.8
+		player.x = background.x + background.width * 0.5
+		player.y = background.y + background.height * 0.8
 		
 		enemies = New Smh_EnemyPool
 		enemies.parent = background
@@ -142,34 +154,35 @@ Class Smh_GameScreen Extends Screen
 		powerups.DoUpdate(dt.frametime)
 		player.DoUpdate(dt.frametime)
 		
+		psys.Update(dt.frametime)
+		
 		ResolveCollisions()
 	End
 	
 	Method Render:Void()
 		Cls
-		' we have to manually do the scissor here since backround has no children
-		SetScissor(background.boundsLeft, background.boundsTop, background.boundsRight-background.boundsLeft, background.boundsBottom-background.boundsTop)
+		' draw the gui first
+		DrawGUI()
 		
 		background.DoRender()
-		enemies.DoRender()
-		If boss Then boss.DoRender()
-		playerBullets.DoRender()
-		powerups.DoRender()
-		player.DoRender()
-		enemyBullets.DoRender()
-		
-		' reset scissor
-		SetScissor(0, 0, DEVICE_WIDTH, DEVICE_HEIGHT)
 		
 		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
 		DrawText("Player Bullet Count: " + playerBullets.aliveCount, 0, 30)
-		DrawText("Graze Count: " + grazeCount, 0, 45)
+		DrawText("Graze Count: " + player.grazeCount, 0, 45)
 		If boss Then
 			DrawText("Boss Health: " + boss.currentHP, 0, 60)
 			DrawText("Boss Phase: " + boss.currentPhase, 0, 75)
 			DrawText("Time Remaining: " + Max(0,Int(Ceil(Float(boss.timeRemainingMillis) / 1000.0))), 0, 90)
 		End
-		DrawRectOutline(background.boundsLeft, background.boundsTop, background.boundsRight-background.boundsLeft, background.boundsBottom-background.boundsTop)
+		DrawRectOutline(background.x+background.boundsLeft, background.y+background.boundsTop, background.boundsRight-background.boundsLeft, background.boundsBottom-background.boundsTop)
+	End
+	
+	Method DrawGUI:Void()
+		' TODO: draw
+		' power bar (temporary)
+		SetColor 255,255,255
+		DrawRectOutline(background.x + background.width + 20, background.y, 100, 15)
+		DrawRect(background.x + background.width + 20, background.y, player.GetPowerRatio() * 100, 15)
 	End
 	
 	Method ResolveCollisions:Void()
@@ -179,24 +192,22 @@ Class Smh_GameScreen Extends Screen
 		' resolve collisions of boss with player
 		If boss Then
 			Local dx:Float = player.x-boss.x
-			local dy:Float = player.y-boss.y
+			Local dy:Float = player.y-boss.y
 			If dx*dx + dy*dy <= boss.radius + player.radius Then
-				' player death
+				player.currentHP = 0
 			End
 		End
 		
 		' resolve collisions of enemies with player
 		enemy = enemies.FindFirstCollision(player)
 		If enemy Then
-			bullet.red = 0
-			' player death
+			player.currentHP = 0
 		End
 		
 		' resolve collisions of enemy bullets with player
 		bullet = enemyBullets.FindFirstCollision(player)
 		If bullet Then
-			bullet.green = 0
-			' player death
+			player.currentHP = 0
 		End
 		
 		' resolve collisions of player bullets with boss
@@ -226,7 +237,20 @@ Class Smh_GameScreen Extends Screen
 		Next
 		
 		' find graze count
-		grazeCount += enemyBullets.GetGrazeCount(player, 5)
+		If nextGrazeBonus < dt.currentticks Then
+			Local grazeCount% = enemyBullets.GetGrazeCount(player, 7)
+			player.AddPower(grazeCount)
+			nextGrazeBonus = dt.currentticks + GRAZE_INTERVAL
+		End
+	End
+	
+	Method CreateParticleSystem:Void()
+		Local parser:XMLParser = New XMLParser
+		Local doc:XMLDocument = parser.ParseFile("graphics/game9/psystem.xml")
+		psys = New ParticleSystem(doc)
+		explosions = psys.GetGroup("explosions")
+		explode1 = psys.GetEmitter("explode1")
+		explode1.ParticleImage = game.images.Find("game9_speck").image
 	End
 End
 
@@ -251,6 +275,7 @@ Class Smh_Entity
 	
 	' position/velocities (velocity in units per second)
 	Field x#, y# ' position
+	Field width#, height# ' size
 	Field dx#, dy# ' cartesian velocity if usePolar = False
 	Field accelX#, accelY# ' cartesian acceleration if usePolar = False
 	Field polarAngle#, polarVelocity# ' polar velocity if usePolar = True
@@ -495,7 +520,7 @@ Class Smh_Entity
 		Translate x, y
 		Scale scaleX, scaleY
 		Rotate rot
-		If scissor Then SetScissor(boundsLeft, boundsTop, boundsRight-boundsLeft, boundsBottom-boundsTop)
+		If scissor Then SetScissor(x+boundsLeft, y+boundsTop, boundsRight-boundsLeft, boundsBottom-boundsTop)
 		Return True
 	End
 	
@@ -565,6 +590,8 @@ Class Smh_Entity
 		logicVar3 = source.logicVar3
 		x = source.x
 		y = source.y
+		width = source.width
+		height = source.height
 		dx = source.dx
 		dy = source.dy
 		accelX = source.accelX
@@ -825,12 +852,33 @@ Class Smh_Background Extends Smh_Entity
 		Local tm:TileMap = reader.LoadMap("graphics/game9/game9_background1.tmx")
 		tilemap = MyTileMap(tm)
 		active = True
+		scissor = True
 	End
 	
 	Method Render:Void()
 		SetAlpha(1)
 		SetColor(255, 255, 255)
+		
+		' render starfield
+		Local starfield:GameImage = game.images.Find("game9_starfield")
+		Local y:Float = scrollY/2
+		While y > 0
+			y -= starfield.h
+		End
+		While y < height
+			DrawImage(starfield.image, 0, y)
+			y += starfield.h
+		End
+		
 		tilemap.RenderMap(scrollX, (tilemap.height*tilemap.tileHeight)-scrollY, SCREEN_WIDTH, SCREEN_HEIGHT)'boundsRight, boundsBottom)
+		
+		enemies.DoRender()
+		If boss Then boss.DoRender()
+		playerBullets.DoRender()
+		powerups.DoRender()
+		player.DoRender()
+		psys.Render()
+		enemyBullets.DoRender()
 	End
 	
 	Method Update:Void(millis:Int)
@@ -903,14 +951,20 @@ Class Smh_Unit Extends Smh_Entity
 		currentHP = unit.currentHP
 		maxHP = unit.maxHP
 		died = unit.died
+		Return Self
 	End
 End
 
 Class Smh_Player Extends Smh_Unit
+	Const MAX_POWER# = 100
 	Field firingSpeed:Int = 100
 	Field nextShotAvailableMillis:Int = 0
 	Field playerShot:Smh_Bullet
 	Field bulletPowerup:Smh_Powerup
+	Field grazeCount:Int
+	Field power:Float
+	Field lives:Int = 3
+	Field score:Int = 0
 	
 	Method New()
 		alive = True
@@ -930,6 +984,7 @@ Class Smh_Player Extends Smh_Unit
 		
 		bulletPowerup = New Smh_Powerup
 		bulletPowerup.CopyFrom(playerShot)
+		bulletPowerup.powerValue = 0.2
 		bulletPowerup.scaleX = 1
 		bulletPowerup.scaleY = 1
 		bulletPowerup.playerInterp = True
@@ -968,8 +1023,27 @@ Class Smh_Player Extends Smh_Unit
 		End
 		
 		' bomb
-		If KeyHit(KEY_X) Then
+		If KeyHit(KEY_X) And power = MAX_POWER Then
+			power = 0
 			enemyBullets.ConvertToPowerups()
+		End
+	End
+	
+	Method AddPower:Void(amt#)
+		power += amt
+		If power > MAX_POWER Then power = MAX_POWER
+	End
+	
+	Method GetPowerRatio#()
+		Return power / MAX_POWER
+	End
+	
+	Method Died:Void()
+		lives -= 1
+		If lives < 0 Then
+			' TODO: game over
+		Else
+			' TODO: destroy bullets and reset player
 		End
 	End
 End
@@ -982,7 +1056,7 @@ Class Smh_Enemy Extends Smh_Unit
 	Method Died:Void()
 		Print "enemy died"
 		alive = False
-		' TODO: explosion
+		explode1.EmitAt(100, x, y)
 		Local pu:Smh_Powerup = Smh_Powerup(powerups.GetEntity(player.bulletPowerup))
 		pu.parent = background
 		pu.x = x
@@ -996,6 +1070,7 @@ Class Smh_Enemy Extends Smh_Unit
 		pu.active = True
 		pu.boundsPurge = True
 		pu.radius = 20
+		pu.powerValue = 5
 	End
 End
 
@@ -1287,6 +1362,7 @@ End
 
 Class Smh_Powerup Extends Smh_Entity
 	Field playerInterp:Bool = False
+	Field powerValue:Float = 1
 	
 	Method New()
 		alive = False
@@ -1311,7 +1387,7 @@ Class Smh_Powerup Extends Smh_Entity
 		Local pdy# = y-player.y
 		If pdx*pdx + pdy*pdy <= radius*radius Or playerInterp And Not interping Then
 			' collect it
-			Print "collect"
+			player.AddPower(powerValue)
 			active = False
 			alive = False
 			interping = False
@@ -1343,6 +1419,7 @@ Class Smh_Powerup Extends Smh_Entity
 		Local other:Smh_Powerup = Smh_Powerup(source)
 		If Not other Then Return Self
 		playerInterp = other.playerInterp
+		powerValue = other.powerValue
 		Return Self
 	End
 End
