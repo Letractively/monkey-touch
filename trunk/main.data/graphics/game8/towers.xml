@@ -12,6 +12,7 @@
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
 		<fireType>lazer</fireType>
+		<slowDown>0</slowDown>
 	</tower>
 	<tower>
 		<name>Rocket</name>
@@ -26,5 +27,21 @@
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
 		<fireType>rocket</fireType>
+		<slowDown>0</slowDown>
+	</tower>
+	<tower>
+		<name>Slow</name>
+		<image>ArtilBase</image>
+		<gunImage>slowGun</gunImage>
+		<damage>0</damage>
+		<damageBonus>0</damageBonus>
+		<range>150</range>
+		<health>100</health>
+		<fireRate>70</fireRate>
+		<cost>250</cost>
+		<firePosX>0</firePosX>
+		<firePosY>-7</firePosY>
+		<fireType>rocket</fireType>
+		<slowDown>1000</slowDown>
 	</tower>
 </towers>
