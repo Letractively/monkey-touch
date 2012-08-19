@@ -41,9 +41,10 @@ Class Game9Screen Extends Screen
 		game.images.LoadAtlas("game9/game9_ships.txt", ImageBank.LIBGDX_ATLAS, True)
 		Local tmpImage:GameImage = Null
 		game.images.Load("game9/game9_ship2.png",,False).image.SetHandle(9, 12)
-		game.images.Load("game9/game9_speck.png")
+		game.images.Load("game9/game9_explode1.png")
 		game.images.LoadAnim("game9/game9_ship6.png", 39, 39, 3, Null)
 		game.images.Load("game9/game9_starfield.jpg",,False)
+		game.images.Load("game9/game9_bg.png",,False)
 		
 		'game.images.LoadAnim("Ship1.png", 64, 64, 7, tmpImage)
 		smhGameScreen = New Smh_GameScreen
@@ -81,7 +82,7 @@ Global psys:ParticleSystem
 Global explosions:ParticleGroup
 Global explode1:Emitter
 
-Global background:Smh_Background
+Global playarea:Smh_PlayArea
 Global enemyBullets:Smh_BulletPool
 Global playerBullets:Smh_BulletPool
 Global powerups:Smh_PowerupPool
@@ -98,38 +99,38 @@ Class Smh_GameScreen Extends Screen
 	Method Start:Void()
 		CreateParticleSystem()
 		
-		background = New Smh_Background("game9_background1.tmx")
-		background.x = 20
-		background.y = 20
-		background.height = SCREEN_HEIGHT - background.y*2
-		background.width = 400
-		background.boundsLeft = 0
-		background.boundsTop = 0
-		background.boundsRight = background.width
-		background.boundsBottom = background.height
+		playarea = New Smh_PlayArea("graphics/game9/game9_background1.tmx")
+		playarea.x = 0
+		playarea.y = 0
+		playarea.height = SCREEN_HEIGHT' - playarea.y*2
+		playarea.width = 380
+		playarea.boundsLeft = 0
+		playarea.boundsTop = 0
+		playarea.boundsRight = playarea.width
+		playarea.boundsBottom = playarea.height
 		
 		enemyBullets = New Smh_BulletPool
-		enemyBullets.parent = background
+		enemyBullets.parent = playarea
 		
 		playerBullets = New Smh_BulletPool
-		playerBullets.parent = background
+		playerBullets.parent = playarea
 		
 		powerups = New Smh_PowerupPool
-		powerups.parent = background
+		powerups.parent = playarea
 		
 		player = New Smh_Player
-		player.parent = background
-		player.x = background.x + background.width * 0.5
-		player.y = background.y + background.height * 0.8
+		player.parent = playarea
+		player.x = playarea.x + playarea.width * 0.5
+		player.y = playarea.y + playarea.height * 0.8
 		
 		enemies = New Smh_EnemyPool
-		enemies.parent = background
+		enemies.parent = playarea
 		
 		currentStage = New Smh_Stage1
 	End
 	
 	Method Kill:Void()
-		background = Null
+		playarea = Null
 		enemyBullets = Null
 		playerBullets = Null
 		player = Null
@@ -146,7 +147,7 @@ Class Smh_GameScreen Extends Screen
 		' update everything
 		currentStage.Update(dt.frametime)
 		
-		background.DoUpdate(dt.frametime)
+		playarea.DoUpdate(dt.frametime)
 		enemies.DoUpdate(dt.frametime)
 		If boss Then boss.DoUpdate(dt.frametime)
 		enemyBullets.DoUpdate(dt.frametime)
@@ -160,12 +161,19 @@ Class Smh_GameScreen Extends Screen
 	End
 	
 	Method Render:Void()
+		' clear the screen
 		Cls
-		' draw the gui first
+		
+		' draw the main background image
+		DrawImage(game.images.Find("game9_bg").image, 0, 0)
+		
+		' draw the gui
 		DrawGUI()
 		
-		background.DoRender()
+		' draw the play area
+		playarea.DoRender()
 		
+		#Rem
 		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
 		DrawText("Player Bullet Count: " + playerBullets.aliveCount, 0, 30)
 		DrawText("Graze Count: " + player.grazeCount, 0, 45)
@@ -174,15 +182,17 @@ Class Smh_GameScreen Extends Screen
 			DrawText("Boss Phase: " + boss.currentPhase, 0, 75)
 			DrawText("Time Remaining: " + Max(0,Int(Ceil(Float(boss.timeRemainingMillis) / 1000.0))), 0, 90)
 		End
-		DrawRectOutline(background.x+background.boundsLeft, background.y+background.boundsTop, background.boundsRight-background.boundsLeft, background.boundsBottom-background.boundsTop)
+		#End
+		DrawLine(playarea.x+playarea.width, playarea.y, playarea.x+playarea.width, playarea.y+playarea.height)
+		'DrawRectOutline(playarea.x+playarea.boundsLeft, playarea.y+playarea.boundsTop, playarea.boundsRight-playarea.boundsLeft, playarea.boundsBottom-playarea.boundsTop)
 	End
 	
 	Method DrawGUI:Void()
 		' TODO: draw
 		' power bar (temporary)
 		SetColor 255,255,255
-		DrawRectOutline(background.x + background.width + 20, background.y, 100, 15)
-		DrawRect(background.x + background.width + 20, background.y, player.GetPowerRatio() * 100, 15)
+		DrawRectOutline(playarea.x + playarea.width + 20, playarea.y, 100, 15)
+		DrawRect(playarea.x + playarea.width + 20, playarea.y, player.GetPowerRatio() * 100, 15)
 	End
 	
 	Method ResolveCollisions:Void()
@@ -250,7 +260,7 @@ Class Smh_GameScreen Extends Screen
 		psys = New ParticleSystem(doc)
 		explosions = psys.GetGroup("explosions")
 		explode1 = psys.GetEmitter("explode1")
-		explode1.ParticleImage = game.images.Find("game9_speck").image
+		explode1.ParticleImage = game.images.Find("game9_explode1").image
 	End
 End
 
@@ -841,7 +851,7 @@ Class Smh_Pool<T> Extends Smh_Entity
 	End
 End
 
-Class Smh_Background Extends Smh_Entity
+Class Smh_PlayArea Extends Smh_Entity
 	Field scrollX:Float
 	Field scrollY:Float
 	Field scrollSpeed:Float = 50
@@ -849,7 +859,7 @@ Class Smh_Background Extends Smh_Entity
 	
 	Method New(mapfile:String)
 		Local reader:MyTiledTileMapReader = New MyTiledTileMapReader
-		Local tm:TileMap = reader.LoadMap("graphics/game9/game9_background1.tmx")
+		Local tm:TileMap = reader.LoadMap(mapfile)
 		tilemap = MyTileMap(tm)
 		active = True
 		scissor = True
@@ -1056,9 +1066,9 @@ Class Smh_Enemy Extends Smh_Unit
 	Method Died:Void()
 		Print "enemy died"
 		alive = False
-		explode1.EmitAt(100, x, y)
+		explode1.EmitAt(20, x, y)
 		Local pu:Smh_Powerup = Smh_Powerup(powerups.GetEntity(player.bulletPowerup))
-		pu.parent = background
+		pu.parent = playarea
 		pu.x = x
 		pu.y = y
 		pu.dx = 0
@@ -1093,10 +1103,10 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 		rotateWithHeading = True
 		usePolar = True
 		
-		boundsLeft = background.boundsLeft
-		boundsRight = background.boundsRight
-		boundsTop = background.boundsTop
-		boundsBottom = background.boundsTop + (background.boundsBottom - background.boundsTop) * 0.4
+		boundsLeft = playarea.boundsLeft
+		boundsRight = playarea.boundsRight
+		boundsTop = playarea.boundsTop
+		boundsBottom = playarea.boundsTop + (playarea.boundsBottom - playarea.boundsTop) * 0.4
 		boundsInset = 20
 		useParentBounds = False
 	End
@@ -1392,7 +1402,7 @@ Class Smh_Powerup Extends Smh_Entity
 			alive = False
 			interping = False
 			' trigger a collect on all other powerups if we collected near the top
-			If Not playerInterp And player.y < boundsTop+(background.boundsBottom-background.boundsTop)*0.25 Then
+			If Not playerInterp And player.y < boundsTop+(playarea.boundsBottom-playarea.boundsTop)*0.25 Then
 				For Local i:Int = 0 Until powerups.aliveCount
 					If powerups.children[i].alive And Not powerups.children[i].playerInterp Then
 						powerups.children[i].SuckToPlayer(Null, 1000)
@@ -1450,14 +1460,14 @@ Class Smh_Stage1 Extends Smh_Stage Implements Smh_EntityLogicHandler
 					Case 0 ' spawn some basic trash
 						' spawn trash
 						enemies.CreateEnemyWave(
-								trash1, background,
-								-20, background.boundsTop+(background.boundsBottom-background.boundsTop)*0.2,
+								trash1, playarea,
+								-20, playarea.boundsTop+(playarea.boundsBottom-playarea.boundsTop)*0.2,
 								15, 100,
 								1, 500,
 								10)
 						enemies.CreateEnemyWave(
-								trash1, background,
-								(background.boundsRight-background.boundsLeft)+20, background.boundsTop+(background.boundsBottom-background.boundsTop)*0.2,
+								trash1, playarea,
+								(playarea.boundsRight-playarea.boundsLeft)+20, playarea.boundsTop+(playarea.boundsBottom-playarea.boundsTop)*0.2,
 								180-15, 100,
 								3000, 500,
 								10)
