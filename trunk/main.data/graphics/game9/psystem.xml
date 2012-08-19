@@ -9,18 +9,19 @@
 	<emitters>
 		<emitter Name="explode1"
 				Group="explosions"
-				Hue="0.1"
-				Saturation="1"
-				Luminance="0.5"
+				Red="255"
+				Green="255"
+				Blue="255"
 				Life="1"
 				AlphaInterpolationTime="0.2"
-				ParticleImage="explosion"
-				Scale="1.5"
-				ScaleSpread="1"
+				Scale="0.5"
+				ScaleSpread="0.5"
 				PolarVelocityAngle="0"
 				PolarVelocityAngleSpread="360"
 				PolarVelocityAmplitude="30"
-				PolarVelocityAmplitudeSpread="10">
+				PolarVelocityAmplitudeSpread="10"
+				RotationSpeed="0"
+				RotationSpeedSpread="200">
 		</emitter>
 	</emitters>
 </psystem>
