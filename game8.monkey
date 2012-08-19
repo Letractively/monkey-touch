@@ -17,12 +17,40 @@ Global gameScreen:GameScreen
 Global gameOverScreen:GameOverScreen
 Global nextLevelScreen:NextLevelScreen
 Global debugOn:Bool = True
+Global player:Player
+
+Class Star
+	Field x:Float, y:Float, z:Float
+	
+	Method New()
+		x = Rnd(-100, 100)
+		y = Rnd(-100, 100)
+		z = Rnd(-100, 100)
+	End
+
+	Method Update:Void()
+		z -= 1 * dt.delta
+		If z <= - 100 z += 200
+	End
+	
+	Method Draw:Void()
+		Local i:Int = z + 121
+		Local px:Int = x * 450 / (z + 151)
+		Local py:Int = y * 350 / (z + 151)
+		SetColor 255 - i, 255 - i, 255 - i
+		DrawOval(SCREEN_WIDTH2 + px, SCREEN_HEIGHT2 + py, 1, 1)
+		SetColor 255, 255, 255
+	End
+End
 
 #rem
 summary:Title Screen Class.
 Used to manage and deal with all Tital Page stuff.
 #End
 Class Game8Screen Extends Screen
+	Field logo:GameImage
+	Field menu:SimpleMenu
+	Field star:Star[1024]
 	
 	Method New()
 		name = "Tower Defense"
@@ -35,6 +63,8 @@ Class Game8Screen Extends Screen
 		GameList[gameid - 1].author = "Steven Revill"
 		GameList[gameid - 1].authorurl = "therevillsgames.com"
 		GameList[gameid - 1].info = "Tower Defense Info"
+		
+		player = New Player()
 	End
 	
 	#rem
@@ -45,7 +75,19 @@ Class Game8Screen Extends Screen
 		gameScreen = New GameScreen
 		gameOverScreen = New GameOverScreen
 		nextLevelScreen = New NextLevelScreen
+		
+		game.images.Load("game8/titleLogo.png")
+		logo = game.images.Find("titleLogo")
+		
+		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 200, 50, True, VERTICAL)
+		menu.AddButton("game8/playButton.png", "game8/playButtonMO.png")
+		menu.AddButton("game8/continueButton.png", "game8/continueButtonMO.png")
+		menu.AddButton("game8/backButton.png", "game8/backButtonMO.png")
+		For Local t:Int = 0 until star.Length
+			star[t] = New Star
+		Next
 	End
+
 	
 	#rem
 	summary:Render Title Screen
@@ -53,7 +95,11 @@ Class Game8Screen Extends Screen
 	#End
 	Method Render:Void()
 		Cls
-		TitleFont.DrawText(Self.name, 320, 240,2)
+		For Local t:Int = 0 until star.Length
+			star[t].Draw()
+		Next
+		logo.Draw(SCREEN_WIDTH2, 100)
+		menu.Draw()
 	End
 
 	#rem
@@ -62,10 +108,20 @@ Class Game8Screen Extends Screen
 	and all use input.
 	#End
 	Method Update:Void()
-		If KeyHit(KEY_SPACE) Or MouseHit() Then
+		menu.Update()
+		For Local t:Int = 0 until star.Length
+			star[t].Update()
+		Next
+		If KeyHit(KEY_SPACE) or KeyHit(KEY_ENTER) or menu.Clicked("playButton") Then
+			player = New Player()
 			FadeToScreen(gameScreen)
 		End
-		If KeyHit(KEY_ESCAPE)
+		
+		if menu.Clicked("continueButton")
+			FadeToScreen(gameScreen)
+		End
+		
+		If KeyHit(KEY_ESCAPE) or menu.Clicked("backButton")
 			FadeToScreen(TitleScr)
 		End
 	End
@@ -78,6 +134,7 @@ Class Rocket Extends Sprite
 	Field target:Enemy
 	Field angle:Float
 	Field smokeDelay:Float
+	Field slowDown:Float
 	
 	Method New(img:GameImage, x:Float, y:Float)
 		Super.New(img, x, y)
@@ -129,6 +186,7 @@ Class Rocket Extends Sprite
 		
 		if Collide(target) Then
 			target.health -= Self.damage
+			target.slowDown = game.CalcAnimLength(slowDown)
 			New Explosion(gameScreen.explosionSmallImage, Self.x, Self.y, 6, 100)
 			Kill()
 		End
@@ -154,6 +212,7 @@ Class UnitTemplate
 	Field firePosX:Float
 	Field firePosY:Float
 	Field fireType:Int
+	Field slowDown:Float
 End
 
 Class TankEnemy Extends Enemy
@@ -172,10 +231,13 @@ Class Enemy Extends Sprite Abstract
 	Field alive:Bool
 	Field route:Int[]
 	Field score:Int
+	Field slowDown:Float
+	Field oSpeed:Float
 	
 	Method New(img:GameImage, x:Float, y:Float, name:String)
 		Super.New(img, x, y)
 		SetStats(name)
+		oSpeed = speed
 		SetPath()
 		list.Add(Self)
 	End
@@ -258,6 +320,13 @@ Class Enemy Extends Sprite Abstract
 				End
 			End
 		End
+		if slowDown > 0
+			speed = oSpeed / 2
+			slowDown -= 1 * dt.delta
+		Else
+			speed = oSpeed
+		End
+		
 		If Self.health <= 0
 			gameScreen.cash += Self.score
 			alive = False
@@ -304,6 +373,7 @@ Class Tower Extends Sprite Abstract
 	Field gunImage:GameImage
 	Field gunFrame:Int
 	Field gunAngle:Float
+	Field slowDown:Float
 	
 	Const LAZER:Int = 0
 	Const ROCKET:Int = 1
@@ -328,6 +398,7 @@ Class Tower Extends Sprite Abstract
 			self.gunImage = game.images.Find(t.gunImageName)
 		End
 		Self.fireType = t.fireType
+		Self.slowDown = t.slowDown
 		Self.selected = False
 	End
 	
@@ -433,6 +504,7 @@ Class Tower Extends Sprite Abstract
 						r.damage = Self.damage + Rnd(0, Self.damageBonus)
 						r.range = Self.range
 						r.target = target
+						r.slowDown = Self.slowDown
 				 End
 				
 				If Self.target.health <= 0
@@ -584,6 +656,16 @@ Class EnemyWave
 	Field count:Int
 End
 
+Class Player
+	Field score:Int
+	Field level:Int
+	
+	Method New()
+		score = 0
+		level = 1
+	End
+End
+
 Class GameScreen Extends Screen
 	Const TILE_SIZE:Int = 20
 	Field tilemap:MyTileMap
@@ -612,6 +694,7 @@ Class GameScreen Extends Screen
 	Field waveMap:IntMap<Wave>
 	Field waveCount:Int
 	Field currentWave:Wave
+	Const MAX_LEVELS:Int = 1
 	
 	Method New()
 		name = "Tower Defense GameScreen"
@@ -665,6 +748,8 @@ Class GameScreen Extends Screen
 				Case "LAZER"
 					t.fireType = Tower.LAZER
 			End
+			t.slowDown = Float(xml.GetFirstChildByName("slowDown").Value)
+			
 			towerTemplateMap.Add(t.name.ToUpper(), t)
 		Next
 	End
@@ -708,7 +793,7 @@ Class GameScreen Extends Screen
 	Method LoadData:Void()
 		LoadEnemyData()
 		LoadTowerData()
-		LoadLevelData(1)
+		LoadLevelData(player.level)
 	End
 	
 	Method LoadMap:Void()
@@ -741,13 +826,15 @@ Class GameScreen Extends Screen
 		
 		game.images.LoadAnim(path + "Artil3.png", 40, 40, 9, tmpImage, False)
 		
+		
 		game.images.Load(path + "rocket.png")
 		game.images.Load(path + "smoke.png")
 		game.images.Load(path + "empty.png")
 		
 		game.images.Load(path + "ArtilBase.png", "", False)
 		game.images.LoadAnim(path + "ArtilGun.png", 40, 40, 8, tmpImage)
-		
+		game.images.LoadAnim(path + "slowGun.png", 40, 40, 8, tmpImage)
+
 		game.images.LoadAnim(path + "turretGun.png", 52, 45, 8, tmpImage)
 		game.images.LoadAnim(path + "explosn.png", 20, 20, 9, tmpImage)
 		game.images.LoadAnim(path + "exploBig.png", 40, 40, 14, tmpImage)
@@ -918,12 +1005,30 @@ Class GameScreen Extends Screen
 			End
 		End
 		
-		If KeyHit(KEY_1)
-			If selectedTower <> Null
-				selectedTower.range += 30
-			End
+		If KeyHit(KEY_1) And gameScreen.cash >= gameScreen.towerTemplateMap.Get("TURRET").cost
+			Local sb:SimpleButton = gui.menu.FindButton("turretButton")
+			gui.DeselectAllButtons()
+			gui.selectedButton = "TURRET"
+			gui.mode = gui.TURRET
+			sb.selected = True
 		End
-		
+
+		If KeyHit(KEY_2) And gameScreen.cash >= gameScreen.towerTemplateMap.Get("ROCKET").cost
+			Local sb:SimpleButton = gui.menu.FindButton("rocketButton")
+			gui.DeselectAllButtons()
+			gui.selectedButton = "ROCKET"
+			gui.mode = gui.TURRET
+			sb.selected = True
+		End
+
+		If KeyHit(KEY_3) And gameScreen.cash >= gameScreen.towerTemplateMap.Get("SLOW").cost
+			Local sb:SimpleButton = gui.menu.FindButton("slowButton")
+			gui.DeselectAllButtons()
+			gui.selectedButton = "SLOW"
+			gui.mode = gui.TURRET
+			sb.selected = True
+		End
+						
 		If game.mouseHit
 			Tower.UnselectTowers()
 			selectedTower = Null
@@ -1019,6 +1124,8 @@ Class Gui
 		b.SetSelectedImage("game8/turretButtonSelected.png", "game8/turretButtonSelectedMO.png")
 		b = menu.AddButton("game8/rocketButton.png", "game8/rocketButtonMO.png")
 		b.SetSelectedImage("game8/rocketButtonSelected.png", "game8/rocketButtonSelectedMO.png")
+		b = menu.AddButton("game8/slowButton.png", "game8/slowButtonMO.png")
+		b.SetSelectedImage("game8/slowButtonSelected.png", "game8/slowButtonSelectedMO.png")
 
 		backgroundImage = game.images.Find("gui")
 		limit = backgroundImage.h
@@ -1099,6 +1206,18 @@ Class Gui
 			End
 		End
 		
+		if menu.Clicked("slowButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("SLOW").cost
+			Local sb:SimpleButton = menu.FindButton("slowButton")
+			if sb.selected = True
+				mode = NONE
+				sb.selected = False
+			Else
+				DeselectAllButtons()
+				selectedButton = "SLOW"
+				mode = TURRET
+				sb.selected = True
+			End
+		End		
 		ShowHideGUI()
 	End
 	
@@ -1107,6 +1226,7 @@ Class Gui
 		menu.Draw()
 		DrawText("CASH:" + gameScreen.cash, SCREEN_WIDTH, y + 10, 1, 0)
 		DrawText("HEALTH:" + gameScreen.health, SCREEN_WIDTH, y + 25, 1, 0)
+		DrawText("LEVEL:" + player.level, SCREEN_WIDTH, y + 35, 1, 0)
 	End
 	
 End
@@ -1160,12 +1280,12 @@ Class NextLevelScreen Extends Screen
 	End
 	
 	Method Start:Void()
-		
 	End
 	
 	Method Render:Void()
 		Cls
 		TitleFont.DrawText("WELL DONE!", 320, 240, 2)
+		TitleFont.DrawText("LEVEL " + player.level + " COMPLETE", 320, 270, 2)
 	End
 	
 	Method Update:Void()
@@ -1173,6 +1293,14 @@ Class NextLevelScreen Extends Screen
 			FadeToScreen(gameScreen)
 		End
 	End
+	
+	Method Kill:Void()
+		player.level += 1
+		if player.level > gameScreen.MAX_LEVELS
+			player.level = 1
+		End		
+	End
+	
 End
 
 #rem
