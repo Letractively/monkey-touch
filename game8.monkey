@@ -30,7 +30,13 @@ Class Star
 
 	Method Update:Void()
 		z -= 1 * dt.delta
+		x -= ( (game.mouseX - SCREEN_WIDTH2) / 200) * dt.delta
+		y -= ( (game.mouseY - SCREEN_HEIGHT2) / 200) * dt.delta
 		If z <= - 100 z += 200
+		If x <= - 100 x += 200
+		If y <= - 100 y += 200
+		If x >= 100 x -= 200
+		If y >= 100 y -= 200
 	End
 	
 	Method Draw:Void()
@@ -38,7 +44,7 @@ Class Star
 		Local px:Int = x * 450 / (z + 151)
 		Local py:Int = y * 350 / (z + 151)
 		SetColor 255 - i, 255 - i, 255 - i
-		DrawOval(SCREEN_WIDTH2 + px, SCREEN_HEIGHT2 + py, 1, 1)
+		DrawRect(SCREEN_WIDTH2 + px, SCREEN_HEIGHT2 + py, 1, 1)
 		SetColor 255, 255, 255
 	End
 End
@@ -79,10 +85,10 @@ Class Game8Screen Extends Screen
 		game.images.Load("game8/titleLogo.png")
 		logo = game.images.Find("titleLogo")
 		
-		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 200, 50, True, VERTICAL)
+		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 200, 30, True, VERTICAL)
 		menu.AddButton("game8/playButton.png", "game8/playButtonMO.png")
-		menu.AddButton("game8/continueButton.png", "game8/continueButtonMO.png")
 		menu.AddButton("game8/backButton.png", "game8/backButtonMO.png")
+		
 		For Local t:Int = 0 until star.Length
 			star[t] = New Star
 		Next
@@ -114,10 +120,6 @@ Class Game8Screen Extends Screen
 		Next
 		If KeyHit(KEY_SPACE) or KeyHit(KEY_ENTER) or menu.Clicked("playButton") Then
 			player = New Player()
-			FadeToScreen(gameScreen)
-		End
-		
-		if menu.Clicked("continueButton")
 			FadeToScreen(gameScreen)
 		End
 		
