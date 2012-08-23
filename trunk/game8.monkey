@@ -92,6 +92,8 @@ Class Game8Screen Extends Screen
 		For Local t:Int = 0 until star.Length
 			star[t] = New Star
 		Next
+		
+		Unit.list.Comparator = New UnitComparator()
 	End
 
 	
@@ -129,8 +131,35 @@ Class Game8Screen Extends Screen
 	End
 End
 
-Class Rocket Extends Sprite
-	Global list:ArrayList<Rocket> = New ArrayList<Rocket>
+Class Unit Extends Sprite
+	Global list:ArrayList<Unit> = New ArrayList<Unit>
+
+	Method New(img:GameImage, x:Float, y:Float)
+		Super.New(img, x, y)
+	End
+		
+	Function DrawAll:Void()
+		If Not list Return
+		Local r:Unit
+		For Local i:Int = 0 Until list.Size
+			r = list.Get(i)
+			r.Draw(game.scrollX, game.scrollY)
+		Next
+	End
+		
+	Function UpdateAll:Void()
+		If Not list Return
+		Local r:Unit
+		For Local i:Int = 0 Until list.Size
+			r = list.Get(i)
+			r.Update()
+		Next
+	End
+	
+	Method Update:Void() Abstract
+End
+
+Class Rocket Extends Unit
 	Field damage:Float
 	Field range:Float
 	Field target:Enemy
@@ -148,24 +177,6 @@ Class Rocket Extends Sprite
 	Method Kill:Void()
 		If Not list Return	
 		list.Remove(Self)
-	End
-	
-	Function DrawAll:Void()
-		If Not list Return
-		Local r:Rocket
-		For Local i:Int = 0 Until list.Size
-			r = list.Get(i)
-			r.Draw(game.scrollX, game.scrollY)
-		Next
-	End
-		
-	Function UpdateAll:Void()
-		If Not list Return
-		Local r:Rocket
-		For Local i:Int = 0 Until list.Size
-			r = list.Get(i)
-			r.Update()
-		Next
 	End
 	
 	Method Update:Void()
@@ -223,8 +234,7 @@ Class TankEnemy Extends Enemy
 	End
 End
 
-Class Enemy Extends Sprite Abstract
-	Global list:ArrayList<Enemy> = New ArrayList<Enemy>
+Class Enemy Extends Unit Abstract
 	Field currentPath:Int = 0
 	Field damage:Float
 	Field range:Float
@@ -258,24 +268,6 @@ Class Enemy Extends Sprite Abstract
 	Method Kill:Void()
 		If Not list Return	
 		list.Remove(Self)
-	End
-	
-	Function DrawAll:Void()
-		If Not list Return
-		Local e:Enemy
-		For Local i:Int = 0 Until list.Size
-			e = list.Get(i)
-			e.Draw(game.scrollX, game.scrollY)
-		Next
-	End
-		
-	Function UpdateAll:Void()
-		If Not list Return
-		Local e:Enemy
-		For Local i:Int = 0 Until list.Size
-			e = list.Get(i)
-			e.Update()
-		Next
 	End
 	
 	Method Update:Void()
@@ -355,8 +347,7 @@ Class TurretTower Extends Tower
 End
 
 ' Towers are NOT midhandled!
-Class Tower Extends Sprite Abstract
-	Global list:ArrayList<Tower> = New ArrayList<Tower>
+Class Tower Extends Unit Abstract
 	Field damage:Float
 	Field damageBonus:Float
 	Field range:Float
@@ -409,16 +400,7 @@ Class Tower Extends Sprite Abstract
 		list.Remove(Self)
 	End
 	
-	Function DrawAll:Void()
-		If Not list Return
-		Local t:Tower
-		For Local i:Int = 0 Until list.Size
-			t = list.Get(i)
-			t.Draw()
-		Next
-	End
-	
-	Method Draw:Void()
+	Method Draw:Void(offsetX:Float, offsetY:Float, rounded:Bool = False)
 		If selected
 			SetAlpha 0.2
 			DrawCircle(firePosX - game.scrollX, firePosY - game.scrollY, range)
@@ -432,15 +414,6 @@ Class Tower Extends Sprite Abstract
 		if gunImage <> Null
 			gunImage.Draw(firePosX - game.scrollX, firePosY - game.scrollY, gunAngle, 1, 1, gunFrame)
 		End
-	End
-	
-	Function UpdateAll:Void()
-		If Not list Return
-		Local t:Tower
-		For Local i:Int = 0 Until list.Size
-			t = list.Get(i)
-			t.Update()
-		Next
 	End
 	
 	Method SetGunAngle:Void(angle:Float)
@@ -517,18 +490,20 @@ Class Tower Extends Sprite Abstract
 				Self.target = Null
 			End
 		Else
-			For Local i:Int = 0 Until Enemy.list.Size
-				e = Enemy.list.Get(i)
-				Local dist:Float = CalcDistance(Self.firePosX, Self.firePosY, e.x, e.y)
-				If Self.target And Self.target.alive
-					If dist < Self.targetDist
-						Self.targetDist = dist
-						Self.target = e
-					End
-				Else
-					If dist < Self.range
-						Self.targetDist = dist
-						Self.target = e
+			For Local i:Int = 0 Until list.Size
+				e = Enemy(list.Get(i))
+				if e Then
+					Local dist:Float = CalcDistance(Self.firePosX, Self.firePosY, e.x, e.y)
+					If Self.target And Self.target.alive
+						If dist < Self.targetDist
+							Self.targetDist = dist
+							Self.target = e
+						End
+					Else
+						If dist < Self.range
+							Self.targetDist = dist
+							Self.target = e
+						End
 					End
 				End
 			Next
@@ -543,18 +518,24 @@ Class Tower Extends Sprite Abstract
 	End
 	
 	Function UnselectTowers:Void()
-		For Local t:Tower = Eachin Tower.list
-			t.selected = False
+		For Local u:Unit = Eachin list
+			if Tower(u) Then
+				Local t:Tower = Tower(u)
+				t.selected = False
+			End
 		Next
 	End
 	
 	Function SelectTower:Tower(x:Int, y:Int)
 		Local tower:Tower
-		For Local t:Tower = Eachin Tower.list
-			If t.x / gameScreen.TILE_SIZE = x / gameScreen.TILE_SIZE And t.y / gameScreen.TILE_SIZE = y / gameScreen.TILE_SIZE
-				t.selected = True
-				tower = t
-				Exit
+		For Local u:Unit = Eachin list
+			if Tower(u) Then
+				Local t:Tower = Tower(u)
+				If t.x / gameScreen.TILE_SIZE = x / gameScreen.TILE_SIZE And t.y / gameScreen.TILE_SIZE = y / gameScreen.TILE_SIZE
+					t.selected = True
+					tower = t
+					Exit
+				End
 			End
 		Next
 		Return tower
@@ -871,6 +852,8 @@ Class GameScreen Extends Screen
 	End
 	
 	Method Render:Void()
+		Unit.list.Sort() ' add a z-order order via the y coordinate
+		
 		Cls
 		tilemap.RenderMap(game.scrollX, game.scrollY, SCREEN_WIDTH, SCREEN_HEIGHT)
 		
@@ -901,9 +884,7 @@ Class GameScreen Extends Screen
 			SetColor 255, 255, 255
 		End
 		
-		Tower.DrawAll()
-		Enemy.DrawAll()
-		Rocket.DrawAll()
+		Unit.DrawAll()
 		Explosion.DrawAll()
 		Particle.DrawAll(game.scrollX, game.scrollY)
 		
@@ -949,13 +930,14 @@ Class GameScreen Extends Screen
 	
 	Method Update:Void()
 		UpdateWave()
-		Tower.UpdateAll()
-		Enemy.UpdateAll()
-		Rocket.UpdateAll()
+		Unit.UpdateAll()
 		Explosion.UpdateAll()
 		Particle.UpdateAll()
 		Controls()
-		
+		CheckLevel()
+	End
+	
+	Method CheckLevel:Void()
 		' game over
 		if health <= 0 Then
 			health = 0
@@ -963,7 +945,15 @@ Class GameScreen Extends Screen
 		End
 		
 		' win
-		if Enemy.list.Size() = 0 And currentWave = null Then
+		Local found:Bool = False
+		For Local u:Unit = EachIn Unit.list
+			If Enemy(u) Then
+				found = True
+				Exit
+			End
+		Next
+		
+		If Not found And currentWave = null Then
 			FadeToScreen(nextLevelScreen, defaultFadeTime, True, True, True)
 		End
 	End
@@ -1077,16 +1067,7 @@ Class GameScreen Extends Screen
 		enemyTemplateMap.Clear()
 		towerTemplateMap.Clear()
 		waveMap.Clear()
-		
-		If Rocket.list
-			Rocket.list.Clear()
-		End
-		If Enemy.list
-			Enemy.list.Clear()
-		End
-		If Tower.list
-			Tower.list.Clear()
-		End
+		Unit.list.Clear()
 		If Explosion.list
 			Explosion.list.Clear()
 		End
@@ -1303,6 +1284,22 @@ Class NextLevelScreen Extends Screen
 		End		
 	End
 	
+End
+
+Class UnitComparator Extends IComparator
+	' Compare should return 0 if the items are equal, a negative value if o1 < o2, and a positive value if o1 > o2
+	Method Compare:Int(o1:Object, o2:Object)
+		Local u1:Unit = Unit(o1)
+		Local u2:Unit = Unit(o2)
+		
+		If u2 = u1 Return False
+		
+		If u1.y = u2.y
+			Return True
+		endif
+		
+		Return Sgn(u1.y - u2.y)
+	End
 End
 
 #rem
