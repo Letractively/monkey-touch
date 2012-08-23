@@ -3,7 +3,7 @@
 	<groups>
 		<group Name="explosions" MaxParticles="500" />
 		<group Name="sparks" MaxParticles="500">
-			<constantforce Name="gravity" X="0" Y="150" Enabled="false" />
+			<constantforce Name="gravity" X="0" Y="150" Enabled="true" />
 		</group>
 	</groups>
 	<emitters>
@@ -21,7 +21,20 @@
 				PolarVelocityAmplitude="30"
 				PolarVelocityAmplitudeSpread="10"
 				RotationSpeed="0"
-				RotationSpeedSpread="200">
-		</emitter>
+				RotationSpeedSpread="200" />
+		<emitter Name="graze"
+				Group="sparks"
+				Red="255"
+				Green="255"
+				Blue="255"
+				Life="0.5"
+				AlphaInterpolationTime="0.1"
+				Scale="0.5"
+				ScaleSpread="0"
+				PolarVelocityAngle="0"
+				PolarVelocityAngleSpread="360"
+				PolarVelocityAmplitude="30"
+				PolarVelocityAmplitudeSpread="10"
+				RotationSpeed="0" />
 	</emitters>
 </psystem>
