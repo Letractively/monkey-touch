@@ -38,7 +38,8 @@ Class TitleScreen Extends Screen
 	Field thisTouchY:Int
 	Field scrollSpeed:Float
 	Field scrolling:Bool
-	
+	Field menu:SimpleMenu
+
 	Method New()
 		name = "Main Screen"
 	End
@@ -47,13 +48,19 @@ Class TitleScreen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		self.background = game.images.Find("title")
+		Self.background = game.images.Find("title")
 		Self.outoforder = game.images.Find("ooo")
 		Self.mask = game.images.Find("title_mask")
 		Self.Tile = game.images.Find("game_tile")
 		
 		selected = 0
 		LoadGameIcons()
+		
+		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 200, 30, True, VERTICAL)
+		local b:SimpleButton = menu.AddButton("playButton.png", "playButton.png")
+		b.MoveTo(270, 390)
+		b = menu.AddButton("aboutButton.png", "aboutButton.png")
+		b.MoveTo(480, 390)
 		
 		#IF TARGET="glfw"
 			game.MusicPlay("brain_menu.wav", True)
@@ -75,17 +82,17 @@ Class TitleScreen Extends Screen
 		'render the game icons.
 		For Local row:Int = 0 To 19
 		
-			if GameList[row].name <> "????"
+			If GameList[row].name <> "????"
 				
-				if Self.selected = row
-					DrawImage(self.Tile.image, 39, 175 + (row * 58) + offsety, 1)
+				If Self.selected = row
+					DrawImage(Self.Tile.image, 39, 175 + (row * 58) + offsety, 1)
 				Else
-					DrawImage(self.Tile.image, 39, 175 + (row * 58) + offsety, 0)
-				End if
+					DrawImage(Self.Tile.image, 39, 175 + (row * 58) + offsety, 0)
+				End If
 				
 				DrawImage(Self.Icons[row].image, 83, 203 + (row * 58) + offsety)
 				InfoFont.DrawText(GameList[row].name[ .. 12], 110, 205 + (row * 58) + offsety)
-			End if
+			End If
 			
 		Next
 		
@@ -112,7 +119,9 @@ Class TitleScreen Extends Screen
 		InfoFont.DrawTextWidth(GameList[Self.selected].info, 245, stp, 1, 380)
 
 		DrawImage(Self.mask.image, 0, 0, 0)
-		
+
+		menu.Draw()
+				
 	End
 
 	#rem
@@ -123,9 +132,9 @@ Class TitleScreen Extends Screen
 	Method Update:Void()
 		Local viewableHeight:Float = 19*58
 		Self.selected = (Abs( (-29 + Self.offsety) / 58))' + 1)
-		
+		menu.Update()
 		If TouchHit() Then
-			If MouseOver(51, 147, 186, 279) Then
+			If MouseOver(51 * SCREENX_RATIO, 147 * SCREENY_RATIO, 186 * SCREENX_RATIO, 279 * SCREENY_RATIO) Then
 				firstTouchY = TouchY()
 				lastTouchY[0] = firstTouchY
 				lastTouchY[1] = firstTouchY
@@ -135,7 +144,7 @@ Class TitleScreen Extends Screen
 				scrolling = True
 				Self.offsety = startOffsetY - firstTouchY + thisTouchY
 			End
-		ElseIf TouchDown() Then
+		Elseif TouchDown() Then
 			If scrolling Then
 				lastTouchY[2] = lastTouchY[1]
 				lastTouchY[1] = lastTouchY[0]
@@ -143,7 +152,7 @@ Class TitleScreen Extends Screen
 				thisTouchY = TouchY()
 				Self.offsety = startOffsetY - firstTouchY + thisTouchY
 			End
-		ElseIf scrolling Then
+		Elseif scrolling Then
 			scrollSpeed = Float(thisTouchY - lastTouchY[2]) / 3.0
 			scrolling = False
 		End
@@ -152,73 +161,70 @@ Class TitleScreen Extends Screen
 		If Self.offsety >= 0 Then
 			Self.offsety = 0
 			Self.scrollSpeed = 0
-		ElseIf Self.offsety <= -viewableHeight
+		Elseif Self.offsety <= -viewableHeight
 			Self.offsety = -viewableHeight
 			Self.scrollSpeed = 0
 		End
 		If scrollSpeed > 0 Then
 			scrollSpeed -= 0.1
 			If scrollSpeed < 0 Then scrollSpeed = 0
-		ElseIf scrollSpeed < 0 Then
+		Elseif scrollSpeed < 0 Then
 			scrollSpeed += 0.1
 			If scrollSpeed > 0 Then scrollSpeed = 0
 		End
 		
 		'About Button
-		If MouseOver(486, 400, 100, 57)
+		If menu.Clicked("aboutButton")
 			If TouchHit() Or MouseHit(MOUSE_LEFT)
 				FadeToScreen(AboutScr)
 			End If
 		Endif
 		
 		'Play Button.
-		If MouseOver(281, 400, 100, 57)
-			
-			If TouchHit() Or MouseHit(MOUSE_LEFT)
+		If menu.Clicked("playButton")
 			'clicked play.
-				Select Self.selected + 1
-					Case 1
-						FadeToScreen(Game1Scr)
-					Case 2
-						FadeToScreen(Game2Scr)
-					Case 3
-						FadeToScreen(Game3Scr)
-					Case 4
-						FadeToScreen(Game4Scr)
-					Case 5
-						FadeToScreen(Game5Scr)
-					Case 6
-						FadeToScreen(Game6Scr)
-					Case 7
-						FadeToScreen(Game7Scr)
-					Case 8
-						FadeToScreen(Game8Scr)
-					Case 9
-						FadeToScreen(Game9Scr)
-					Case 10
-						FadeToScreen(Game10Scr)
-					Case 11
-						FadeToScreen(Game11Scr)
-					Case 12
-						FadeToScreen(Game12Scr)
-					Case 13
-						FadeToScreen(Game13Scr)
-					Case 14
-						FadeToScreen(Game14Scr)
-					Case 15
-						FadeToScreen(Game15Scr)
-					Case 16
-						FadeToScreen(Game16Scr)
-					Case 17
-						FadeToScreen(Game17Scr)
-					Case 18
-						FadeToScreen(Game18Scr)
-					Case 19
-						FadeToScreen(Game19Scr)
-					Case 20
-						FadeToScreen(Game20Scr)
-				End
-			End If
+			Select Self.selected + 1
+				Case 1
+					FadeToScreen(Game1Scr)
+				Case 2
+					FadeToScreen(Game2Scr)
+				Case 3
+					FadeToScreen(Game3Scr)
+				Case 4
+					FadeToScreen(Game4Scr)
+				Case 5
+					FadeToScreen(Game5Scr)
+				Case 6
+					FadeToScreen(Game6Scr)
+				Case 7
+					FadeToScreen(Game7Scr)
+				Case 8
+					FadeToScreen(Game8Scr)
+				Case 9
+					FadeToScreen(Game9Scr)
+				Case 10
+					FadeToScreen(Game10Scr)
+				Case 11
+					FadeToScreen(Game11Scr)
+				Case 12
+					FadeToScreen(Game12Scr)
+				Case 13
+					FadeToScreen(Game13Scr)
+				Case 14
+					FadeToScreen(Game14Scr)
+				Case 15
+					FadeToScreen(Game15Scr)
+				Case 16
+					FadeToScreen(Game16Scr)
+				Case 17
+					FadeToScreen(Game17Scr)
+				Case 18
+					FadeToScreen(Game18Scr)
+				Case 19
+					FadeToScreen(Game19Scr)
+				Case 20
+					FadeToScreen(Game20Scr)
+			End
 			
 		Endif
 	
