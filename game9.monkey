@@ -4,7 +4,7 @@ header:
 
 [b]File Name :[/b] Game9Screen
 [b]Author    :[/b] Shane "Samah" Woolcock
-[b]About     :[/b]
+[b]About     :[/b] Music by SouljahdeShiva: http://opengameart.org/content/upbeat-techno-spacenomad-2
 Touhou Clone
 [/quote]
 #End
@@ -46,6 +46,16 @@ Class Game9Screen Extends Screen
 		game.images.Load("game9/game9_starfield.jpg",,False)
 		game.images.Load("game9/game9_bg.png",,False)
 		
+		game.sounds.Load("game9_death")
+		game.sounds.Load("game9_explosion1")
+		game.sounds.Load("game9_explosion2")
+		game.sounds.Load("game9_explosion3")
+		game.sounds.Load("game9_laser1")
+		game.sounds.Load("game9_laser2")
+		game.sounds.Load("game9_laser3")
+		game.sounds.Load("game9_laser4")
+		game.sounds.Load("game9_pickup1")
+		
 		'game.images.LoadAnim("Ship1.png", 64, 64, 7, tmpImage)
 		smhGameScreen = New Smh_GameScreen
 	End
@@ -80,7 +90,9 @@ Global smhGameScreen:Smh_GameScreen
 
 Global psys:ParticleSystem
 Global explosions:ParticleGroup
+Global sparks:ParticleGroup
 Global explode1:Emitter
+Global grazeEmitter:Emitter
 
 Global playarea:Smh_PlayArea
 Global enemyBullets:Smh_BulletPool
@@ -127,9 +139,13 @@ Class Smh_GameScreen Extends Screen
 		enemies.parent = playarea
 		
 		currentStage = New Smh_Stage1
+		
+		game.MusicPlay("game9_bgm.mp3")
 	End
 	
 	Method Kill:Void()
+		StopMusic()
+		
 		playarea = Null
 		enemyBullets = Null
 		playerBullets = Null
@@ -173,6 +189,15 @@ Class Smh_GameScreen Extends Screen
 		' draw the play area
 		playarea.DoRender()
 		
+		' draw the timer
+		If boss Then
+			SetAlpha(0.8)
+			SetColor(255,255,255)
+			DrawRect(playarea.x+15, playarea.y+15, (playarea.width-60) * Float(boss.currentHP)/Float(boss.maxHP), 10)
+			SetAlpha(1)
+			TitleFont.DrawText(""+Int(Max(0.0,Ceil(boss.timeRemainingMillis/1000.0))), playarea.x + playarea.width - 10, 10, eDrawAlign.RIGHT)
+		End
+		
 		#Rem
 		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
 		DrawText("Player Bullet Count: " + playerBullets.aliveCount, 0, 30)
@@ -183,11 +208,17 @@ Class Smh_GameScreen Extends Screen
 			DrawText("Time Remaining: " + Max(0,Int(Ceil(Float(boss.timeRemainingMillis) / 1000.0))), 0, 90)
 		End
 		#End
+		SetColor 255,255,255
 		DrawLine(playarea.x+playarea.width, playarea.y, playarea.x+playarea.width, playarea.y+playarea.height)
 		'DrawRectOutline(playarea.x+playarea.boundsLeft, playarea.y+playarea.boundsTop, playarea.boundsRight-playarea.boundsLeft, playarea.boundsBottom-playarea.boundsTop)
 	End
 	
 	Method DrawGUI:Void()
+		' labels
+		TitleFont.DrawText("Player", playarea.x+playarea.width+20, 100)
+		TitleFont.DrawText("Bomb", playarea.x+playarea.width+20, 150)
+		TitleFont.DrawText("Score", playarea.x+playarea.width+20, 200)
+		TitleFont.DrawText("Graze", playarea.x+playarea.width+20, 250)
 		' TODO: draw
 		' power bar (temporary)
 		SetColor 255,255,255
@@ -248,9 +279,10 @@ Class Smh_GameScreen Extends Screen
 		
 		' find graze count
 		If nextGrazeBonus < dt.currentticks Then
-			Local grazeCount% = enemyBullets.GetGrazeCount(player, 7)
+			Local grazeCount% = enemyBullets.GetGrazeCount(player, 15)
 			player.AddPower(grazeCount)
 			nextGrazeBonus = dt.currentticks + GRAZE_INTERVAL
+			If grazeCount > 0 Then grazeEmitter.EmitAt(20, player.x, player.y)
 		End
 	End
 	
@@ -259,8 +291,11 @@ Class Smh_GameScreen Extends Screen
 		Local doc:XMLDocument = parser.ParseFile("graphics/game9/psystem.xml")
 		psys = New ParticleSystem(doc)
 		explosions = psys.GetGroup("explosions")
+		sparks = psys.GetGroup("sparks")
 		explode1 = psys.GetEmitter("explode1")
 		explode1.ParticleImage = game.images.Find("game9_explode1").image
+		grazeEmitter = psys.GetEmitter("graze")
+		grazeEmitter.ParticleImage = game.images.Find("game9_bullet1").image
 	End
 End
 
@@ -807,6 +842,13 @@ Class Smh_Pool<T> Extends Smh_Entity
 		End
 	End
 	
+	Method Clear:Void()
+		For Local i% = 0 Until aliveCount
+			children[i].alive = False
+		Next
+		Purge()
+	End
+	
 	Method FindFirstCollision:T(other:Smh_Entity)
 		For Local i% = 0 Until aliveCount
 			If children[i].alive Then
@@ -966,9 +1008,11 @@ Class Smh_Unit Extends Smh_Entity
 End
 
 Class Smh_Player Extends Smh_Unit
-	Const MAX_POWER# = 100
+	Const MAX_POWER# = 50
 	Field firingSpeed:Int = 100
 	Field nextShotAvailableMillis:Int = 0
+	Field shotSoundDelayMillis:Int = 300
+	Field nextShotSoundMillis:Int = 0
 	Field playerShot:Smh_Bullet
 	Field bulletPowerup:Smh_Powerup
 	Field grazeCount:Int
@@ -983,6 +1027,8 @@ Class Smh_Player Extends Smh_Unit
 		boundsRestrict = True
 		boundsPurge = False
 		boundsInset = 20
+		currentHP = 1
+		maxHP = 1
 		
 		playerShot = New Smh_Bullet
 		playerShot.image = game.images.Find("game9_bullet1")
@@ -1031,6 +1077,10 @@ Class Smh_Player Extends Smh_Unit
 			' update next available
 			nextShotAvailableMillis = dt.currentticks + firingSpeed
 		End
+		If KeyDown(KEY_Z) And nextShotSoundMillis < dt.currentticks Then
+			PlaySound(game.sounds.Find("game9_laser1").sound)
+			nextShotSoundMillis = dt.currentticks + shotSoundDelayMillis
+		End
 		
 		' bomb
 		If KeyHit(KEY_X) And power = MAX_POWER Then
@@ -1049,11 +1099,17 @@ Class Smh_Player Extends Smh_Unit
 	End
 	
 	Method Died:Void()
+		PlaySound(game.sounds.Find("game9_death").sound)
 		lives -= 1
 		If lives < 0 Then
 			' TODO: game over
 		Else
-			' TODO: destroy bullets and reset player
+			' destroy bullets
+			enemyBullets.Clear()
+			' TODO: reset player
+			currentHP = maxHP
+			died = False
+			' TODO: some kind of special effect
 		End
 	End
 End
@@ -1064,7 +1120,6 @@ Class Smh_Enemy Extends Smh_Unit
 	End
 	
 	Method Died:Void()
-		Print "enemy died"
 		alive = False
 		explode1.EmitAt(20, x, y)
 		Local pu:Smh_Powerup = Smh_Powerup(powerups.GetEntity(player.bulletPowerup))
@@ -1192,22 +1247,22 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 		waitTimeMillis = 2000
 	End
 	
-	Method InterpIn:Void()
+	Method InterpIn:Void(millis%=2000)
 		If lastX < -1000 Or lastY < -1000 Then
 			lastX = boundsLeft+(boundsRight-boundsLeft)/2
 			lastY = boundsTop+(boundsBottom-boundsTop)/2
 		End
-		InterpIn(lastX, lastY)
+		InterpIn(lastX, lastY, millis)
 	End
 	
-	Method InterpIn:Void(targetX:Float, targetY:Float)
+	Method InterpIn:Void(targetX:Float, targetY:Float, millis%=2000)
 		' interp from a random point
 		If targetX < boundsLeft + (boundsRight-boundsLeft)/2 Then
-			SetInterpOverTime(Rnd(boundsLeft,(boundsRight-boundsLeft)/2), -100, targetX, targetY, 2000, 1)
+			SetInterpOverTime(Rnd(boundsLeft,(boundsRight-boundsLeft)/2), -100, targetX, targetY, millis, 1)
 		Else
-			SetInterpOverTime(Rnd((boundsRight-boundsLeft)/2,boundsRight), -100, targetX, targetY, 2000, 1)
+			SetInterpOverTime(Rnd((boundsRight-boundsLeft)/2,boundsRight), -100, targetX, targetY, millis, 1)
 		End
-		waitTimeMillis = 2000
+		waitTimeMillis = millis
 	End
 End
 
@@ -1316,6 +1371,7 @@ Class Smh_BulletPool Extends Smh_Pool<Smh_Bullet>
 				children[i].alive = False
 			End
 		Next
+		Purge()
 	End
 End
 
@@ -1438,6 +1494,7 @@ End
 Class Smh_Stage1 Extends Smh_Stage Implements Smh_EntityLogicHandler
 	Field firstBoss:Smh_Boss = New Smh_Stage1Boss1
 	Field trash1:Smh_Enemy
+	Field trash1Bullet:Smh_Bullet
 	
 	Method New()
 		trash1 = New Smh_Enemy
@@ -1449,8 +1506,13 @@ Class Smh_Stage1 Extends Smh_Stage Implements Smh_EntityLogicHandler
 		trash1.entityTypeId = 0
 		trash1.logicHandler = Self
 		trash1.logicVar1 = 1500 ' time until next fire
-		trash1.logicVar2 = 500 ' firing frequency
+		trash1.logicVar2 = 1000 ' firing frequency
 		trash1.image = game.images.Find("game9_ship2")
+		
+		trash1Bullet = New Smh_Bullet
+		trash1Bullet.CopyFrom(player.playerShot)
+		trash1Bullet.scaleX = 1
+		trash1Bullet.scaleY = 1
 	End
 	
 	Method DoLogic:Void(millis%)
@@ -1517,6 +1579,8 @@ Class Smh_Stage1 Extends Smh_Stage Implements Smh_EntityLogicHandler
 		Select entity.entityTypeId
 			' first trash mob will wait for a certain number of millis, then fire a bullet regularly until dead or offscreen
 			Case 0
+				' logicVar1 = millis remaining until next fire
+				' logicVar2 = fire delay millis
 				If entity.alive Then
 					While millis > 0
 						entity.logicVar1 -= millis
@@ -1524,8 +1588,9 @@ Class Smh_Stage1 Extends Smh_Stage Implements Smh_EntityLogicHandler
 						If entity.logicVar1 <= 0 Then
 							millis = -entity.logicVar1
 							entity.logicVar1 = entity.logicVar2
-							' TODO: fire
-							Print "entity firing"
+							Local bullet:Smh_Bullet = enemyBullets.FireBulletLinear(trash1Bullet, Null, entity.x, entity.y, ATan2(player.y-entity.y, player.x-entity.x), 75, 75)
+							bullet.active = True
+							If millis > 0 Then bullet.Update(millis)
 						End
 					End
 				End
