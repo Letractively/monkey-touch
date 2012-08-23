@@ -85,7 +85,7 @@ Class Game8Screen Extends Screen
 		game.images.Load("game8/titleLogo.png")
 		logo = game.images.Find("titleLogo")
 		
-		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 200, 30, True, VERTICAL)
+		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 240, 50, True, VERTICAL)
 		menu.AddButton("game8/playButton.png", "game8/playButtonMO.png")
 		menu.AddButton("game8/backButton.png", "game8/backButtonMO.png")
 		
@@ -189,8 +189,15 @@ Class Rocket Extends Unit
 		MoveForward()
 		if smokeDelay > 1
 			smokeDelay = 0
-			local p:Particle = Particle.Create(gameScreen.smokeImage, x, y, -dx / 10, -dy / 10, 0, 500)
-			p.SetupRotation(1, 300, True, True)
+			local p:Particle
+			if slowDown > 0
+				p = Particle.Create(game.images.Find("slowBullet"), x, y, 0, 0, 0, 500)
+				p.rotation = rotation
+			Else
+				p = Particle.Create(gameScreen.smokeImage, x, y, -dx / 10, -dy / 10, 0, 500)
+				p.SetupRotation(1, 300, True, True)
+			End
+			
 		Else
 			smokeDelay += 1 * dt.delta
 		End
@@ -370,6 +377,7 @@ Class Tower Extends Unit Abstract
 	
 	Const LAZER:Int = 0
 	Const ROCKET:Int = 1
+	Const SLOW:Int = 2
 	
 	Method New(img:GameImage, x:Float, y:Float, name:String)
 		Super.New(img, x, y)
@@ -475,6 +483,13 @@ Class Tower Extends Unit Abstract
 						New Explosion(gameScreen.explosionSmallImage, Self.target.x, Self.target.y, 6, 100)
 					Case ROCKET
 						local r:Rocket = New Rocket(game.images.Find("Rocket"), Self.firePosX, Self.firePosY)
+						r.rotation = -angle - 90
+						r.damage = Self.damage + Rnd(0, Self.damageBonus)
+						r.range = Self.range
+						r.target = target
+						r.slowDown = Self.slowDown
+					Case SLOW
+						local r:Rocket = New Rocket(game.images.Find("slowBullet"), Self.firePosX, Self.firePosY)
 						r.rotation = -angle - 90
 						r.damage = Self.damage + Rnd(0, Self.damageBonus)
 						r.range = Self.range
@@ -730,6 +745,8 @@ Class GameScreen Extends Screen
 					t.fireType = Tower.ROCKET
 				Case "LAZER"
 					t.fireType = Tower.LAZER
+				Case "SLOW"
+					t.fireType = Tower.SLOW
 			End
 			t.slowDown = Float(xml.GetFirstChildByName("slowDown").Value)
 			
@@ -811,6 +828,7 @@ Class GameScreen Extends Screen
 		
 		
 		game.images.Load(path + "rocket.png")
+		game.images.Load(path + "slowBullet.png")
 		game.images.Load(path + "smoke.png")
 		game.images.Load(path + "empty.png")
 		

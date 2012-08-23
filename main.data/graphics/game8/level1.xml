@@ -5,37 +5,37 @@
 		<map>level1</map>
 		<wave>
 			<sequence>1</sequence>
-			<initialDelay>50</initialDelay>
+			<initialDelay>100</initialDelay>
 			<enemies>
 				<enemy>
 					<sequence>1</sequence>
 					<type>EasyTank</type>
 					<amount>10</amount>
-					<delay>50</delay>
+					<delay>100</delay>
 				</enemy>
 			</enemies>
 		</wave>
 		<wave>
 			<sequence>2</sequence>
-			<initialDelay>50</initialDelay>
+			<initialDelay>100</initialDelay>
 			<enemies>
 				<enemy>
 					<sequence>1</sequence>
 					<type>MediumTank</type>
 					<amount>10</amount>
-					<delay>50</delay>
+					<delay>100</delay>
 				</enemy>
 			</enemies>
 		</wave>
 		<wave>
 			<sequence>3</sequence>
-			<initialDelay>50</initialDelay>
+			<initialDelay>100</initialDelay>
 			<enemies>
 				<enemy>
 					<sequence>1</sequence>
 					<type>HardTank</type>
 					<amount>10</amount>
-					<delay>50</delay>
+					<delay>100</delay>
 				</enemy>
 			</enemies>
 		</wave>

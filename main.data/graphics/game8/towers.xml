@@ -8,7 +8,7 @@
 		<range>100</range>
 		<health>100</health>
 		<fireRate>25</fireRate>
-		<cost>250</cost>
+		<cost>200</cost>
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
 		<fireType>lazer</fireType>
@@ -23,7 +23,7 @@
 		<range>150</range>
 		<health>100</health>
 		<fireRate>70</fireRate>
-		<cost>250</cost>
+		<cost>300</cost>
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
 		<fireType>rocket</fireType>
@@ -35,13 +35,13 @@
 		<gunImage>slowGun</gunImage>
 		<damage>0</damage>
 		<damageBonus>0</damageBonus>
-		<range>150</range>
+		<range>125</range>
 		<health>100</health>
 		<fireRate>70</fireRate>
 		<cost>250</cost>
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
-		<fireType>rocket</fireType>
-		<slowDown>1000</slowDown>
+		<fireType>slow</fireType>
+		<slowDown>2000</slowDown>
 	</tower>
 </towers>
