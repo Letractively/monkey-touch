@@ -143,7 +143,7 @@ Class Unit Extends Sprite
 		Local r:Unit
 		For Local i:Int = 0 Until list.Size
 			r = list.Get(i)
-			r.Draw(game.scrollX, game.scrollY)
+			If r <> Null Then r.Draw(game.scrollX, game.scrollY)
 		Next
 	End
 		
@@ -152,7 +152,7 @@ Class Unit Extends Sprite
 		Local r:Unit
 		For Local i:Int = 0 Until list.Size
 			r = list.Get(i)
-			r.Update()
+			If r <> Null Then r.Update()
 		Next
 	End
 	
@@ -576,7 +576,7 @@ Class Explosion Extends Sprite
 		Local e:Explosion
 		For Local i:Int = 0 Until list.Size
 			e = list.Get(i)
-			e.Draw(game.scrollX, game.scrollY)
+			If e <> Null Then e.Draw(game.scrollX, game.scrollY)
 		Next
 	End
 	
@@ -585,7 +585,7 @@ Class Explosion Extends Sprite
 		Local e:Explosion
 		For Local i:Int = 0 Until list.Size
 			e = list.Get(i)
-			e.Update()
+			If e <> Null Then e.Update()
 		Next
 	End
 	
