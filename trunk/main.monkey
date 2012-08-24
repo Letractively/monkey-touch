@@ -1,4 +1,4 @@
-#Rem
+#rem
 header:
 [quote]
 
@@ -40,8 +40,6 @@ or assets to this project.
 
 [/quote]
 #end
-
-
 
 Strict
 #TEXT_FILES="*.txt|*.xml|*.json|*.tmx"
@@ -90,9 +88,6 @@ Function Main:Int()
 	'game.debugKeyOn = True
 	'game.drawFPSOn = True
 	game.FPS = 60
-	
-	game.SoundSetVolume(30)
-	game.MusicSetVolume(50)
 	Return 1
 End
 
@@ -136,12 +131,14 @@ Class MyGame Extends DiddyApp
 		LoadImages()
 		LoadSounds()
 		LoadFonts()
-		
-		game.Start(TitleScr) 
+	
+		game.SoundSetVolume(30)
+		game.MusicSetVolume(50)
+		game.Start(TitleScr)
 		Return 0
 	End Method
 	
-	#Rem
+	#rem
 		summary: LoadImages
 		This method also loads ALL game(index).png Atlas files in each of the games folders
 		so if your using the packer, just pack and publish , then use the game.images.find()
@@ -153,23 +150,23 @@ Class MyGame Extends DiddyApp
 		'game.images.LoadAtlas("sheet.txt", images.LIBGDX_ATLAS, true)
 		
 		'loading in all the mini games atlas sheets.
-		For Local g:Int = 1 to 20
+		For Local g:Int = 1 To 20
 			Local path:String
 			path = ("game" + g + "/game" + g + ".txt")
 			'Print "Loading " + path
-			game.images.LoadAtlas(path, images.LIBGDX_ATLAS, true)
+			game.images.LoadAtlas(path, images.LIBGDX_ATLAS, True)
 		Next
 		
 		Local tmpimg:Image
 		
-		game.images.LoadAnim("game_tile.png", 202, 58, 2, tmpimg, false)
+		game.images.LoadAnim("game_tile.png", 202, 58, 2, tmpimg, False)
 		
 		game.images.Load("about.png", "", False, False)
 		game.images.Load("title.png", "", False, False)
 		game.images.Load("title_mask.png", "", False, False)
 		game.images.Load("about_mask.png", "", False, False)
 		game.images.Load("about_buttons.png", "", False, False)
-		game.images.Load("ooo.png", "", true, False)
+		game.images.Load("ooo.png", "", True, False)
 		
 	End Method
 
@@ -211,17 +208,17 @@ Class MyGame Extends DiddyApp
 End
 
 
-#Rem
+#rem
 	summary: Extension of Font Machine's BitmapFont
 	Created so that others dont need to hack their font machine module.
 	Should be removed soon once Ziggy writes his own more efficiant version.
 	
 #END
-Class BitmapFont2 extends BitmapFont
+Class BitmapFont2 Extends BitmapFont
 	
-	Method new(fontDescriptionFilePath:String, dynamicLoad:bool)
+	Method New(fontDescriptionFilePath:String, dynamicLoad:Bool)
 		Super.New(fontDescriptionFilePath, dynamicLoad)
-	End method
+	End Method
 	
 	#rem
 		summary:This is a BitmapFont class constructor.
@@ -229,14 +226,14 @@ Class BitmapFont2 extends BitmapFont
 	#end
 	Method New(fontDescriptionFilePath:String)
 		Super.New(fontDescriptionFilePath)
-	End method
+	End Method
 	#rem
 		summary:This Method draws TEXT within a given Width.
 		Draw's Text inside a given width, allowing for textbox like rendering.
 		Code by Taiphoz.
 	#End
 	
-	Method DrawTextWidth:void(text:String, x:float, y:float, align:Int, Tai_width:Int)
+	Method DrawTextWidth:Void(text:String, x:Float, y:Float, align:Int, Tai_width:Int)
 		
 		Local Tai_TextLines:String[]
 		
@@ -255,11 +252,11 @@ Class BitmapFont2 extends BitmapFont
 					If DrawBorder Then DrawCharsText(Tai_CurLine, x, y + (Tai_Count * Tai_Drop), 1, align)
 					DrawCharsText(Tai_CurLine, x, y + (Tai_Count * Tai_Drop), 0, align)
 					Tai_Count+=1
-				End if
+				End If
 			Next
 			
 		Else
-			if DrawShadow Then DrawCharsText(text, x, y, 2, align)
+			If DrawShadow Then DrawCharsText(text, x, y, 2, align)
 			If DrawBorder Then DrawCharsText(text, x, y, 1, align)
 			DrawCharsText(text, x, y, 0, align)
 		End If
@@ -306,7 +303,7 @@ Class BitmapFont2 extends BitmapFont
 	
 End
 
-#Rem
+#rem
 footer:
 [quote]
 [a Http://www.monkeycoder.co.nz]Monkey Coder[/a] 
