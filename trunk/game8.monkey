@@ -674,7 +674,7 @@ Class GameScreen Extends Screen
 	Field waveMap:IntMap<Wave>
 	Field waveCount:Int
 	Field currentWave:Wave
-	Const MAX_LEVELS:Int = 1
+	Const MAX_LEVELS:Int = 3
 	
 	Field font12:BitmapFont2
 	Field font16:BitmapFont2
@@ -863,8 +863,6 @@ Class GameScreen Extends Screen
 		
 	End
 	
-
-	
 	Method Render:Void()
 		Unit.list.Sort() ' add a z-order order via the y coordinate
 		
@@ -1008,8 +1006,25 @@ Class GameScreen Extends Screen
 			If KeyDown(KEY_DOWN)
 				game.scrollY += Floor(gameScrollSpeed * dt.delta)
 			End
-
 		End
+		Local scrollGap% = 10
+		if game.mouseX < scrollGap
+			game.scrollX -= Floor(gameScrollSpeed * dt.delta)
+		End
+		if game.mouseY < scrollGap
+			game.scrollY -= Floor(gameScrollSpeed * dt.delta)
+		End
+		if game.mouseX > SCREEN_WIDTH - scrollGap
+			game.scrollX += Floor(gameScrollSpeed * dt.delta)
+		End
+		if game.mouseY > SCREEN_HEIGHT - scrollGap
+			game.scrollY += Floor(gameScrollSpeed * dt.delta)
+		End
+		' tower defense maps have a border of TILE_SIZE around them so dont display that extra tile
+		if game.scrollX < TILE_SIZE Then game.scrollX = TILE_SIZE
+		if game.scrollY < TILE_SIZE Then game.scrollY = TILE_SIZE
+		if game.scrollX + SCREEN_WIDTH > tilemap.width * TILE_SIZE - TILE_SIZE Then game.scrollX = tilemap.width * TILE_SIZE - SCREEN_WIDTH - TILE_SIZE
+		if game.scrollY + SCREEN_HEIGHT > tilemap.height * TILE_SIZE - TILE_SIZE Then game.scrollY = tilemap.height * TILE_SIZE - SCREEN_HEIGHT - TILE_SIZE
 		
 		If KeyHit(KEY_DELETE)
 			If selectedTower <> Null
@@ -1121,6 +1136,8 @@ Class Gui
 	Field mouseOverText:String
 	Field mouseOverX:Int
 	Field mouseOverY:Int
+	Field mouseOverAlpha:Float
+	Field mouseOverFade:Float = 0.04
 	
 	Method New()
 		showGUI = SCROLL_UP
@@ -1204,14 +1221,20 @@ Class Gui
 		menu.Update()
 		menu.SetY(y + menuOffsetY)
 		
-		mouseOverText = ""
 		For Local b:SimpleButton = eachin menu
 			if b.mouseOver
 				SetMouseOverText(b.name)
+				mouseOverAlpha = 1
 				mouseOverX = b.x
 				mouseOverY = b.y - 30
 			End
 		Next
+
+		if mouseOverAlpha > 0
+			mouseOverAlpha -= mouseOverFade * dt.delta
+		Else
+			mouseOverAlpha = 0
+		End
 		
 		if menu.Clicked("turretButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("TURRET").cost
 			Local sb:SimpleButton = menu.FindButton("turretButton")
@@ -1250,17 +1273,55 @@ Class Gui
 				mode = TURRET
 				sb.selected = True
 			End
-		End		
+		End
+
 		ShowHideGUI()
 	End
 	
 	Method Draw:Void()
 		backgroundImage.Draw(x, y)
 		menu.Draw()
-		gameScreen.font12.DrawText(mouseOverText, mouseOverX, mouseOverY, eDrawAlign.LEFT)
+		
+		if mouseOverAlpha > 0
+			SetAlpha mouseOverAlpha
+			gameScreen.font12.DrawText(mouseOverText, mouseOverX, mouseOverY, eDrawAlign.LEFT)
+			SetAlpha 1
+		End
+		
 		gameScreen.font12.DrawText("CASH: " + gameScreen.cash, SCREEN_WIDTH, y + 10, eDrawAlign.RIGHT)
-		gameScreen.font12.DrawText("HEALTH: " + gameScreen.health, SCREEN_WIDTH, y + 25, eDrawAlign.RIGHT)
 		gameScreen.font12.DrawText("LEVEL: " + player.level, SCREEN_WIDTH, y + 35, eDrawAlign.RIGHT)
+
+		Local healthX:Int = SCREEN_WIDTH2
+		Local healthY:Int = y + 20
+		Local hr:Int, hg:Int, hb:Int
+		Local br:Int, bg:Int, bb:Int
+		hr = 0; hg = 255; hb = 0
+		br = 0; bg = 0; bb = 0
+
+		if gameScreen.health < 70 Then
+			hr = 255
+			hg = 255
+			hb = 0
+		End
+		if gameScreen.health < 40 Then
+			hr = 255
+			hg = 0
+			hb = 0
+		End
+		
+		DrawHealthBar(healthX, healthY, 200, 20, Float(gameScreen.health / 100.0), hr, hg, hb, br, bg, bb)
+
+	End
+	
+	Method DrawHealthBar:Void(x:Int, y:Int, width:Int, height:Int, percent:Float, r1:Int, g1:Int, b1:Int, r2:Int, g2:Int, b2:Int)
+		Local fill:Float = (width - 2) * percent
+		Local w:Int = width - 1
+		Local h:Int = height - 1
+		SetColor(r1, g1, b1)
+		DrawRect(x + 1, y + 1, fill, h - 1)
+		SetColor(r2, g2, b2)
+		DrawRectOutline(x, y, w, h)
+		SetColor 255, 255, 255
 	End
 	
 End

@@ -2,7 +2,7 @@
 	<enemy>
 		<name>EasyTank</name>
 		<image>tank7</image>
-		<damage>10</damage>
+		<damage>2</damage>
 		<range>70</range>
 		<health>100</health>
 		<speed>1.2</speed>
@@ -11,7 +11,7 @@
 	<enemy>
 		<name>MediumTank</name>
 		<image>Tank5b</image>
-		<damage>20</damage>
+		<damage>5</damage>
 		<range>100</range>
 		<health>150</health>
 		<speed>1</speed>
@@ -20,7 +20,7 @@
 	<enemy>
 		<name>HardTank</name>
 		<image>hardtank</image>
-		<damage>30</damage>
+		<damage>10</damage>
 		<range>200</range>
 		<health>350</health>
 		<speed>.5</speed>
