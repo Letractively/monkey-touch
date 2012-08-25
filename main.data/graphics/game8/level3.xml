@@ -21,9 +21,9 @@
 			<enemies>
 				<enemy>
 					<sequence>1</sequence>
-					<type>EasyTank</type>
-					<amount>20</amount>
-					<delay>70</delay>
+					<type>MediumTank</type>
+					<amount>10</amount>
+					<delay>100</delay>
 				</enemy>
 			</enemies>
 		</wave>
@@ -33,9 +33,9 @@
 			<enemies>
 				<enemy>
 					<sequence>1</sequence>
-					<type>EasyTank</type>
-					<amount>30</amount>
-					<delay>50</delay>
+					<type>HardTank</type>
+					<amount>10</amount>
+					<delay>100</delay>
 				</enemy>
 			</enemies>
 		</wave>
