@@ -1,6 +1,7 @@
 <towers>
 	<tower>
 		<name>Turret</name>
+		<desc>Cheap, fast weak lazer turret</desc>
 		<image>turretBase</image>
 		<gunImage>turretGun</gunImage>
 		<damage>10</damage>
@@ -16,6 +17,7 @@
 	</tower>
 	<tower>
 		<name>Rocket</name>
+		<desc>Costly, slow strong rocket tower</desc>
 		<image>ArtilBase</image>
 		<gunImage>ArtilGun</gunImage>
 		<damage>40</damage>
@@ -31,6 +33,7 @@
 	</tower>
 	<tower>
 		<name>Slow</name>
+		<desc>Slows down enemy units</desc>
 		<image>ArtilBase</image>
 		<gunImage>slowGun</gunImage>
 		<damage>0</damage>

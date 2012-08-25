@@ -19,36 +19,6 @@ Global nextLevelScreen:NextLevelScreen
 Global debugOn:Bool = True
 Global player:Player
 
-Class Star
-	Field x:Float, y:Float, z:Float
-	
-	Method New()
-		x = Rnd(-100, 100)
-		y = Rnd(-100, 100)
-		z = Rnd(-100, 100)
-	End
-
-	Method Update:Void()
-		z -= 1 * dt.delta
-		x -= ( (game.mouseX - SCREEN_WIDTH2) / 200) * dt.delta
-		y -= ( (game.mouseY - SCREEN_HEIGHT2) / 200) * dt.delta
-		If z <= - 100 z += 200
-		If x <= - 100 x += 200
-		If y <= - 100 y += 200
-		If x >= 100 x -= 200
-		If y >= 100 y -= 200
-	End
-	
-	Method Draw:Void()
-		Local i:Int = z + 121
-		Local px:Int = x * 450 / (z + 151)
-		Local py:Int = y * 350 / (z + 151)
-		SetColor 255 - i, 255 - i, 255 - i
-		DrawRect(SCREEN_WIDTH2 + px, SCREEN_HEIGHT2 + py, 1, 1)
-		SetColor 255, 255, 255
-	End
-End
-
 #rem
 summary:Title Screen Class.
 Used to manage and deal with all Tital Page stuff.
@@ -57,6 +27,7 @@ Class Game8Screen Extends Screen
 	Field logo:GameImage
 	Field menu:SimpleMenu
 	Field star:Star[1024]
+
 	
 	Method New()
 		name = "Tower Defense"
@@ -85,7 +56,7 @@ Class Game8Screen Extends Screen
 		game.images.Load("game8/titleLogo.png")
 		logo = game.images.Find("titleLogo")
 		
-		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 240, 50, True, VERTICAL)
+		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 290, 50, True, VERTICAL)
 		menu.AddButton("game8/playButton.png", "game8/playButtonMO.png")
 		menu.AddButton("game8/backButton.png", "game8/backButtonMO.png")
 		
@@ -95,8 +66,7 @@ Class Game8Screen Extends Screen
 		
 		Unit.list.Comparator = New UnitComparator()
 	End
-
-	
+		
 	#rem
 	summary:Render Title Screen
 	Renders all the Screen Elements.
@@ -108,6 +78,17 @@ Class Game8Screen Extends Screen
 		Next
 		logo.Draw(SCREEN_WIDTH2, 100)
 		menu.Draw()
+		Local y:Int = 130
+		Local gap:Int = 30
+		gameScreen.font20.DrawText("By", SCREEN_WIDTH2, y, eDrawAlign.CENTER)
+		y += gap
+		gameScreen.font20.DrawText("Steven Revill", SCREEN_WIDTH2, y, eDrawAlign.CENTER)
+		y += gap
+		gameScreen.font16.DrawText("(www.therevillsgames.com)", SCREEN_WIDTH2, y, eDrawAlign.CENTER)
+		y += gap
+		gameScreen.font16.DrawText("Game Graphics by Daniel Cook (Lostgarden.com)", SCREEN_WIDTH2, y, eDrawAlign.CENTER)
+		y += gap
+		gameScreen.font16.DrawText("Music by ...", SCREEN_WIDTH2, y, eDrawAlign.CENTER)
 	End
 
 	#rem
@@ -219,6 +200,7 @@ End
 
 Class UnitTemplate
 	Field name:String
+	Field desc:String
 	Field gunImageName:String
 	Field damage:Float
 	Field damageBonus:Float
@@ -694,8 +676,19 @@ Class GameScreen Extends Screen
 	Field currentWave:Wave
 	Const MAX_LEVELS:Int = 1
 	
+	Field font12:BitmapFont2
+	Field font16:BitmapFont2
+	Field font20:BitmapFont2
+		
 	Method New()
 		name = "Tower Defense GameScreen"
+		LoadFonts()
+	End
+	
+	Method LoadFonts:Void()
+		font12 = New BitmapFont2("fonts/joystix_12.txt", True)
+		font16 = New BitmapFont2("fonts/joystix_16.txt", True)
+		font20 = New BitmapFont2("fonts/joystix_20.txt", True)
 	End
 	
 	Method LoadEnemyData:Void()
@@ -729,6 +722,7 @@ Class GameScreen Extends Screen
 			Local t:UnitTemplate = New UnitTemplate()
 			
 			t.name = xml.GetFirstChildByName("name").Value
+			t.desc = xml.GetFirstChildByName("desc").Value
 			t.imageName = xml.GetFirstChildByName("image").Value
 			t.gunImageName = xml.GetFirstChildByName("gunImage").Value
 			t.damage = Float(xml.GetFirstChildByName("damage").Value)
@@ -869,6 +863,8 @@ Class GameScreen Extends Screen
 		
 	End
 	
+
+	
 	Method Render:Void()
 		Unit.list.Sort() ' add a z-order order via the y coordinate
 		
@@ -907,9 +903,18 @@ Class GameScreen Extends Screen
 		Particle.DrawAll(game.scrollX, game.scrollY)
 		
 		if gui.mode = gui.TURRET
-			Local nx:Float = Floor((game.mouseX + game.scrollX)/ TILE_SIZE)
-			Local ny:Float = Floor((game.mouseY + game.scrollY)/ TILE_SIZE)
-			turretBaseImage.Draw(nx * TILE_SIZE - game.scrollX, ny * TILE_SIZE - game.scrollY)
+			Local nx:Float = Floor( (game.mouseX + game.scrollX) / TILE_SIZE)
+			Local ny:Float = Floor( (game.mouseY + game.scrollY) / TILE_SIZE)
+			nx = nx * TILE_SIZE - game.scrollX
+			ny = ny * TILE_SIZE - game.scrollY
+
+			Local tower:UnitTemplate = towerTemplateMap.Get(gui.selectedButton.ToUpper())
+			Local img:GameImage = game.images.Find(tower.imageName)
+			Local gimg:GameImage = game.images.Find(tower.gunImageName)
+			img.Draw(nx, ny)
+			if gimg <> null Then
+				gimg.Draw(nx + tower.firePosX + img.w2, ny + tower.firePosY + img.h2)
+			End
 		End
 		
 		gui.Draw()
@@ -1113,6 +1118,9 @@ Class Gui
 	Field lip:Int = 20
 	Field enableScroll:Bool
 	Field menuOffsetY:Int = 7
+	Field mouseOverText:String
+	Field mouseOverX:Int
+	Field mouseOverY:Int
 	
 	Method New()
 		showGUI = SCROLL_UP
@@ -1177,10 +1185,34 @@ Class Gui
 		Next
 	End
 	
+	Method SetMouseOverText:Void(name:String)
+		Local tower:UnitTemplate
+		Select name.ToUpper()
+			Case "TURRETBUTTON"
+				tower = gameScreen.towerTemplateMap.Get("TURRET")
+				mouseOverText = "$" + tower.cost + " " + tower.desc
+			Case "ROCKETBUTTON"
+				tower = gameScreen.towerTemplateMap.Get("ROCKET")
+				mouseOverText = "$" + tower.cost + " " + tower.desc
+			Case "SLOWBUTTON"
+				tower = gameScreen.towerTemplateMap.Get("SLOW")
+				mouseOverText = "$" + tower.cost + " " + tower.desc
+		End
+	End
+	
 	Method Update:Void()
 		menu.Update()
 		menu.SetY(y + menuOffsetY)
-
+		
+		mouseOverText = ""
+		For Local b:SimpleButton = eachin menu
+			if b.mouseOver
+				SetMouseOverText(b.name)
+				mouseOverX = b.x
+				mouseOverY = b.y - 30
+			End
+		Next
+		
 		if menu.Clicked("turretButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("TURRET").cost
 			Local sb:SimpleButton = menu.FindButton("turretButton")
 			if sb.selected = True
@@ -1225,9 +1257,10 @@ Class Gui
 	Method Draw:Void()
 		backgroundImage.Draw(x, y)
 		menu.Draw()
-		DrawText("CASH:" + gameScreen.cash, SCREEN_WIDTH, y + 10, 1, 0)
-		DrawText("HEALTH:" + gameScreen.health, SCREEN_WIDTH, y + 25, 1, 0)
-		DrawText("LEVEL:" + player.level, SCREEN_WIDTH, y + 35, 1, 0)
+		gameScreen.font12.DrawText(mouseOverText, mouseOverX, mouseOverY, eDrawAlign.LEFT)
+		gameScreen.font12.DrawText("CASH: " + gameScreen.cash, SCREEN_WIDTH, y + 10, eDrawAlign.RIGHT)
+		gameScreen.font12.DrawText("HEALTH: " + gameScreen.health, SCREEN_WIDTH, y + 25, eDrawAlign.RIGHT)
+		gameScreen.font12.DrawText("LEVEL: " + player.level, SCREEN_WIDTH, y + 35, eDrawAlign.RIGHT)
 	End
 	
 End
@@ -1317,6 +1350,36 @@ Class UnitComparator Extends IComparator
 		endif
 		
 		Return Sgn(u1.y - u2.y)
+	End
+End
+
+Class Star
+	Field x:Float, y:Float, z:Float
+	
+	Method New()
+		x = Rnd(-100, 100)
+		y = Rnd(-100, 100)
+		z = Rnd(-100, 100)
+	End
+
+	Method Update:Void()
+		z -= 1 * dt.delta
+		x -= ( (game.mouseX - SCREEN_WIDTH2) / 200) * dt.delta
+		y -= ( (game.mouseY - SCREEN_HEIGHT2) / 200) * dt.delta
+		If z <= - 100 z += 200
+		If x <= - 100 x += 200
+		If y <= - 100 y += 200
+		If x >= 100 x -= 200
+		If y >= 100 y -= 200
+	End
+	
+	Method Draw:Void()
+		Local i:Int = z + 121
+		Local px:Int = x * 450 / (z + 151)
+		Local py:Int = y * 350 / (z + 151)
+		SetColor 255 - i, 255 - i, 255 - i
+		DrawRect(SCREEN_WIDTH2 + px, SCREEN_HEIGHT2 + py, 1, 1)
+		SetColor 255, 255, 255
 	End
 End
 
