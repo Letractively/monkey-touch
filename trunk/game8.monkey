@@ -16,7 +16,7 @@ Import main
 Global gameScreen:GameScreen
 Global gameOverScreen:GameOverScreen
 Global nextLevelScreen:NextLevelScreen
-Global debugOn:Bool = True
+Global debugOn:Bool = false
 Global player:Player
 
 #rem
@@ -679,7 +679,9 @@ Class GameScreen Extends Screen
 	Field font12:BitmapFont2
 	Field font16:BitmapFont2
 	Field font20:BitmapFont2
-		
+	
+	Field flagList:ArrayList<Sprite>
+	
 	Method New()
 		name = "Tower Defense GameScreen"
 		LoadFonts()
@@ -807,6 +809,21 @@ Class GameScreen Extends Screen
 		
 		' set the map for the pathfinder using diagonals(2) and randomise it a tad(1)
 		PathFinder.SetMap(grid, tilemap.width, tilemap.height, 2, 1)
+		
+		' flags 1 and 2 are the start
+		' flags 3 and 4 are the end
+		flagList = New ArrayList<Sprite>
+		Local img:String = "flagGreen"
+		For Local i:Int = 1 to 4
+			Local flag:TileMapObject = tilemap.FindObjectByName("flag" + i)
+			if i > 2 Then
+				img = "flag"
+			End
+			Local flagSprite:Sprite = New Sprite(game.images.Find(img), flag.x, flag.y)
+			flagSprite.SetFrame(0, 4, 100, True, True)
+			flagList.Add(flagSprite)
+		Next
+
 	End
 	
 	Method LoadImages:Void()
@@ -820,6 +837,8 @@ Class GameScreen Extends Screen
 		
 		game.images.LoadAnim(path + "Artil3.png", 40, 40, 9, tmpImage, False)
 		
+		game.images.LoadAnim(path + "flag.png", 20, 20, 5, tmpImage)
+		game.images.LoadAnim(path + "flaggreen.png", 20, 20, 5, tmpImage)
 		
 		game.images.Load(path + "rocket.png")
 		game.images.Load(path + "slowBullet.png")
@@ -843,6 +862,7 @@ Class GameScreen Extends Screen
 		explosionImage = game.images.Find("explosn")
 		explosionBigImage = game.images.Find("exploBig")
 		explosionSmallImage = game.images.Find("expSmall")
+
 	End
 	
 	Method Start:Void()
@@ -856,6 +876,8 @@ Class GameScreen Extends Screen
 		LoadData()
 		LoadImages()
 		LoadMap()
+		
+		
 		health = 100
 		gui = New Gui
 		waveCount = 1
@@ -868,6 +890,10 @@ Class GameScreen Extends Screen
 		
 		Cls
 		tilemap.RenderMap(game.scrollX, game.scrollY, SCREEN_WIDTH, SCREEN_HEIGHT)
+
+		For Local f:Sprite = eachin flagList
+			f.Draw(game.scrollX, game.scrollY)
+		Next
 		
 		If gridOn
 			'Draw grid lines
@@ -950,6 +976,10 @@ Class GameScreen Extends Screen
 	End
 	
 	Method Update:Void()
+		For Local f:Sprite = eachin flagList
+			f.UpdateAnimation()
+		Next
+		
 		UpdateWave()
 		Unit.UpdateAll()
 		Explosion.UpdateAll()
@@ -1101,6 +1131,7 @@ Class GameScreen Extends Screen
 	End
 	
 	Method ClearItems:Void()
+		flagList.Clear()
 		Particle.Clear()
 		enemyTemplateMap.Clear()
 		towerTemplateMap.Clear()
