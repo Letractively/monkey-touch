@@ -38,6 +38,7 @@ Class Game9Screen Extends Screen
 	#End
 	Method Start:Void()
 		game.images.LoadAtlas("game9/game9_bullets1.txt", ImageBank.LIBGDX_ATLAS, True)
+		game.images.LoadAtlas("game9/game9_bullets2.txt", ImageBank.LIBGDX_ATLAS, True)
 		game.images.LoadAtlas("game9/game9_ships.txt", ImageBank.LIBGDX_ATLAS, True)
 		Local tmpImage:GameImage = Null
 		game.images.Load("game9/game9_ship2.png",,False).image.SetHandle(9, 12)
@@ -156,6 +157,9 @@ Class Smh_GameScreen Extends Screen
 	End
 	
 	Method Update:Void()
+		If KeyHit(KEY_Q) Then
+			AssertNotNull(Null)
+		End
 		If KeyHit(KEY_ESCAPE) Then
 			FadeToScreen(Game9Scr)
 		End
@@ -351,6 +355,7 @@ Class Smh_Entity
 	Field animDirection:Int
 	Field animForcedDirection:Int
 	Field rotation# = 0
+	Field rotationSpeed# = 0
 	Field rotateWithHeading? = True
 	Field scaleX# = 1
 	Field scaleY# = 1
@@ -518,6 +523,13 @@ Class Smh_Entity
 			y += dy * millis / 1000.0
 		End
 		
+		' update rotation
+		If rotationSpeed <> 0 Then
+			rotation += rotationSpeed
+			While rotation < 0 rotation += 360 End
+			While rotation >= 360 rotation -= 360 End
+		End
+		
 		' get bounds
 		Local current:Smh_Entity = Self
 		While current.parent And current.useParentBounds
@@ -665,6 +677,7 @@ Class Smh_Entity
 		interping = source.interping
 		image = source.image
 		rotation = source.rotation
+		rotationSpeed = source.rotationSpeed
 		rotateWithHeading = source.rotateWithHeading
 		scaleX = source.scaleX
 		scaleY = source.scaleY
@@ -1011,7 +1024,7 @@ Class Smh_Player Extends Smh_Unit
 	Const MAX_POWER# = 50
 	Field firingSpeed:Int = 100
 	Field nextShotAvailableMillis:Int = 0
-	Field shotSoundDelayMillis:Int = 300
+	Field shotSoundDelayMillis:Int = 200
 	Field nextShotSoundMillis:Int = 0
 	Field playerShot:Smh_Bullet
 	Field bulletPowerup:Smh_Powerup
@@ -1031,10 +1044,11 @@ Class Smh_Player Extends Smh_Unit
 		maxHP = 1
 		
 		playerShot = New Smh_Bullet
-		playerShot.image = game.images.Find("game9_bullet1")
-		playerShot.rotation = 45
-		playerShot.scaleX = 4
-		playerShot.scaleY = 4
+		playerShot.image = game.images.Find("game9_bullet5")
+		playerShot.rotation = 0
+		playerShot.rotationSpeed = 60
+		playerShot.scaleX = 1.5
+		playerShot.scaleY = 1.5
 		playerShot.radius = 10
 		playerShot.blendMode = AdditiveBlend
 		
@@ -1510,9 +1524,12 @@ Class Smh_Stage1 Extends Smh_Stage Implements Smh_EntityLogicHandler
 		trash1.image = game.images.Find("game9_ship2")
 		
 		trash1Bullet = New Smh_Bullet
-		trash1Bullet.CopyFrom(player.playerShot)
-		trash1Bullet.scaleX = 1
-		trash1Bullet.scaleY = 1
+		trash1Bullet.image = game.images.Find("game9_bullet4")
+		trash1Bullet.rotation = 0
+		trash1Bullet.scaleX = 2
+		trash1Bullet.scaleY = 2
+		trash1Bullet.radius = 3
+		trash1Bullet.blendMode = AdditiveBlend
 	End
 	
 	Method DoLogic:Void(millis%)
@@ -1625,8 +1642,8 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		firstBullet.visibleWhileInactive = True
 		firstBullet.fadeInTimeMillis = 1000
 		
-		secondBullet.image = game.images.Find("game9_bullet1")
-		secondBullet.rotation = 45
+		secondBullet.image = game.images.Find("game9_bullet2")
+		secondBullet.rotation = 90
 		secondBullet.scaleX = 2
 		secondBullet.scaleY = 2
 		secondBullet.radius = 8
@@ -1634,8 +1651,8 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		secondBullet.visibleWhileInactive = False
 		secondBullet.fadeInTimeMillis = 1000
 		
-		thirdBullet.image = game.images.Find("game9_bullet1")
-		thirdBullet.rotation = 45
+		thirdBullet.image = game.images.Find("game9_bullet3")
+		thirdBullet.rotation = 90
 		thirdBullet.scaleX = 1.5
 		thirdBullet.scaleY = 1.5
 		thirdBullet.radius = 5
