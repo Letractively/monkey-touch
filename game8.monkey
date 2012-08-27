@@ -103,7 +103,7 @@ Class Game8Screen Extends Screen
 		Next
 		If KeyHit(KEY_SPACE) or KeyHit(KEY_ENTER) or menu.Clicked("playButton") Then
 			player = New Player()
-			FadeToScreen(gameScreen)
+			FadeToScreen(gameScreen, defaultFadeTime, True, True, False)
 		End
 		
 		If KeyHit(KEY_ESCAPE) or menu.Clicked("backButton")
@@ -585,6 +585,7 @@ Class Wave
 	Field enemySeq:Int
 	Field currentEnemyWave:EnemyWave
 	Field firstTime:Bool
+	Field textAlpha:Float
 	
 	Method New()
 		enemyMap = New IntMap<EnemyWave>
@@ -595,12 +596,18 @@ Class Wave
 	End
 	
 	Method Update:Int()
+		if initialDelayCounter > 0
+			textAlpha = 1
+		Else
+			textAlpha -= 0.03 * dt.delta
+		End
+		
 		if firstTime
 			currentEnemyWave = enemyMap.Get(enemySeq)
 			firstTime = False
 		Else
-			if initialDelayCounter < initialDelay
-				initialDelayCounter += 1 * dt.delta
+			if initialDelayCounter > 0
+				initialDelayCounter -= 1 * dt.delta
 			Else
 				if currentEnemyWave <> null Then
 					if currentEnemyWave.count < currentEnemyWave.amount Then
@@ -625,6 +632,33 @@ Class Wave
 			End
 		End
 		Return 0
+	End
+	
+	Method Draw:Void()		
+		if textAlpha > 0
+			SetAlpha textAlpha
+			Local countDown:Int = ( (Round(initialDelayCounter) * (1000.0 / game.FPS)) / 1000)
+			Local x:Int = SCREEN_WIDTH2
+			Local oy:Int = SCREEN_HEIGHT2 - 30
+			Local y:Int = oy
+			Local gap:Int = gameScreen.font20.GetFontHeight() +5
+			
+			SetColor 0, 0, 0
+			For Local i:Int = 0 to 1
+				if i = 1
+					y = oy
+					SetColor 255, 255, 255
+					x -= 4
+					y -= 4
+				End
+				gameScreen.font20.DrawText("NEXT WAVE IN...", x, y, eDrawAlign.CENTER)
+				y += gap
+				gameScreen.font20.DrawText(countDown, x, y, eDrawAlign.CENTER)
+			Next
+			
+			SetAlpha 1
+			SetColor 255, 255, 255
+		End
 	End
 End
 
@@ -765,7 +799,8 @@ Class GameScreen Extends Screen
 			For Local waveXml:XMLElement = Eachin xml.GetChildrenByName("wave")
 				Local wave:Wave = New Wave()
 				wave.sequence = Int(waveXml.GetFirstChildByName("sequence").Value)
-				wave.initialDelay = Int(waveXml.GetFirstChildByName("initialDelay").Value)
+				wave.initialDelay = game.CalcAnimLength(Int(waveXml.GetFirstChildByName("initialDelay").Value))
+				wave.initialDelayCounter = wave.initialDelay
 				For Local enemiesXml:XMLElement = Eachin waveXml.GetChildrenByName("enemies")
 				
 					For Local enemyXml:XMLElement = Eachin enemiesXml.GetChildrenByName("enemy")
@@ -773,7 +808,7 @@ Class GameScreen Extends Screen
 						ew.sequence = Int(enemyXml.GetFirstChildByName("sequence").Value)
 						ew.type = enemyXml.GetFirstChildByName("type").Value
 						ew.amount = Int(enemyXml.GetFirstChildByName("amount").Value)
-						ew.delay = Int(enemyXml.GetFirstChildByName("delay").Value)
+						ew.delay = game.CalcAnimLength(Int(enemyXml.GetFirstChildByName("delay").Value))
 						wave.enemyMap.Add(ew.sequence, ew)
 					Next
 					
@@ -943,6 +978,8 @@ Class GameScreen Extends Screen
 		
 		gui.Draw()
 		
+		if currentWave <> null Then currentWave.Draw()
+
 		If debugOn Then DrawDebugInfo()
 	End
 
@@ -1151,7 +1188,7 @@ Class Gui
 	Const NONE:Int = 0
 	Const TURRET:Int = 1
 	Field selectedButton:String
-	
+	Field mouseControlGui:Bool = false
 	Field showGUI:Int
 	Field x:Float
 	Field y:Float
@@ -1160,7 +1197,7 @@ Class Gui
 	Field limit:Int
 	Field override:Int = 0
 	Field backgroundImage:GameImage
-	Field speedY:Int = 4
+	Field speedY:Float = 1.2
 	Field lip:Int = 20
 	Field enableScroll:Bool
 	Field menuOffsetY:Int = 7
@@ -1174,7 +1211,7 @@ Class Gui
 		showGUI = SCROLL_UP
 		mode = NONE
 		x = 0
-		y = SCREEN_HEIGHT - lip
+		y = SCREEN_HEIGHT
 		override = 0
 		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 0, 20, True, HORIZONTAL)
 		local b:SimpleButton = menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png")
@@ -1185,8 +1222,8 @@ Class Gui
 		b.SetSelectedImage("game8/slowButtonSelected.png", "game8/slowButtonSelectedMO.png")
 
 		backgroundImage = game.images.Find("gui")
-		limit = backgroundImage.h
-		enableScroll = False
+		limit = 50
+		enableScroll = True
 		if Not enableScroll
 			y = SCREEN_HEIGHT - 50
 		End
@@ -1198,8 +1235,10 @@ Class Gui
 	
 	Method ShowHideGUI:Void()
 		if enableScroll
-			If game.mouseY < SCREEN_HEIGHT - limit And override = 0 showGUI = SCROLL_DOWN
-			If game.mouseY >= SCREEN_HEIGHT - lip showGUI = SCROLL_UP
+			if mouseControlGui
+				If game.mouseY < SCREEN_HEIGHT - limit And override = 0 showGUI = SCROLL_DOWN
+				If game.mouseY >= SCREEN_HEIGHT - lip showGUI = SCROLL_UP
+			End
 			
 			If showGUI = SCROLL_UP
 				y -= speedY * dt.delta
