@@ -399,6 +399,9 @@ Class Tower Extends Unit Abstract
 		Super.Draw(game.scrollX, game.scrollY)
 
 		If drawLine
+			SetColor 255, 0, 0
+			DrawLineThick(dx1 - game.scrollX, dy1 - game.scrollY, dx2 - game.scrollX, dy2 - game.scrollY, 4)
+			SetColor 255, 255, 255
 			DrawLine dx1 - game.scrollX, dy1 - game.scrollY, dx2 - game.scrollX, dy2 - game.scrollY
 		End
 		if gunImage <> Null
@@ -699,6 +702,7 @@ Class GameScreen Extends Screen
 	Field gui:Gui
 	Field cash:Int
 	Field health:Int
+	Field maxHealth:Float
 	Field gameScrollSpeed:Int = 5
 	Field enemyTemplateMap:StringMap<UnitTemplate>
 	Field towerTemplateMap:StringMap<UnitTemplate>
@@ -819,6 +823,25 @@ Class GameScreen Extends Screen
 			Next
 			
 		Next
+		
+		
+		' calculate the max damage based off the number of enemies per level
+		Local maxDamage:Float
+		For Local waveKey:Int = EachIn waveMap.Keys()
+			local wave:Wave = waveMap.Get(waveKey)
+			For Local enemyKey:Int = eachin wave.enemyMap.Keys()
+				Local enemyWave:EnemyWave = wave.enemyMap.Get(enemyKey)
+				Local amount:Int = enemyWave.amount
+				Local type:String = enemyWave.type
+				Local t:UnitTemplate = enemyTemplateMap.Get(type.ToUpper())
+				maxDamage += t.damage * amount
+			Next
+		Next
+		
+		' then set the health to be half that
+		maxHealth = maxDamage / 2
+		health = maxHealth
+		
 	End
 	
 	Method LoadData:Void()
@@ -911,9 +934,7 @@ Class GameScreen Extends Screen
 		LoadData()
 		LoadImages()
 		LoadMap()
-		
-		
-		health = 100
+
 		gui = New Gui
 		waveCount = 1
 		currentWave = waveMap.Get(waveCount)
@@ -1358,28 +1379,35 @@ Class Gui
 			SetAlpha 1
 		End
 		
-		gameScreen.font12.DrawText("CASH: " + gameScreen.cash, SCREEN_WIDTH, y + 10, eDrawAlign.RIGHT)
-		gameScreen.font12.DrawText("LEVEL: " + player.level, SCREEN_WIDTH, y + 35, eDrawAlign.RIGHT)
+		Local cashX:Int = SCREEN_WIDTH - 70
+		Local cashY:Int = y + 10
+		Local gapX:Int = 5
+		gameScreen.font12.DrawText("CASH : ", cashX, cashY, eDrawAlign.RIGHT)
+		gameScreen.font12.DrawText(gameScreen.cash, cashX + gapX, cashY, eDrawAlign.LEFT)
+		Local levelX:Int = cashX
+		Local levelY:Int = y + 30
+		gameScreen.font12.DrawText("LEVEL: ", levelX, levelY, eDrawAlign.RIGHT)
+		gameScreen.font12.DrawText(player.level, levelX + gapX, levelY, eDrawAlign.LEFT)
 
-		Local healthX:Int = SCREEN_WIDTH2
-		Local healthY:Int = y + 20
+		Local healthX:Int = 200
+		Local healthY:Int = y + 17
 		Local hr:Int, hg:Int, hb:Int
 		Local br:Int, bg:Int, bb:Int
 		hr = 0; hg = 255; hb = 0
 		br = 0; bg = 0; bb = 0
 
-		if gameScreen.health < 70 Then
+		if gameScreen.health < gameScreen.maxHealth * 0.70 Then
 			hr = 255
 			hg = 255
 			hb = 0
 		End
-		if gameScreen.health < 40 Then
+		if gameScreen.health < gameScreen.maxHealth * 0.40 Then
 			hr = 255
 			hg = 0
 			hb = 0
 		End
 		
-		DrawHealthBar(healthX, healthY, 200, 20, Float(gameScreen.health / 100.0), hr, hg, hb, br, bg, bb)
+		DrawHealthBar(healthX, healthY, 300, 20, Float(gameScreen.health / gameScreen.maxHealth), hr, hg, hb, br, bg, bb)
 
 	End
 	
@@ -1429,7 +1457,7 @@ Class GameOverScreen Extends Screen
 	
 	Method Render:Void()
 		Cls
-		TitleFont.DrawText("GAME OVER!", 320, 240, 2)
+		gameScreen.font20.DrawText("GAME OVER!", SCREEN_WIDTH2, 240, eDrawAlign.CENTER)
 	End
 	
 	Method Update:Void()
@@ -1449,8 +1477,8 @@ Class NextLevelScreen Extends Screen
 	
 	Method Render:Void()
 		Cls
-		TitleFont.DrawText("WELL DONE!", 320, 240, 2)
-		TitleFont.DrawText("LEVEL " + player.level + " COMPLETE", 320, 270, 2)
+		gameScreen.font20.DrawText("WELL DONE!", SCREEN_WIDTH2, 240, eDrawAlign.CENTER)
+		gameScreen.font20.DrawText("LEVEL " + player.level + " COMPLETE", SCREEN_WIDTH2, 270, eDrawAlign.CENTER)
 	End
 	
 	Method Update:Void()
