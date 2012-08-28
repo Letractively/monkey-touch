@@ -167,7 +167,7 @@ Class Unit Extends Sprite
 			End
 		Next
 		
-		if shotSoundMillis < dt.currentticks
+		if soundMillis < dt.currentticks
 			if sfxLaser
 				sfxLaser = False
 				gameScreen.lazerSound.rate = Rnd(1, 2)
@@ -183,7 +183,7 @@ Class Unit Extends Sprite
 				gameScreen.rocketSound.rate = Rnd(1, 2)
 				gameScreen.rocketSound.Play()
 			End
-			shotSoundMillis = dt.currentticks + soundDelayMillis
+			soundMillis = dt.currentticks + soundDelayMillis
 		End		
 	End
 	
