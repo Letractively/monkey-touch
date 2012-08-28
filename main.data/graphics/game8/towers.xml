@@ -4,7 +4,7 @@
 		<desc>Cheap, fast weak lazer turret</desc>
 		<image>turretBase</image>
 		<gunImage>turretGun</gunImage>
-		<damage>10</damage>
+		<damage>6</damage>
 		<damageBonus>2</damageBonus>
 		<range>100</range>
 		<health>100</health>
@@ -24,7 +24,7 @@
 		<damageBonus>2</damageBonus>
 		<range>150</range>
 		<health>100</health>
-		<fireRate>70</fireRate>
+		<fireRate>75</fireRate>
 		<cost>300</cost>
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
@@ -40,7 +40,7 @@
 		<damageBonus>0</damageBonus>
 		<range>125</range>
 		<health>100</health>
-		<fireRate>70</fireRate>
+		<fireRate>50</fireRate>
 		<cost>250</cost>
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
