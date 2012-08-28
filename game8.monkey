@@ -65,6 +65,13 @@ Class Game8Screen Extends Screen
 		Next
 		
 		Unit.list.Comparator = New UnitComparator()
+		
+		#IF TARGET="glfw"
+			game.MusicPlay("HomeBaseGroove.wav", True)
+		#ELSE
+			game.MusicPlay("HomeBaseGroove.mp3", True)
+		#END
+		
 	End
 		
 	#rem
@@ -88,7 +95,7 @@ Class Game8Screen Extends Screen
 		y += gap
 		gameScreen.font16.DrawText("Game Graphics by Daniel Cook (Lostgarden.com)", SCREEN_WIDTH2, y, eDrawAlign.CENTER)
 		y += gap
-		gameScreen.font16.DrawText("Music by ...", SCREEN_WIDTH2, y, eDrawAlign.CENTER)
+		gameScreen.font16.DrawText("Music by Kevin MacLeod (incompetech.com)", SCREEN_WIDTH2, y, eDrawAlign.CENTER)
 	End
 
 	#rem
@@ -114,7 +121,13 @@ End
 
 Class Unit Extends Sprite
 	Global list:ArrayList<Unit> = New ArrayList<Unit>
-
+	Field firing:Bool
+	Global soundDelayMillis:Int = 200
+	Global soundMillis:Int = 0
+	Global sfxLaser:Bool
+	Global sfxRocket:Bool
+	Global sfxSlow:Bool
+		
 	Method New(img:GameImage, x:Float, y:Float)
 		Super.New(img, x, y)
 	End
@@ -131,10 +144,47 @@ Class Unit Extends Sprite
 	Function UpdateAll:Void()
 		If Not list Return
 		Local r:Unit
+
+
 		For Local i:Int = 0 Until list.Size
 			r = list.Get(i)
-			If r <> Null Then r.Update()
+			If r <> Null Then
+				r.Update()
+				if r.firing
+					Local t:Tower = Tower(r)
+					if t <> null Then
+						select t.fireType
+							Case Tower.LAZER
+								sfxLaser = True
+							Case Tower.ROCKET
+								sfxRocket = True
+							Case Tower.SLOW
+								sfxSlow = True
+						End
+					End
+					r.firing = False
+				End
+			End
 		Next
+		
+		if shotSoundMillis < dt.currentticks
+			if sfxLaser
+				sfxLaser = False
+				gameScreen.lazerSound.rate = Rnd(1, 2)
+				gameScreen.lazerSound.Play()
+			End
+			if sfxRocket
+				sfxRocket = False
+				gameScreen.rocketSound.rate = Rnd(1, 2)
+				gameScreen.rocketSound.Play()
+			End
+			if sfxSlow
+				sfxSlow = False
+				gameScreen.rocketSound.rate = Rnd(1, 2)
+				gameScreen.rocketSound.Play()
+			End
+			shotSoundMillis = dt.currentticks + soundDelayMillis
+		End		
 	End
 	
 	Method Update:Void() Abstract
@@ -313,6 +363,7 @@ Class Enemy Extends Unit Abstract
 		If Self.health <= 0
 			gameScreen.cash += Self.score
 			alive = False
+			gameScreen.vexplosion.Play()
 			New Explosion(gameScreen.explosionImage, x, y, 8, 100)
 			Kill()
 		End
@@ -457,6 +508,7 @@ Class Tower Extends Unit Abstract
 			If lastFire > fireRate
 				SetGunAngle(angle)
 				lastFire = 0
+				firing = True
 				select fireType
 					Case LAZER
 						Self.drawLine = True
@@ -720,6 +772,10 @@ Class GameScreen Extends Screen
 	
 	Field flagList:ArrayList<Sprite>
 	
+	Field lazerSound:GameSound
+	Field rocketSound:GameSound
+	Field vexplosion:GameSound
+	
 	Method New()
 		name = "Tower Defense GameScreen"
 		LoadFonts()
@@ -923,6 +979,16 @@ Class GameScreen Extends Screen
 
 	End
 	
+	Method LoadSounds:Void()
+		game.sounds.Load("Firelaser")
+		game.sounds.Load("Firemissile")
+		game.sounds.Load("vexplosion")
+		
+		lazerSound = game.sounds.Find("firelaser")
+		rocketSound = game.sounds.Find("Firemissile")
+		vexplosion = game.sounds.Find("vexplosion")
+	End
+	
 	Method Start:Void()
 		enemyTemplateMap = New StringMap<UnitTemplate>
 		towerTemplateMap = New StringMap<UnitTemplate>
@@ -933,6 +999,7 @@ Class GameScreen Extends Screen
 		delay = maxDelay
 		LoadData()
 		LoadImages()
+		LoadSounds()
 		LoadMap()
 
 		gui = New Gui
