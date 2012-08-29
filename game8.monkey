@@ -16,7 +16,7 @@ Import main
 Global gameScreen:GameScreen
 Global gameOverScreen:GameOverScreen
 Global nextLevelScreen:NextLevelScreen
-Global debugOn:Bool = false
+Global debugOn:Bool = False
 Global player:Player
 
 #rem
@@ -60,7 +60,7 @@ Class Game8Screen Extends Screen
 		menu.AddButton("game8/playButton.png", "game8/playButtonMO.png")
 		menu.AddButton("game8/backButton.png", "game8/backButtonMO.png")
 		
-		For Local t:Int = 0 until star.Length
+		For Local t:Int = 0 Until star.Length
 			star[t] = New Star
 		Next
 		
@@ -80,7 +80,7 @@ Class Game8Screen Extends Screen
 	#End
 	Method Render:Void()
 		Cls
-		For Local t:Int = 0 until star.Length
+		For Local t:Int = 0 Until star.Length
 			star[t].Draw()
 		Next
 		logo.Draw(SCREEN_WIDTH2, 100)
@@ -105,15 +105,15 @@ Class Game8Screen Extends Screen
 	#End
 	Method Update:Void()
 		menu.Update()
-		For Local t:Int = 0 until star.Length
+		For Local t:Int = 0 Until star.Length
 			star[t].Update()
 		Next
-		If KeyHit(KEY_SPACE) or KeyHit(KEY_ENTER) or menu.Clicked("playButton") Then
+		If KeyHit(KEY_SPACE) Or KeyHit(KEY_ENTER) Or menu.Clicked("playButton") Then
 			player = New Player()
 			FadeToScreen(gameScreen, defaultFadeTime, True, True, False)
 		End
 		
-		If KeyHit(KEY_ESCAPE) or menu.Clicked("backButton")
+		If KeyHit(KEY_ESCAPE) Or menu.Clicked("backButton")
 			FadeToScreen(TitleScr)
 		End
 	End
@@ -122,8 +122,6 @@ End
 Class Unit Extends Sprite
 	Global list:ArrayList<Unit> = New ArrayList<Unit>
 	Field firing:Bool
-	Global soundDelayMillis:Int = 200
-	Global soundMillis:Int = 0
 	Global sfxLaser:Bool
 	Global sfxRocket:Bool
 	Global sfxSlow:Bool
@@ -145,15 +143,14 @@ Class Unit Extends Sprite
 		If Not list Return
 		Local r:Unit
 
-
 		For Local i:Int = 0 Until list.Size
 			r = list.Get(i)
 			If r <> Null Then
 				r.Update()
-				if r.firing
+				If r.firing
 					Local t:Tower = Tower(r)
-					if t <> null Then
-						select t.fireType
+					If t <> Null Then
+						Select t.fireType
 							Case Tower.LAZER
 								sfxLaser = True
 							Case Tower.ROCKET
@@ -166,25 +163,23 @@ Class Unit Extends Sprite
 				End
 			End
 		Next
-		
-		if soundMillis < dt.currentticks
-			if sfxLaser
-				sfxLaser = False
-				gameScreen.lazerSound.rate = Rnd(1, 2)
-				gameScreen.lazerSound.Play()
-			End
-			if sfxRocket
-				sfxRocket = False
-				gameScreen.rocketSound.rate = Rnd(1, 2)
-				gameScreen.rocketSound.Play()
-			End
-			if sfxSlow
-				sfxSlow = False
-				gameScreen.rocketSound.rate = Rnd(1, 2)
-				gameScreen.rocketSound.Play()
-			End
-			soundMillis = dt.currentticks + soundDelayMillis
-		End		
+	
+		If sfxLaser
+			sfxLaser = False
+			gameScreen.lazerSound.rate = Rnd(1, 2)
+			gameScreen.lazerSound.Play()
+		End
+		If sfxRocket
+			sfxRocket = False
+			gameScreen.rocketSound.rate = Rnd(1, 2)
+			gameScreen.rocketSound.Play()
+		End
+		If sfxSlow
+			sfxSlow = False
+			gameScreen.rocketSound.rate = Rnd(1, 2)
+			gameScreen.rocketSound.Play()
+		End
+	
 	End
 	
 	Method Update:Void() Abstract
@@ -214,14 +209,14 @@ Class Rocket Extends Unit
 		Local xDist:Float = target.x - x
 		Local yDist:Float = target.y - y
 		Local angle:Float = ATan2(yDist, xDist)
-		if angle < 0 angle += 360
+		If angle < 0 angle += 360
 		rotation = -angle - 90
 				
 		MoveForward()
-		if smokeDelay > 1
+		If smokeDelay > 1
 			smokeDelay = 0
-			local p:Particle
-			if slowDown > 0
+			Local p:Particle
+			If slowDown > 0
 				p = Particle.Create(game.images.Find("slowBullet"), x, y, 0, 0, 0, 500)
 				p.rotation = rotation
 			Else
@@ -235,14 +230,14 @@ Class Rocket Extends Unit
 		
 		range -= speed
 		
-		if Collide(target) Then
+		If Collide(target) Then
 			target.health -= Self.damage
 			target.slowDown = game.CalcAnimLength(slowDown)
 			New Explosion(gameScreen.explosionSmallImage, Self.x, Self.y, 6, 100)
 			Kill()
 		End
 		
-		if range < 0
+		If range < 0
 			Kill()
 		End
 	End
@@ -353,7 +348,7 @@ Class Enemy Extends Unit Abstract
 				End
 			End
 		End
-		if slowDown > 0
+		If slowDown > 0
 			speed = oSpeed / 2
 			slowDown -= 1 * dt.delta
 		Else
@@ -428,8 +423,8 @@ Class Tower Extends Unit Abstract
 		Self.cost = t.cost
 		Self.firePosX = x + Self.image.w2 + t.firePosX
 		Self.firePosY = y + Self.image.h2 + t.firePosY
-		if t.gunImageName <> "" Then
-			self.gunImage = game.images.Find(t.gunImageName)
+		If t.gunImageName <> "" Then
+			Self.gunImage = game.images.Find(t.gunImageName)
 		End
 		Self.fireType = t.fireType
 		Self.slowDown = t.slowDown
@@ -455,7 +450,7 @@ Class Tower Extends Unit Abstract
 			SetColor 255, 255, 255
 			DrawLine dx1 - game.scrollX, dy1 - game.scrollY, dx2 - game.scrollX, dy2 - game.scrollY
 		End
-		if gunImage <> Null
+		If gunImage <> Null
 			gunImage.Draw(firePosX - game.scrollX, firePosY - game.scrollY, gunAngle, 1, 1, gunFrame)
 		End
 	End
@@ -509,7 +504,7 @@ Class Tower Extends Unit Abstract
 				SetGunAngle(angle)
 				lastFire = 0
 				firing = True
-				select fireType
+				Select fireType
 					Case LAZER
 						Self.drawLine = True
 						dx1 = Self.firePosX
@@ -519,14 +514,14 @@ Class Tower Extends Unit Abstract
 						Self.target.health -= Self.damage + Rnd(0, Self.damageBonus)
 						New Explosion(gameScreen.explosionSmallImage, Self.target.x, Self.target.y, 6, 100)
 					Case ROCKET
-						local r:Rocket = New Rocket(game.images.Find("Rocket"), Self.firePosX, Self.firePosY)
+						Local r:Rocket = New Rocket(game.images.Find("Rocket"), Self.firePosX, Self.firePosY)
 						r.rotation = -angle - 90
 						r.damage = Self.damage + Rnd(0, Self.damageBonus)
 						r.range = Self.range
 						r.target = target
 						r.slowDown = Self.slowDown
 					Case SLOW
-						local r:Rocket = New Rocket(game.images.Find("slowBullet"), Self.firePosX, Self.firePosY)
+						Local r:Rocket = New Rocket(game.images.Find("slowBullet"), Self.firePosX, Self.firePosY)
 						r.rotation = -angle - 90
 						r.damage = Self.damage + Rnd(0, Self.damageBonus)
 						r.range = Self.range
@@ -544,7 +539,7 @@ Class Tower Extends Unit Abstract
 		Else
 			For Local i:Int = 0 Until list.Size
 				e = Enemy(list.Get(i))
-				if e Then
+				If e Then
 					Local dist:Float = CalcDistance(Self.firePosX, Self.firePosY, e.x, e.y)
 					If Self.target And Self.target.alive
 						If dist < Self.targetDist
@@ -571,7 +566,7 @@ Class Tower Extends Unit Abstract
 	
 	Function UnselectTowers:Void()
 		For Local u:Unit = Eachin list
-			if Tower(u) Then
+			If Tower(u) Then
 				Local t:Tower = Tower(u)
 				t.selected = False
 			End
@@ -581,7 +576,7 @@ Class Tower Extends Unit Abstract
 	Function SelectTower:Tower(x:Int, y:Int)
 		Local tower:Tower
 		For Local u:Unit = Eachin list
-			if Tower(u) Then
+			If Tower(u) Then
 				Local t:Tower = Tower(u)
 				If t.x / gameScreen.TILE_SIZE = x / gameScreen.TILE_SIZE And t.y / gameScreen.TILE_SIZE = y / gameScreen.TILE_SIZE
 					t.selected = True
@@ -651,23 +646,23 @@ Class Wave
 	End
 	
 	Method Update:Int()
-		if initialDelayCounter > 0
+		If initialDelayCounter > 0
 			textAlpha = 1
 		Else
 			textAlpha -= 0.03 * dt.delta
 		End
 		
-		if firstTime
+		If firstTime
 			currentEnemyWave = enemyMap.Get(enemySeq)
 			firstTime = False
 		Else
-			if initialDelayCounter > 0
+			If initialDelayCounter > 0
 				initialDelayCounter -= 1 * dt.delta
 			Else
-				if currentEnemyWave <> null Then
-					if currentEnemyWave.count < currentEnemyWave.amount Then
+				If currentEnemyWave <> Null Then
+					If currentEnemyWave.count < currentEnemyWave.amount Then
 						delay += 1 * dt.delta
-						if delay > currentEnemyWave.delay
+						If delay > currentEnemyWave.delay
 							delay = 0
 							Local startPos:TileMapObject = gameScreen.tilemap.FindObjectByName("Start")
 							Local endPos:TileMapObject = gameScreen.tilemap.FindObjectByName("End")
@@ -677,7 +672,7 @@ Class Wave
 					Else
 						enemySeq += 1
 						currentEnemyWave = enemyMap.Get(enemySeq)
-						if currentEnemyWave = null
+						If currentEnemyWave = Null
 							Return 1
 						End
 					End
@@ -690,7 +685,7 @@ Class Wave
 	End
 	
 	Method Draw:Void()		
-		if textAlpha > 0
+		If textAlpha > 0
 			SetAlpha textAlpha
 			Local countDown:Int = ( (Round(initialDelayCounter) * (1000.0 / game.FPS)) / 1000)
 			Local x:Int = SCREEN_WIDTH2
@@ -699,8 +694,8 @@ Class Wave
 			Local gap:Int = gameScreen.font20.GetFontHeight() +5
 			
 			SetColor 0, 0, 0
-			For Local i:Int = 0 to 1
-				if i = 1
+			For Local i:Int = 0 To 1
+				If i = 1
 					y = oy
 					SetColor 255, 255, 255
 					x -= 4
@@ -883,9 +878,9 @@ Class GameScreen Extends Screen
 		
 		' calculate the max damage based off the number of enemies per level
 		Local maxDamage:Float
-		For Local waveKey:Int = EachIn waveMap.Keys()
-			local wave:Wave = waveMap.Get(waveKey)
-			For Local enemyKey:Int = eachin wave.enemyMap.Keys()
+		For Local waveKey:Int = Eachin waveMap.Keys()
+			Local wave:Wave = waveMap.Get(waveKey)
+			For Local enemyKey:Int = Eachin wave.enemyMap.Keys()
 				Local enemyWave:EnemyWave = wave.enemyMap.Get(enemyKey)
 				Local amount:Int = enemyWave.amount
 				Local type:String = enemyWave.type
@@ -928,9 +923,9 @@ Class GameScreen Extends Screen
 		' flags 3 and 4 are the end
 		flagList = New ArrayList<Sprite>
 		Local img:String = "flagGreen"
-		For Local i:Int = 1 to 4
+		For Local i:Int = 1 To 4
 			Local flag:TileMapObject = tilemap.FindObjectByName("flag" + i)
-			if i > 2 Then
+			If i > 2 Then
 				img = "flag"
 			End
 			Local flagSprite:Sprite = New Sprite(game.images.Find(img), flag.x, flag.y)
@@ -980,13 +975,9 @@ Class GameScreen Extends Screen
 	End
 	
 	Method LoadSounds:Void()
-		game.sounds.Load("Firelaser")
-		game.sounds.Load("Firemissile")
-		game.sounds.Load("vexplosion")
-		
-		lazerSound = game.sounds.Find("firelaser")
-		rocketSound = game.sounds.Find("Firemissile")
-		vexplosion = game.sounds.Find("vexplosion")
+		lazerSound = game.sounds.Load("Firelaser",,,250)
+		rocketSound = game.sounds.Load("Firemissile",,,250)
+		vexplosion = game.sounds.Load("vexplosion")
 	End
 	
 	Method Start:Void()
@@ -1014,7 +1005,7 @@ Class GameScreen Extends Screen
 		Cls
 		tilemap.RenderMap(game.scrollX, game.scrollY, SCREEN_WIDTH, SCREEN_HEIGHT)
 
-		For Local f:Sprite = eachin flagList
+		For Local f:Sprite = Eachin flagList
 			f.Draw(game.scrollX, game.scrollY)
 		Next
 		
@@ -1049,7 +1040,7 @@ Class GameScreen Extends Screen
 		Explosion.DrawAll()
 		Particle.DrawAll(game.scrollX, game.scrollY)
 		
-		if gui.mode = gui.TURRET
+		If gui.mode = gui.TURRET
 			Local nx:Float = Floor( (game.mouseX + game.scrollX) / TILE_SIZE)
 			Local ny:Float = Floor( (game.mouseY + game.scrollY) / TILE_SIZE)
 			nx = nx * TILE_SIZE - game.scrollX
@@ -1059,14 +1050,14 @@ Class GameScreen Extends Screen
 			Local img:GameImage = game.images.Find(tower.imageName)
 			Local gimg:GameImage = game.images.Find(tower.gunImageName)
 			img.Draw(nx, ny)
-			if gimg <> null Then
+			If gimg <> Null Then
 				gimg.Draw(nx + tower.firePosX + img.w2, ny + tower.firePosY + img.h2)
 			End
 		End
 		
 		gui.Draw()
 		
-		if currentWave <> null Then currentWave.Draw()
+		If currentWave <> Null Then currentWave.Draw()
 
 		If debugOn Then DrawDebugInfo()
 	End
@@ -1092,8 +1083,8 @@ Class GameScreen Extends Screen
 	End
 
 	Method UpdateWave:Void()
-		if currentWave <> null Then
-			if currentWave.Update()
+		If currentWave <> Null Then
+			If currentWave.Update()
 				waveCount += 1
 				currentWave = waveMap.Get(waveCount)
 			End
@@ -1101,7 +1092,7 @@ Class GameScreen Extends Screen
 	End
 	
 	Method Update:Void()
-		For Local f:Sprite = eachin flagList
+		For Local f:Sprite = Eachin flagList
 			f.UpdateAnimation()
 		Next
 		
@@ -1115,21 +1106,21 @@ Class GameScreen Extends Screen
 	
 	Method CheckLevel:Void()
 		' game over
-		if health <= 0 Then
+		If health <= 0 Then
 			health = 0
 			FadeToScreen(gameOverScreen, defaultFadeTime, True, True, False)
 		End
 		
 		' win
 		Local found:Bool = False
-		For Local u:Unit = EachIn Unit.list
+		For Local u:Unit = Eachin Unit.list
 			If Enemy(u) Then
 				found = True
 				Exit
 			End
 		Next
 		
-		If Not found And currentWave = null Then
+		If Not found And currentWave = Null Then
 			FadeToScreen(nextLevelScreen, defaultFadeTime, True, True, True)
 		End
 	End
@@ -1163,23 +1154,23 @@ Class GameScreen Extends Screen
 			End
 		End
 		Local scrollGap% = 10
-		if game.mouseX < scrollGap
+		If game.mouseX < scrollGap
 			game.scrollX -= Floor(gameScrollSpeed * dt.delta)
 		End
-		if game.mouseY < scrollGap
+		If game.mouseY < scrollGap
 			game.scrollY -= Floor(gameScrollSpeed * dt.delta)
 		End
-		if game.mouseX > SCREEN_WIDTH - scrollGap
+		If game.mouseX > SCREEN_WIDTH - scrollGap
 			game.scrollX += Floor(gameScrollSpeed * dt.delta)
 		End
-		if game.mouseY > SCREEN_HEIGHT - scrollGap
+		If game.mouseY > SCREEN_HEIGHT - scrollGap
 			game.scrollY += Floor(gameScrollSpeed * dt.delta)
 		End
 		' tower defense maps have a border of TILE_SIZE around them so dont display that extra tile
-		if game.scrollX < TILE_SIZE Then game.scrollX = TILE_SIZE
-		if game.scrollY < TILE_SIZE Then game.scrollY = TILE_SIZE
-		if game.scrollX + SCREEN_WIDTH > tilemap.width * TILE_SIZE - TILE_SIZE Then game.scrollX = tilemap.width * TILE_SIZE - SCREEN_WIDTH - TILE_SIZE
-		if game.scrollY + SCREEN_HEIGHT > tilemap.height * TILE_SIZE - TILE_SIZE Then game.scrollY = tilemap.height * TILE_SIZE - SCREEN_HEIGHT - TILE_SIZE
+		If game.scrollX < TILE_SIZE Then game.scrollX = TILE_SIZE
+		If game.scrollY < TILE_SIZE Then game.scrollY = TILE_SIZE
+		If game.scrollX + SCREEN_WIDTH > tilemap.width * TILE_SIZE - TILE_SIZE Then game.scrollX = tilemap.width * TILE_SIZE - SCREEN_WIDTH - TILE_SIZE
+		If game.scrollY + SCREEN_HEIGHT > tilemap.height * TILE_SIZE - TILE_SIZE Then game.scrollY = tilemap.height * TILE_SIZE - SCREEN_HEIGHT - TILE_SIZE
 		
 		If KeyHit(KEY_DELETE)
 			If selectedTower <> Null
@@ -1217,13 +1208,13 @@ Class GameScreen Extends Screen
 		If game.mouseHit
 			Tower.UnselectTowers()
 			selectedTower = Null
-			if game.mouseY < gui.y Then
+			If game.mouseY < gui.y Then
 				Local mx:Int = game.mouseX + game.scrollX
 				Local my:Int = game.mouseY + game.scrollY
 				
 				If gameScreen.tilemap.CollisionTile(mx + TILE_SIZE, my, gameScreen.tilemap.BUILD_LAYER) = 0 And
 				gameScreen.tilemap.CollisionTile(mx, my, gameScreen.tilemap.BUILD_LAYER) = 0 Then
-					if gui.mode = gui.TURRET
+					If gui.mode = gui.TURRET
 						Local nx:Float = Floor(mx / TILE_SIZE)
 						Local ny:Float = Floor(my / TILE_SIZE)
 						Local t:TurretTower = New TurretTower(gui.selectedButton, nx * TILE_SIZE, ny * TILE_SIZE)
@@ -1237,7 +1228,7 @@ Class GameScreen Extends Screen
 						gui.Reset()
 					End
 				Else
-					if gui.mode = gui.NONE
+					If gui.mode = gui.NONE
 						If gameScreen.tilemap.CollisionTile(mx, my, gameScreen.tilemap.BUILD_LAYER) = 1
 							selectedTower = Tower.SelectTower(mx, my)
 						End
@@ -1276,7 +1267,7 @@ Class Gui
 	Const NONE:Int = 0
 	Const TURRET:Int = 1
 	Field selectedButton:String
-	Field mouseControlGui:Bool = false
+	Field mouseControlGui:Bool = False
 	Field showGUI:Int
 	Field x:Float
 	Field y:Float
@@ -1302,7 +1293,7 @@ Class Gui
 		y = SCREEN_HEIGHT
 		override = 0
 		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 0, 20, True, HORIZONTAL)
-		local b:SimpleButton = menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png")
+		Local b:SimpleButton = menu.AddButton("game8/turretButton.png", "game8/turretButtonMO.png")
 		b.SetSelectedImage("game8/turretButtonSelected.png", "game8/turretButtonSelectedMO.png")
 		b = menu.AddButton("game8/rocketButton.png", "game8/rocketButtonMO.png")
 		b.SetSelectedImage("game8/rocketButtonSelected.png", "game8/rocketButtonSelectedMO.png")
@@ -1312,7 +1303,7 @@ Class Gui
 		backgroundImage = game.images.Find("gui")
 		limit = 50
 		enableScroll = True
-		if Not enableScroll
+		If Not enableScroll
 			y = SCREEN_HEIGHT - 50
 		End
 
@@ -1322,8 +1313,8 @@ Class Gui
 	End
 	
 	Method ShowHideGUI:Void()
-		if enableScroll
-			if mouseControlGui
+		If enableScroll
+			If mouseControlGui
 				If game.mouseY < SCREEN_HEIGHT - limit And override = 0 showGUI = SCROLL_DOWN
 				If game.mouseY >= SCREEN_HEIGHT - lip showGUI = SCROLL_UP
 			End
@@ -1349,13 +1340,13 @@ Class Gui
 	
 	Method Reset:Void()
 		mode = NONE
-		For local b:SimpleButton = EachIn self.menu
+		For Local b:SimpleButton = Eachin Self.menu
 			b.selected = False
 		Next
 	End
 	
 	Method DeselectAllButtons:Void()
-		For Local b:SimpleButton = eachin menu
+		For Local b:SimpleButton = Eachin menu
 			b.selected = False
 		Next
 	End
@@ -1379,8 +1370,8 @@ Class Gui
 		menu.Update()
 		menu.SetY(y + menuOffsetY)
 		
-		For Local b:SimpleButton = eachin menu
-			if b.mouseOver
+		For Local b:SimpleButton = Eachin menu
+			If b.mouseOver
 				SetMouseOverText(b.name)
 				mouseOverAlpha = 1
 				mouseOverX = b.x
@@ -1388,15 +1379,15 @@ Class Gui
 			End
 		Next
 
-		if mouseOverAlpha > 0
+		If mouseOverAlpha > 0
 			mouseOverAlpha -= mouseOverFade * dt.delta
 		Else
 			mouseOverAlpha = 0
 		End
 		
-		if menu.Clicked("turretButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("TURRET").cost
+		If menu.Clicked("turretButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("TURRET").cost
 			Local sb:SimpleButton = menu.FindButton("turretButton")
-			if sb.selected = True
+			If sb.selected = True
 				mode = NONE
 				sb.selected = False
 			Else
@@ -1407,9 +1398,9 @@ Class Gui
 			End
 		End
 		
-		if menu.Clicked("rocketButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("ROCKET").cost
+		If menu.Clicked("rocketButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("ROCKET").cost
 			Local sb:SimpleButton = menu.FindButton("rocketButton")
-			if sb.selected = True
+			If sb.selected = True
 				mode = NONE
 				sb.selected = False
 			Else
@@ -1420,9 +1411,9 @@ Class Gui
 			End
 		End
 		
-		if menu.Clicked("slowButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("SLOW").cost
+		If menu.Clicked("slowButton") And gameScreen.cash >= gameScreen.towerTemplateMap.Get("SLOW").cost
 			Local sb:SimpleButton = menu.FindButton("slowButton")
-			if sb.selected = True
+			If sb.selected = True
 				mode = NONE
 				sb.selected = False
 			Else
@@ -1440,7 +1431,7 @@ Class Gui
 		backgroundImage.Draw(x, y)
 		menu.Draw()
 		
-		if mouseOverAlpha > 0
+		If mouseOverAlpha > 0
 			SetAlpha mouseOverAlpha
 			gameScreen.font12.DrawText(mouseOverText, mouseOverX, mouseOverY, eDrawAlign.LEFT)
 			SetAlpha 1
@@ -1463,12 +1454,12 @@ Class Gui
 		hr = 0; hg = 255; hb = 0
 		br = 0; bg = 0; bb = 0
 
-		if gameScreen.health < gameScreen.maxHealth * 0.70 Then
+		If gameScreen.health < gameScreen.maxHealth * 0.70 Then
 			hr = 255
 			hg = 255
 			hb = 0
 		End
-		if gameScreen.health < gameScreen.maxHealth * 0.40 Then
+		If gameScreen.health < gameScreen.maxHealth * 0.40 Then
 			hr = 255
 			hg = 0
 			hb = 0
@@ -1528,7 +1519,7 @@ Class GameOverScreen Extends Screen
 	End
 	
 	Method Update:Void()
-		If KeyHit(KEY_SPACE) or KeyHit(KEY_ESCAPE) Or MouseHit() Then
+		If KeyHit(KEY_SPACE) Or KeyHit(KEY_ESCAPE) Or MouseHit() Then
 			FadeToScreen(Game8Scr)
 		End
 	End
@@ -1549,14 +1540,14 @@ Class NextLevelScreen Extends Screen
 	End
 	
 	Method Update:Void()
-		If KeyHit(KEY_SPACE) or KeyHit(KEY_ESCAPE) Or MouseHit() Then
+		If KeyHit(KEY_SPACE) Or KeyHit(KEY_ESCAPE) Or MouseHit() Then
 			FadeToScreen(gameScreen)
 		End
 	End
 	
 	Method Kill:Void()
 		player.level += 1
-		if player.level > gameScreen.MAX_LEVELS
+		If player.level > gameScreen.MAX_LEVELS
 			player.level = 1
 		End		
 	End
@@ -1573,7 +1564,7 @@ Class UnitComparator Extends IComparator
 		
 		If u1.y = u2.y
 			Return True
-		endif
+		Endif
 		
 		Return Sgn(u1.y - u2.y)
 	End
