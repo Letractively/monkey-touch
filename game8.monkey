@@ -1529,13 +1529,17 @@ Class UnitComparator Extends IComparator
 		Local u1:Unit = Unit(o1)
 		Local u2:Unit = Unit(o2)
 		
-		If u2 = u1 Return False
+		If u2 = u1 Return 0
 		
 		If u1.y = u2.y
-			Return True
-		Endif
-		
+			Return Sgn(u1.x - u2.x)
+		End
+				
 		Return Sgn(u1.y - u2.y)
+	End
+	
+	Method Equals:Bool(o1:Object, o2:Object)
+		Return o1 = o2
 	End
 End
 
