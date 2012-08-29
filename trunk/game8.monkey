@@ -121,11 +121,7 @@ End
 
 Class Unit Extends Sprite
 	Global list:ArrayList<Unit> = New ArrayList<Unit>
-	Field firing:Bool
-	Global sfxLaser:Bool
-	Global sfxRocket:Bool
-	Global sfxSlow:Bool
-		
+
 	Method New(img:GameImage, x:Float, y:Float)
 		Super.New(img, x, y)
 	End
@@ -147,39 +143,8 @@ Class Unit Extends Sprite
 			r = list.Get(i)
 			If r <> Null Then
 				r.Update()
-				If r.firing
-					Local t:Tower = Tower(r)
-					If t <> Null Then
-						Select t.fireType
-							Case Tower.LAZER
-								sfxLaser = True
-							Case Tower.ROCKET
-								sfxRocket = True
-							Case Tower.SLOW
-								sfxSlow = True
-						End
-					End
-					r.firing = False
-				End
 			End
-		Next
-	
-		If sfxLaser
-			sfxLaser = False
-			gameScreen.lazerSound.rate = Rnd(1, 2)
-			gameScreen.lazerSound.Play()
-		End
-		If sfxRocket
-			sfxRocket = False
-			gameScreen.rocketSound.rate = Rnd(1, 2)
-			gameScreen.rocketSound.Play()
-		End
-		If sfxSlow
-			sfxSlow = False
-			gameScreen.rocketSound.rate = Rnd(1, 2)
-			gameScreen.rocketSound.Play()
-		End
-	
+		Next	
 	End
 	
 	Method Update:Void() Abstract
@@ -343,6 +308,7 @@ Class Enemy Extends Unit Abstract
 				currentPath -= 2
 				If currentPath < 0
 					gameScreen.health -= damage
+					gameScreen.hurtSound.Play()
 					alive = False
 					Kill()
 				End
@@ -503,9 +469,10 @@ Class Tower Extends Unit Abstract
 			If lastFire > fireRate
 				SetGunAngle(angle)
 				lastFire = 0
-				firing = True
 				Select fireType
 					Case LAZER
+						gameScreen.lazerSound.rate = Rnd(1, 2)
+						gameScreen.lazerSound.Play()
 						Self.drawLine = True
 						dx1 = Self.firePosX
 						dy1 = Self.firePosY
@@ -514,6 +481,8 @@ Class Tower Extends Unit Abstract
 						Self.target.health -= Self.damage + Rnd(0, Self.damageBonus)
 						New Explosion(gameScreen.explosionSmallImage, Self.target.x, Self.target.y, 6, 100)
 					Case ROCKET
+						gameScreen.rocketSound.rate = Rnd(1, 2)
+						gameScreen.rocketSound.Play()
 						Local r:Rocket = New Rocket(game.images.Find("Rocket"), Self.firePosX, Self.firePosY)
 						r.rotation = -angle - 90
 						r.damage = Self.damage + Rnd(0, Self.damageBonus)
@@ -521,6 +490,8 @@ Class Tower Extends Unit Abstract
 						r.target = target
 						r.slowDown = Self.slowDown
 					Case SLOW
+						gameScreen.slowSound.rate = Rnd(1, 2)
+						gameScreen.slowSound.Play()
 						Local r:Rocket = New Rocket(game.images.Find("slowBullet"), Self.firePosX, Self.firePosY)
 						r.rotation = -angle - 90
 						r.damage = Self.damage + Rnd(0, Self.damageBonus)
@@ -769,7 +740,9 @@ Class GameScreen Extends Screen
 	
 	Field lazerSound:GameSound
 	Field rocketSound:GameSound
+	Field slowSound:GameSound
 	Field vexplosion:GameSound
+	Field hurtSound:GameSound
 	
 	Method New()
 		name = "Tower Defense GameScreen"
@@ -820,7 +793,7 @@ Class GameScreen Extends Screen
 			t.damageBonus = Float(xml.GetFirstChildByName("damageBonus").Value)
 			t.range = Float(xml.GetFirstChildByName("range").Value)
 			t.health = Float(xml.GetFirstChildByName("health").Value)
-			t.fireRate = Float(xml.GetFirstChildByName("fireRate").Value)
+			t.fireRate = game.CalcAnimLength(Int(xml.GetFirstChildByName("fireRate").Value))
 			t.cost = Int(xml.GetFirstChildByName("cost").Value)
 			t.firePosX = Float(xml.GetFirstChildByName("firePosX").Value)
 			t.firePosY = Float(xml.GetFirstChildByName("firePosY").Value)
@@ -939,10 +912,10 @@ Class GameScreen Extends Screen
 		Local tmpImage:Image
 		Local path:String = "game8/"
 		
-		game.images.LoadAnim(path + "tank7.png", 20, 20, 9, tmpImage)
+		enemyImage = game.images.LoadAnim(path + "tank7.png", 20, 20, 9, tmpImage)
 		game.images.LoadAnim(path + "Tank5b.png", 20, 20, 9, tmpImage)
 		game.images.LoadAnim(path + "hardtank.png", 40, 40, 9, tmpImage)
-		game.images.LoadAnim(path + "turretBase.png", 40, 28, 2, tmpImage, False)
+		turretBaseImage = game.images.LoadAnim(path + "turretBase.png", 40, 28, 2, tmpImage, False)
 		
 		game.images.LoadAnim(path + "Artil3.png", 40, 40, 9, tmpImage, False)
 		
@@ -951,33 +924,29 @@ Class GameScreen Extends Screen
 		
 		game.images.Load(path + "rocket.png")
 		game.images.Load(path + "slowBullet.png")
-		game.images.Load(path + "smoke.png")
+		smokeImage = game.images.Load(path + "smoke.png")
 		game.images.Load(path + "empty.png")
 		
 		game.images.Load(path + "ArtilBase.png", "", False)
 		game.images.LoadAnim(path + "ArtilGun.png", 40, 40, 8, tmpImage)
 		game.images.LoadAnim(path + "slowGun.png", 40, 40, 8, tmpImage)
 
-		game.images.LoadAnim(path + "turretGun.png", 52, 45, 8, tmpImage)
-		game.images.LoadAnim(path + "explosn.png", 20, 20, 9, tmpImage)
-		game.images.LoadAnim(path + "exploBig.png", 40, 40, 14, tmpImage)
-		game.images.LoadAnim(path + "expSmall.png", 20, 20, 7, tmpImage)
+		turretGunImage = game.images.LoadAnim(path + "turretGun.png", 52, 45, 8, tmpImage)
+		explosionImage = game.images.LoadAnim(path + "explosn.png", 20, 20, 9, tmpImage)
+		explosionBigImage = game.images.LoadAnim(path + "exploBig.png", 40, 40, 14, tmpImage)
+		explosionSmallImage = game.images.LoadAnim(path + "expSmall.png", 20, 20, 7, tmpImage)
 		
 		game.images.Load("game8/gui.png", "", False)
-		smokeImage = game.images.Find("smoke")
-		turretBaseImage = game.images.Find("turretBase")
-		turretGunImage = game.images.Find("turretGun")
-		enemyImage = game.images.Find("tank7")
-		explosionImage = game.images.Find("explosn")
-		explosionBigImage = game.images.Find("exploBig")
-		explosionSmallImage = game.images.Find("expSmall")
-
 	End
 	
 	Method LoadSounds:Void()
-		lazerSound = game.sounds.Load("Firelaser",,,250)
-		rocketSound = game.sounds.Load("Firemissile",,,250)
-		vexplosion = game.sounds.Load("vexplosion")
+		lazerSound = game.sounds.Load("Firelaser",,, 250)
+		rocketSound = game.sounds.Load("Firemissile",,, 250)
+		rocketSound.volume = 0.35
+		slowSound = game.sounds.Load("slow",,, 250)
+		slowSound.volume = 0.25
+		vexplosion = game.sounds.Load("vexplosion",,, 250)
+		hurtSound = game.sounds.Load("Hurt",,, 250)
 	End
 	
 	Method Start:Void()

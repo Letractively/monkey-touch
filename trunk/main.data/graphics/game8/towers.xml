@@ -8,7 +8,7 @@
 		<damageBonus>2</damageBonus>
 		<range>100</range>
 		<health>100</health>
-		<fireRate>25</fireRate>
+		<fireRate>500</fireRate>
 		<cost>200</cost>
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
@@ -24,7 +24,7 @@
 		<damageBonus>2</damageBonus>
 		<range>150</range>
 		<health>100</health>
-		<fireRate>75</fireRate>
+		<fireRate>1000</fireRate>
 		<cost>300</cost>
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
@@ -36,11 +36,11 @@
 		<desc>Slows down enemy units</desc>
 		<image>ArtilBase</image>
 		<gunImage>slowGun</gunImage>
-		<damage>0</damage>
+		<damage>2</damage>
 		<damageBonus>0</damageBonus>
 		<range>125</range>
 		<health>100</health>
-		<fireRate>50</fireRate>
+		<fireRate>750</fireRate>
 		<cost>250</cost>
 		<firePosX>0</firePosX>
 		<firePosY>-7</firePosY>
