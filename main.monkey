@@ -43,6 +43,7 @@ or assets to this project.
 
 Strict
 #TEXT_FILES="*.txt|*.xml|*.json|*.tmx"
+#MOJO_AUTO_SUSPEND_ENABLED="true"
 
 Private
 
@@ -87,7 +88,6 @@ Function Main:Int()
 	game = New MyGame()
 	'game.debugKeyOn = True
 	'game.drawFPSOn = True
-	game.FPS = 60
 	Return 1
 End
 
