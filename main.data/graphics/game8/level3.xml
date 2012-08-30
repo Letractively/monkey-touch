@@ -1,8 +1,8 @@
 <level>
 	<data>
-		<name>Level One</name>
+		<name>Level Three</name>
 		<cash>1000</cash>
-		<map>level1</map>
+		<map>level3</map>
 		<wave>
 			<sequence>1</sequence>
 			<initialDelay>6000</initialDelay>
@@ -10,6 +10,12 @@
 				<enemy>
 					<sequence>1</sequence>
 					<type>EasyTank</type>
+					<amount>10</amount>
+					<delay>1000</delay>
+				</enemy>
+				<enemy>
+					<sequence>2</sequence>
+					<type>MediumTank</type>
 					<amount>10</amount>
 					<delay>1000</delay>
 				</enemy>
@@ -25,6 +31,12 @@
 					<amount>10</amount>
 					<delay>1000</delay>
 				</enemy>
+				<enemy>
+					<sequence>2</sequence>
+					<type>HardTank</type>
+					<amount>10</amount>
+					<delay>1000</delay>
+				</enemy>
 			</enemies>
 		</wave>
 		<wave>
@@ -33,6 +45,12 @@
 			<enemies>
 				<enemy>
 					<sequence>1</sequence>
+					<type>HardTank</type>
+					<amount>10</amount>
+					<delay>1000</delay>
+				</enemy>
+				<enemy>
+					<sequence>2</sequence>
 					<type>HardTank</type>
 					<amount>10</amount>
 					<delay>1000</delay>

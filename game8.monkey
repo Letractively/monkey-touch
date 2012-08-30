@@ -730,7 +730,7 @@ Class GameScreen Extends Screen
 	Field waveMap:IntMap<Wave>
 	Field waveCount:Int
 	Field currentWave:Wave
-	Const MAX_LEVELS:Int = 3
+	Const MAX_LEVELS:Int = 4
 	
 	Field font12:BitmapFont2
 	Field font16:BitmapFont2
@@ -1122,7 +1122,7 @@ Class GameScreen Extends Screen
 				game.scrollY += Floor(gameScrollSpeed * dt.delta)
 			End
 		End
-		Local scrollGap% = 10
+		Local scrollGap:Int = 20
 		If game.mouseX < scrollGap
 			game.scrollX -= Floor(gameScrollSpeed * dt.delta)
 		End
@@ -1139,12 +1139,13 @@ Class GameScreen Extends Screen
 		If game.scrollX < TILE_SIZE Then game.scrollX = TILE_SIZE
 		If game.scrollY < TILE_SIZE Then game.scrollY = TILE_SIZE
 		If game.scrollX + SCREEN_WIDTH > tilemap.width * TILE_SIZE - TILE_SIZE Then game.scrollX = tilemap.width * TILE_SIZE - SCREEN_WIDTH - TILE_SIZE
-		If game.scrollY + SCREEN_HEIGHT > tilemap.height * TILE_SIZE - TILE_SIZE Then game.scrollY = tilemap.height * TILE_SIZE - SCREEN_HEIGHT - TILE_SIZE
+		If game.scrollY + SCREEN_HEIGHT - gui.limit > tilemap.height * TILE_SIZE - TILE_SIZE Then game.scrollY = tilemap.height * TILE_SIZE - SCREEN_HEIGHT + gui.limit - TILE_SIZE
 		
 		If KeyHit(KEY_DELETE)
 			If selectedTower <> Null
 				gameScreen.tilemap.SetTile(selectedTower.x, selectedTower.y, 0, gameScreen.tilemap.BUILD_LAYER)
-				gameScreen.tilemap.SetTile((selectedTower.x + TILE_SIZE), selectedTower.y, 0, gameScreen.tilemap.BUILD_LAYER)
+				gameScreen.tilemap.SetTile( (selectedTower.x + TILE_SIZE), selectedTower.y, 0, gameScreen.tilemap.BUILD_LAYER)
+				
 				New Explosion(explosionBigImage, selectedTower.x + selectedTower.image.w2, selectedTower.y + selectedTower.image.h2, 13, 80)
 				selectedTower.Kill()
 			End
@@ -1191,9 +1192,8 @@ Class GameScreen Extends Screen
 						
 						gameScreen.tilemap.SetTile(mx, my, 1, gameScreen.tilemap.BUILD_LAYER)
 						gameScreen.tilemap.SetTile(mx + TILE_SIZE, my, 1, gameScreen.tilemap.BUILD_LAYER)
-						
 						selectedTower = Tower.SelectTower(mx, my)
-
+						
 						gui.Reset()
 					End
 				Else
@@ -1236,7 +1236,7 @@ Class Gui
 	Const NONE:Int = 0
 	Const TURRET:Int = 1
 	Field selectedButton:String
-	Field mouseControlGui:Bool = False
+	Field mouseControlGui:Bool = false
 	Field showGUI:Int
 	Field x:Float
 	Field y:Float
