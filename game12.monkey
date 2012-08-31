@@ -77,7 +77,7 @@ Class Game12Screen Extends Screen
 
 		' Keyboard short cuts
 		If KeyHit(KEY_ESCAPE)
-			'FadeToScreen(TitleScr)
+			FadeToScreen(TitleScr)
 		Endif
 		
 		If KeyHit(KEY_SPACE)
