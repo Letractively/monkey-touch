@@ -19,17 +19,19 @@ summary:Title Screen Class.
 Used to manage and deal with all Title Page stuff.
 #End
 Class Game9Screen Extends Screen
+	Field loaded:Bool = False
+	
 	Method New()
-		name = "Danmaku"
+		name = "DanMonkey"
 		Local gameid:Int = 9
 		GameList[gameid - 1] = New miniGame
 		GameList[gameid - 1].id = gameid - 1
-		GameList[gameid - 1].name = "Danmaku"
+		GameList[gameid - 1].name = "DanMonkey"
 		GameList[gameid - 1].iconname = "game" + gameid + "_icon"
 		GameList[gameid - 1].thumbnail = "game" + gameid + "_thumb"
 		GameList[gameid - 1].author = "Shane Woolcock"
 		GameList[gameid - 1].authorurl = "????"
-		GameList[gameid - 1].info = "Touhou Clone"
+		GameList[gameid - 1].info = "A bullet hell game... in Monkey ;)"
 	End
 	
 	#rem
@@ -37,25 +39,7 @@ Class Game9Screen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		game.images.LoadAtlas("game9/game9_bullets1.txt", ImageBank.LIBGDX_ATLAS, True)
-		game.images.LoadAtlas("game9/game9_bullets2.txt", ImageBank.LIBGDX_ATLAS, True)
-		game.images.LoadAtlas("game9/game9_ships.txt", ImageBank.LIBGDX_ATLAS, True)
-		Local tmpImage:GameImage = Null
-		game.images.Load("game9/game9_ship2.png",,False).image.SetHandle(9, 12)
-		game.images.Load("game9/game9_explode1.png")
-		game.images.LoadAnim("game9/game9_ship6.png", 39, 39, 3, Null)
-		game.images.Load("game9/game9_starfield.jpg",,False)
-		game.images.Load("game9/game9_bg.png",,False)
-		
-		game.sounds.Load("game9_death")
-		game.sounds.Load("game9_explosion1")
-		game.sounds.Load("game9_explosion2")
-		game.sounds.Load("game9_explosion3")
-		game.sounds.Load("game9_laser1")
-		game.sounds.Load("game9_laser2")
-		game.sounds.Load("game9_laser3")
-		game.sounds.Load("game9_laser4")
-		game.sounds.Load("game9_pickup1")
+		If Not loaded Then LoadMedia()
 		
 		'game.images.LoadAnim("Ship1.png", 64, 64, 7, tmpImage)
 		smhGameScreen = New Smh_GameScreen
@@ -67,7 +51,7 @@ Class Game9Screen Extends Screen
 	#End
 	Method Render:Void()
 		Cls
-		TitleFont.DrawText(Self.name, 320, 240, 2)
+		TitleFont.DrawText(Self.name, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 2)
 	End
 
 	#rem
@@ -81,6 +65,47 @@ Class Game9Screen Extends Screen
 		End
 		If KeyHit(KEY_SPACE) Or MouseHit() Then
 			FadeToScreen(smhGameScreen)
+		End
+	End
+	
+	Method LoadMedia:Void()
+		loaded = True
+		game.images.LoadAtlas("game9/game9_bullets1.txt", ImageBank.LIBGDX_ATLAS, True)
+		game.images.LoadAtlas("game9/game9_bullets2.txt", ImageBank.LIBGDX_ATLAS, True)
+		game.images.LoadAtlas("game9/game9_ships.txt", ImageBank.LIBGDX_ATLAS, True)
+		Local tmpImage:GameImage = Null
+		game.images.Load("game9/game9_ship2.png",,False).image.SetHandle(9, 12)
+		game.images.Load("game9/game9_explode1.png")
+		game.images.LoadAnim("game9/game9_ship6.png", 39, 39, 3, Null)
+		game.images.LoadAnim("game9/game9_cube.png", 24, 28, 21, Null)
+		game.images.Load("game9/game9_starfield.jpg",,False)
+		game.images.Load("game9/game9_bg.png",,False)
+		
+		game.sounds.Load("game9_death")
+		game.sounds.Load("game9_explosion1")
+		game.sounds.Load("game9_explosion2")
+		game.sounds.Load("game9_explosion3")
+		game.sounds.Load("game9_laser1")
+		game.sounds.Load("game9_laser2")
+		game.sounds.Load("game9_laser3")
+		game.sounds.Load("game9_laser4")
+		game.sounds.Load("game9_pickup1")
+	End
+End
+
+Class Smh_GameOverScreen Extends Screen
+	Method Start:Void()
+		
+	End
+	
+	Method Render:Void()
+		Cls
+		TitleFont.DrawText("Game Over!", SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 2)
+	End
+	
+	Method Update:Void()
+		If KeyHit(KEY_ESCAPE) Or KeyHit(KEY_SPACE) Or MouseHit() Then
+			FadeToScreen(Game9Scr)
 		End
 	End
 End
@@ -157,9 +182,6 @@ Class Smh_GameScreen Extends Screen
 	End
 	
 	Method Update:Void()
-		If KeyHit(KEY_Q) Then
-			AssertNotNull(Null)
-		End
 		If KeyHit(KEY_ESCAPE) Then
 			FadeToScreen(Game9Scr)
 		End
@@ -202,19 +224,10 @@ Class Smh_GameScreen Extends Screen
 			TitleFont.DrawText(""+Int(Max(0.0,Ceil(boss.timeRemainingMillis/1000.0))), playarea.x + playarea.width - 10, 10, eDrawAlign.RIGHT)
 		End
 		
-		#Rem
-		DrawText("Enemy Bullet Count: " + enemyBullets.aliveCount, 0, 15)
-		DrawText("Player Bullet Count: " + playerBullets.aliveCount, 0, 30)
-		DrawText("Graze Count: " + player.grazeCount, 0, 45)
-		If boss Then
-			DrawText("Boss Health: " + boss.currentHP, 0, 60)
-			DrawText("Boss Phase: " + boss.currentPhase, 0, 75)
-			DrawText("Time Remaining: " + Max(0,Int(Ceil(Float(boss.timeRemainingMillis) / 1000.0))), 0, 90)
-		End
-		#End
 		SetColor 255,255,255
 		DrawLine(playarea.x+playarea.width, playarea.y, playarea.x+playarea.width, playarea.y+playarea.height)
-		'DrawRectOutline(playarea.x+playarea.boundsLeft, playarea.y+playarea.boundsTop, playarea.boundsRight-playarea.boundsLeft, playarea.boundsBottom-playarea.boundsTop)
+		
+		If player.godMode Then DrawText("God Mode", 0, 0)
 	End
 	
 	Method DrawGUI:Void()
@@ -223,11 +236,38 @@ Class Smh_GameScreen Extends Screen
 		TitleFont.DrawText("Bomb", playarea.x+playarea.width+20, 150)
 		TitleFont.DrawText("Score", playarea.x+playarea.width+20, 200)
 		TitleFont.DrawText("Graze", playarea.x+playarea.width+20, 250)
-		' TODO: draw
-		' power bar (temporary)
-		SetColor 255,255,255
-		DrawRectOutline(playarea.x + playarea.width + 20, playarea.y, 100, 15)
-		DrawRect(playarea.x + playarea.width + 20, playarea.y, player.GetPowerRatio() * 100, 15)
+		' draw player/bomb counters
+		Local markerX:Float = playarea.x+playarea.width+100
+		Local cubes:GameImage = game.images.Find("game9_cube")
+		For Local i:Int = 0 Until Smh_Player.MAX_LIVES
+			If (i+1) * Smh_Player.POWER_PER_LIFE <= player.lifePower
+				SetAlpha(1)
+				cubes.Draw(markerX+(cubes.image.Width()+2)*i, 110,,,,20)
+			Else
+				SetAlpha(0.5)
+				cubes.Draw(markerX+(cubes.image.Width()+2)*i, 110,,,,18)
+				If i = Int(player.lifePower / Smh_Player.POWER_PER_LIFE) Then
+					SetAlpha(1)
+					Local ratio:Float = (player.lifePower Mod Smh_Player.POWER_PER_LIFE) / Smh_Player.POWER_PER_LIFE
+					cubes.DrawSubImage(markerX+(cubes.image.Width()+2)*i, 110, 0, 0, cubes.image.Width()*ratio, cubes.image.Height(),,,,20)
+				End
+			End
+		Next
+		
+		For Local i:Int = 0 Until Smh_Player.MAX_BOMBS
+			If (i+1) * Smh_Player.POWER_PER_BOMB <= player.bombPower
+				SetAlpha(1)
+				cubes.Draw(markerX+(cubes.image.Width()+2)*i, 160,,,,17)
+			Else
+				SetAlpha(0.5)
+				cubes.Draw(markerX+(cubes.image.Width()+2)*i, 160,,,,15)
+				If i = Int(player.bombPower / Smh_Player.POWER_PER_BOMB) Then
+					SetAlpha(1)
+					Local ratio:Float = (player.bombPower Mod Smh_Player.POWER_PER_BOMB) / Smh_Player.POWER_PER_BOMB
+					cubes.DrawSubImage(markerX+(cubes.image.Width()+2)*i, 160, 0, 0, cubes.image.Width()*ratio, cubes.image.Height(),,,,17)
+				End
+			End
+		Next
 	End
 	
 	Method ResolveCollisions:Void()
@@ -284,9 +324,9 @@ Class Smh_GameScreen Extends Screen
 		' find graze count
 		If nextGrazeBonus < dt.currentticks Then
 			Local grazeCount% = enemyBullets.GetGrazeCount(player, 15)
-			player.AddPower(grazeCount)
+			player.AddBombPower(grazeCount)
 			nextGrazeBonus = dt.currentticks + GRAZE_INTERVAL
-			If grazeCount > 0 Then grazeEmitter.EmitAt(20, player.x, player.y)
+			If grazeCount > 0 Then grazeEmitter.EmitAt(5*grazeCount, player.x, player.y)
 		End
 	End
 	
@@ -525,7 +565,7 @@ Class Smh_Entity
 		
 		' update rotation
 		If rotationSpeed <> 0 Then
-			rotation += rotationSpeed
+			rotation += rotationSpeed * millis / 1000.0
 			While rotation < 0 rotation += 360 End
 			While rotation >= 360 rotation -= 360 End
 		End
@@ -922,7 +962,7 @@ Class Smh_PlayArea Extends Smh_Entity
 	
 	Method Render:Void()
 		SetAlpha(1)
-		SetColor(255, 255, 255)
+		'SetColor(128, 128, 128)
 		
 		' render starfield
 		Local starfield:GameImage = game.images.Find("game9_starfield")
@@ -937,6 +977,13 @@ Class Smh_PlayArea Extends Smh_Entity
 		
 		tilemap.RenderMap(scrollX, (tilemap.height*tilemap.tileHeight)-scrollY, SCREEN_WIDTH, SCREEN_HEIGHT)'boundsRight, boundsBottom)
 		
+		' temporary
+		SetColor(0,0,0)
+		SetAlpha(0.5)
+		DrawRect(x, Self.y, width, height)
+		SetAlpha(1)
+		
+		SetColor(255, 255, 255)
 		enemies.DoRender()
 		If boss Then boss.DoRender()
 		playerBullets.DoRender()
@@ -1021,7 +1068,10 @@ Class Smh_Unit Extends Smh_Entity
 End
 
 Class Smh_Player Extends Smh_Unit
-	Const MAX_POWER# = 50
+	Const POWER_PER_BOMB# = 80
+	Const POWER_PER_LIFE# = 150
+	Const MAX_BOMBS% = 5
+	Const MAX_LIVES% = 5
 	Field firingSpeed:Int = 100
 	Field nextShotAvailableMillis:Int = 0
 	Field shotSoundDelayMillis:Int = 200
@@ -1029,9 +1079,10 @@ Class Smh_Player Extends Smh_Unit
 	Field playerShot:Smh_Bullet
 	Field bulletPowerup:Smh_Powerup
 	Field grazeCount:Int
-	Field power:Float
-	Field lives:Int = 3
 	Field score:Int = 0
+	Field bombPower:Float = POWER_PER_BOMB
+	Field lifePower:Float = 3 * POWER_PER_LIFE
+	Field godMode:Bool = False
 	
 	Method New()
 		alive = True
@@ -1046,7 +1097,7 @@ Class Smh_Player Extends Smh_Unit
 		playerShot = New Smh_Bullet
 		playerShot.image = game.images.Find("game9_bullet5")
 		playerShot.rotation = 0
-		playerShot.rotationSpeed = 60
+		playerShot.rotationSpeed = 360
 		playerShot.scaleX = 1.5
 		playerShot.scaleY = 1.5
 		playerShot.radius = 10
@@ -1054,7 +1105,7 @@ Class Smh_Player Extends Smh_Unit
 		
 		bulletPowerup = New Smh_Powerup
 		bulletPowerup.CopyFrom(playerShot)
-		bulletPowerup.powerValue = 0.2
+		bulletPowerup.powerValue = 1
 		bulletPowerup.scaleX = 1
 		bulletPowerup.scaleY = 1
 		bulletPowerup.playerInterp = True
@@ -1097,26 +1148,36 @@ Class Smh_Player Extends Smh_Unit
 		End
 		
 		' bomb
-		If KeyHit(KEY_X) And power = MAX_POWER Then
-			power = 0
+		If KeyHit(KEY_X) And bombPower >= POWER_PER_BOMB Then
+			bombPower -= POWER_PER_BOMB
 			enemyBullets.ConvertToPowerups()
+		End
+		
+		' god mode
+		If KeyHit(KEY_Q) Then godMode = Not godMode
+	End
+	
+	Method AddBombPower:Void(amt#)
+		bombPower += amt
+		If bombPower > MAX_BOMBS * POWER_PER_BOMB Then
+			bombPower = MAX_BOMBS * POWER_PER_BOMB
 		End
 	End
 	
-	Method AddPower:Void(amt#)
-		power += amt
-		If power > MAX_POWER Then power = MAX_POWER
-	End
-	
-	Method GetPowerRatio#()
-		Return power / MAX_POWER
+	Method AddLifePower:Void(amt#)
+		lifePower += amt
+		If lifePower > MAX_LIVES * POWER_PER_LIFE Then
+			lifePower = MAX_LIVES * POWER_PER_LIFE
+		End
 	End
 	
 	Method Died:Void()
 		PlaySound(game.sounds.Find("game9_death").sound)
-		lives -= 1
-		If lives < 0 Then
+		lifePower -= POWER_PER_LIFE
+		If lifePower < 0 Then
+			lifePower = 0
 			' TODO: game over
+			If Not godMode Then smhGameScreen.FadeToScreen(New Smh_GameOverScreen)
 		Else
 			' destroy bullets
 			enemyBullets.Clear()
@@ -1217,7 +1278,8 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 				InterpOut()
 				timeRemainingMillis = 0
 				bossInterping = True
-				' TODO: bullets to powerups
+				' bullets to powerups
+				enemyBullets.ConvertToPowerups()
 				Return
 			End
 		End
@@ -1234,11 +1296,9 @@ Class Smh_Boss Extends Smh_Enemy Abstract
 		
 		' if we have no millis left, die
 		If millis = 0 Then
-			If bossInterping Then
-				If timeRemainingMillis <= 0 Then
-					' boss is gone
-					boss = Null
-				End
+			If bossInterping And timeRemainingMillis <= 0 And boss.y < -10 Then
+				' boss is gone
+				boss = Null
 				bossInterping = False
 			End
 			Return
@@ -1442,7 +1502,7 @@ End
 
 Class Smh_Powerup Extends Smh_Entity
 	Field playerInterp:Bool = False
-	Field powerValue:Float = 1
+	Field powerValue:Float = 5
 	
 	Method New()
 		alive = False
@@ -1467,7 +1527,7 @@ Class Smh_Powerup Extends Smh_Entity
 		Local pdy# = y-player.y
 		If pdx*pdx + pdy*pdy <= radius*radius Or playerInterp And Not interping Then
 			' collect it
-			player.AddPower(powerValue)
+			player.AddLifePower(powerValue)
 			active = False
 			alive = False
 			interping = False
@@ -1637,7 +1697,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		firstBullet.rotation = 45
 		firstBullet.scaleX = 1.5
 		firstBullet.scaleY = 1.5
-		firstBullet.radius = 5
+		firstBullet.radius = 4
 		firstBullet.blendMode = AdditiveBlend
 		firstBullet.visibleWhileInactive = True
 		firstBullet.fadeInTimeMillis = 1000
@@ -1646,7 +1706,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		secondBullet.rotation = 90
 		secondBullet.scaleX = 2
 		secondBullet.scaleY = 2
-		secondBullet.radius = 8
+		secondBullet.radius = 4
 		secondBullet.blendMode = AdditiveBlend
 		secondBullet.visibleWhileInactive = False
 		secondBullet.fadeInTimeMillis = 1000
@@ -1655,7 +1715,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		thirdBullet.rotation = 90
 		thirdBullet.scaleX = 1.5
 		thirdBullet.scaleY = 1.5
-		thirdBullet.radius = 5
+		thirdBullet.radius = 4
 		thirdBullet.blendMode = AdditiveBlend
 		thirdBullet.visibleWhileInactive = False
 		thirdBullet.fadeInTimeMillis = 1000
@@ -1667,7 +1727,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		fourthBullet.rotation = 45
 		fourthBullet.scaleX = 1.5
 		fourthBullet.scaleY = 1.5
-		fourthBullet.radius = 5
+		fourthBullet.radius = 4
 		fourthBullet.blendMode = AdditiveBlend
 		fourthBullet.visibleWhileInactive = False
 		fourthBullet.fadeInTimeMillis = 0
