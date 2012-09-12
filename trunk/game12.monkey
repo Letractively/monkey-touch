@@ -21,6 +21,7 @@ Global Game12PlayScr:Screen = New Game12PlayScreen()
 Global Game12TransScr:Screen = New Game12TransitionScreen()
 Global Game12EndScr:Screen = New Game12EndScreen()
 Global Game12Gfx:Game12Graphics = New Game12Graphics()
+Global Game12Snd:Game12Sounds = New Game12Sounds()
 
 #Rem
 summary:Title Screen Class.
@@ -56,6 +57,8 @@ Class Game12Screen Extends Screen
 		InitGraphics()   ' InitGraphics not needed if Atlas Sheet Done
 		LoadGraphics()
 		LoadFonts()
+		InitSounds()
+		LoadSounds()
 		InitGame()
 	End Method
 	
@@ -82,7 +85,7 @@ Class Game12Screen Extends Screen
 		
 		If KeyHit(KEY_SPACE)
 			FadeToScreen(Game12TransScr)
-		Endif
+		EndIf
 		
 		' Mouse input
 		if TouchHit() or TouchDown()
@@ -145,6 +148,46 @@ Class Game12Screen Extends Screen
 		game.images.Load("game12/smashsplat.png","g12SmashSplat",True)
 		game.images.Load("game12/smashbutton.png","g12SmashButton",True)
 		game.images.Load("game12/wand.png","g12Wand",True)
+	End Method
+	
+	Method InitSounds:Void()
+		game.sounds.Load("g12_coin", "g12coin")
+		game.sounds.Load("g12_explosion", "g12explosion")
+		game.sounds.Load("g12_goingdown", "g12goingdown")
+		game.sounds.Load("g12_goingup", "g12goingup")
+		game.sounds.Load("g12_goody", "g12goody")
+		game.sounds.Load("g12_heal", "g12heal")
+		game.sounds.Load("g12_hithurt1", "g12hithurt1")
+		game.sounds.Load("g12_hithurt2", "g12hithurt2")
+		game.sounds.Load("g12_hithurt3", "g12hithurt3")
+		game.sounds.Load("g12_hithurt4", "g12hithurt4")
+		game.sounds.Load("g12_levelup", "g12levelup")
+		game.sounds.Load("g12_miss1", "g12miss1")
+		game.sounds.Load("g12_miss2", "g12miss2")
+		game.sounds.Load("g12_miss3", "g12miss3")
+		game.sounds.Load("g12_smash", "g12smash")
+		game.sounds.Load("g12_temple", "g12temple")
+		game.sounds.Load("g12_combat", "g12combat")
+	End Method
+	
+	Method LoadSounds:Void()
+		Game12Snd.coin = game.sounds.Find("g12coin")
+		Game12Snd.explode = game.sounds.Find("g12explosion")
+		Game12Snd.godown = game.sounds.Find("g12goingdown")
+		Game12Snd.goody = game.sounds.Find("g12goody")
+		Game12Snd.heal = game.sounds.Find("g12heal")
+		Game12Snd.goup = game.sounds.Find("g12goingup")
+		Game12Snd.hit1 = game.sounds.Find("g12hithurt1")
+		Game12Snd.hit2 = game.sounds.Find("g12hithurt2")
+		Game12Snd.hit3 = game.sounds.Find("g12hithurt3")
+		Game12Snd.hit4 = game.sounds.Find("g12hithurt4")
+		Game12Snd.levelup = game.sounds.Find("g12levelup")
+		Game12Snd.miss1 = game.sounds.Find("g12miss1")
+		Game12Snd.miss2 = game.sounds.Find("g12miss2")
+		Game12Snd.miss3 = game.sounds.Find("g12miss3")
+		Game12Snd.smash = game.sounds.Find("g12smash")
+		Game12Snd.temple = game.sounds.Find("g12temple")
+		Game12Snd.combat = game.sounds.Find("g12combat")
 	End Method
 	
 	Method InitGame:Void()
@@ -265,6 +308,26 @@ Class Game12Graphics
 	Field Wand:GameImage
 End Class
 
+Class Game12Sounds
+	Field coin:GameSound
+	Field explode:GameSound
+	Field godown:GameSound
+	Field goup:GameSound
+	Field goody:GameSound
+	Field heal:GameSound
+	Field hit1:GameSound
+	Field hit2:GameSound
+	Field hit3:GameSound
+	Field hit4:GameSound
+	Field levelup:GameSound
+	Field miss1:GameSound
+	Field miss2:GameSound
+	Field miss3:GameSound
+	Field smash:GameSound
+	Field temple:GameSound
+	Field combat:GameSound
+End Class
+
 Global font20:BitmapFont2
 
 Global levelDepth:Int
@@ -323,7 +386,7 @@ Class Game12PlayScreen Extends Screen
 					If KeyHit(KEY_ENTER) Or KeyHit(KEY_SPACE) Or (MouseHit() And player.ClickRelativeDir(DIR_NONE, False) = True)
 						Local item:Item
 						item = currLevel.FindItemByLocation(player.x, player.y)
-						If item <> Null Then player.ActivateItem(item)
+						If item Then player.ActivateItem(item)
 					EndIf
 					player.CheckButtonClick()
 				EndIf
@@ -335,7 +398,7 @@ Class Game12PlayScreen Extends Screen
 				player.state = STATE_INACTIVE
 				Game12PlayScr.FadeToScreen(Game12TransScr)
 			Case STATE_ANIM
-				If currAnim <> Null
+				If currAnim
 					If currAnim.Done() = True
 						currAnim = GetNextAnimation()
 					Else
@@ -366,7 +429,7 @@ Class Game12PlayScreen Extends Screen
 			Case STATE_COMBAT
 				player.Update()
 				player.UpdateCombat()
-				If player.attacker <> Null
+				If player.attacker
 					player.attacker.Update()
 					player.attacker.UpdateCombat()
 					If player.attacker.hitAnim = Null
@@ -385,7 +448,7 @@ Class Game12PlayScreen Extends Screen
 				player.EndCombat()
 				currLevel.ResetEntityTimers()
 				If player.alive = False
-					QueueAnimation(Game12Gfx.Skull, player.x * TILE_SIZE + (TILE_SIZE / 2), player.y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+					QueueAnimation(Game12Gfx.Skull, player.x * TILE_SIZE + (TILE_SIZE / 2), player.y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.explode)
 				EndIf
 				' Maybe add an ending animation where player zooms back out ??
 			Case STATE_DEAD
@@ -430,7 +493,6 @@ Class Game12TransitionScreen Extends Screen
 		Else
 			font20.DrawText("Entering the Dungeon!", SCREEN_WIDTH2, SCREEN_HEIGHT2, 2)
 		EndIf
-		
 	End Method
 
 	Method Update:Void()
@@ -544,6 +606,7 @@ Class Item
 	Field unknown:Bool			' Is it still an Unknown?
 	Field x:Int					' X Coordinate of item on Map
 	Field y:Int					' Y Coordinate of item on Map
+	Field snd:GameSound			' For items which have immediate sound (not tied to animation)
 
 	Method New(type:Int, image:GameImage, x:Int, y:Int)
 		Self.type = type
@@ -577,11 +640,13 @@ End Class
 Class DownStairs Extends Item
 	Method New(x:Int, y:Int)
 		Super.New(ITEM_DSTAIR, Game12Gfx.StairsDown, x, y)
+		snd = Game12Snd.godown
 	End Method
 	
 	Method DoAction:Bool()
 		nextLevelDepth += 1
 		player.state = STATE_INACTIVE
+		Game12Snd.godown.Play(1)
 		Game12PlayScr.FadeToScreen(Game12TransScr)
 		Return False
 	End Method
@@ -590,11 +655,13 @@ End Class
 Class UpStairs Extends Item
 	Method New(x:Int, y:Int)
 		Super.New(ITEM_USTAIR, Game12Gfx.StairsUp, x, y)
+		snd = Game12Snd.goup
 	End Method
 	
 	Method DoAction:Bool()
 		nextLevelDepth -= 1
 		player.state = STATE_INACTIVE
+		Game12Snd.goup.Play(1)
 		Game12PlayScr.FadeToScreen(Game12TransScr)
 		Return False
 	End Method
@@ -607,7 +674,7 @@ Class GoldBag Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.coin)
 		Local amt:Int = Rnd(levelDepth * 3) + (levelDepth * 5)
 		player.AddGold(amt)
 		Return True
@@ -622,7 +689,7 @@ Class GoldBar Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.goody)
 		Local amt:Int = Rnd(levelDepth * 10) + (levelDepth * 20)
 		player.AddGold(amt)
 		Return True
@@ -637,9 +704,10 @@ Class Temple Extends Item
 	
 	Method DoAction:Bool()
 		' This will prevent the zoom-in effect for something the player has already landed on
-		If seenYet = False Then QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		If seenYet = False Then QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.temple)
 		seenYet = True
 		If player.gold > 0
+			Game12Snd.coin.Play(1)
 			player.AddExp(player.gold)
 			player.EmptyGold()
 		EndIf
@@ -655,7 +723,7 @@ Class Food Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.goody)
 		Local amt:Int = Rnd(levelDepth * 5) + 10
 		player.Heal(amt)
 		Return True
@@ -671,7 +739,7 @@ Class Heal Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.heal)
 		player.healPotions += 1
 		Return True
 	End Method
@@ -685,7 +753,7 @@ Class Shovel Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.goody)
 		player.shovels += 1
 		Return True
 	End Method
@@ -700,7 +768,7 @@ Class Sword Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.goody)
 		player.weaponPower += 1
 		Return True
 	End Method
@@ -714,7 +782,7 @@ Class Shield Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.goody)
 		player.armorPower += 1
 		Return True
 	End Method
@@ -728,7 +796,7 @@ Class Fireball Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.explode)
 		player.Damage(Rnd(levelDepth * TRAP_DAM)+1)
 		Return True
 	End Method
@@ -742,7 +810,7 @@ Class Explosion Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.explode)
 		player.Damage(Rnd(levelDepth * TRAP_DAM)+1)
 		Return True
 	End Method
@@ -756,7 +824,7 @@ Class Punji Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.explode)
 		player.Damage(Rnd(levelDepth * TRAP_DAM)+1)
 		Return True
 	End Method
@@ -770,7 +838,7 @@ Class Poison Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.explode)
 		player.Damage(Rnd(levelDepth * TRAP_DAM)+1)
 		Return True
 	End Method
@@ -784,7 +852,7 @@ Class Bolt Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.explode)
 		player.Damage(Rnd(levelDepth * TRAP_DAM)+1)
 		Return True
 	End Method
@@ -798,7 +866,7 @@ Class Pit Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.godown)
 		player.Damage(Rnd(levelDepth * TRAP_DAM)+1)
 		' If we don't die from the pit fall, have player fall down a couple levels
 		If player.nextState <> STATE_DEAD Then player.nextState = STATE_FALLING
@@ -813,7 +881,7 @@ Class Wand Extends Item
 	End Method
 
 	Method DoAction:Bool()
-		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.goody)
 		player.nextState = STATE_WIN
 		Return True
 	End Method
@@ -871,18 +939,18 @@ Class Level
 		player.Render()
 
 		' Render any special effects here
-		If currAnim <> Null Then currAnim.Render()
+		If currAnim Then currAnim.Render()
 		
-		If player.combatAnim <> Null
+		If player.combatAnim
 			player.combatAnim.Render()
-			If player.hitAnim <> Null Then player.hitAnim.Render()
+			If player.hitAnim Then player.hitAnim.Render()
 			
 		EndIf
-		If player.attacker <> Null
-			If player.attacker.combatAnim <> Null
+		If player.attacker
+			If player.attacker.combatAnim
 				player.attacker.combatAnim.Render()
 			EndIf
-			If player.attacker.hitAnim <> Null Then player.attacker.hitAnim.Render()
+			If player.attacker.hitAnim Then player.attacker.hitAnim.Render()
 		EndIf
 	End Method
 
@@ -1279,7 +1347,7 @@ Class Level
 			Case ITEM_POISON ; newItem = New Poison(x, y)
 		End Select
 		
-		If newItem <> Null Then items.AddLast(newItem)
+		If newItem Then items.AddLast(newItem)
 	End Method
 
 	Method FindEntityByLocation:Entity(x:Int,y:Int)
@@ -1342,13 +1410,13 @@ Class Entity
 		If currLevel.tiles[x][y].visible = False Then Return
 		
 		' If in combat, do not render image
-		If attacker <> Null Then Return
+		If attacker Then Return
 		
 		' Since graphics are centered with mid-handle, need to translate display
 		PushMatrix()
 		Translate TILE_SIZE / 2, TILE_SIZE / 2
 
-		If alive = True
+		If alive
 			' Draw a floor under the entity 
 			Game12Gfx.Floor.Draw(x*TILE_SIZE, y*TILE_SIZE)
 			image.Draw(x*TILE_SIZE, y*TILE_SIZE)
@@ -1404,7 +1472,7 @@ Class Entity
 
 		If tempMoveDirX <> 0 Or tempMoveDirY <> 0
 			' If cannot have entity on square, check this now and do not allow move if true
-			If noEntity = True And currLevel.TileIsEmpty(x+tempMoveDirX,y+tempMoveDirY,True) = False Then Return False
+			If noEntity And currLevel.TileIsEmpty(x + tempMoveDirX, y + tempMoveDirY, True) = False Then Return False
 
 			moveDirX = tempMoveDirX
 			moveDirY = tempMoveDirY
@@ -1441,7 +1509,7 @@ Class Entity
 		Local amt:Int = (hitPointsMax - hitPoints) / healRate + 1
 		
 		temple = currLevel.FindItemByType(ITEM_TEMPLE)
-		If temple <> Null
+		If temple
 			If temple.x = x And temple.y = y Then amt *= 3
 		EndIF
 		
@@ -1461,10 +1529,11 @@ Class Entity
 	
 	Method UpdateCombat:Void()
 		Local amt:Int	' Amount of damage attempted
+		Local ran:Int   ' Random value
 		
 		' Combat animations take precedence over activity
-		If hitAnim <> Null
-			If hitAnim.Done() = True
+		If hitAnim
+			If hitAnim.Done()
 				hitAnim = Null
 			Else
 				hitAnim.Update()
@@ -1493,7 +1562,7 @@ Class Entity
 
 		If trySmash
 			If superSmashes > 0
-				attacker.hitAnim = MakeAnimation(Game12Gfx.SmashSplat, attacker.combatAnim.x, attacker.combatAnim.y, attacker.combatAnim.x, attacker.combatAnim.y, ANIM_SIZE, ANIM_SIZE, True, True)
+				attacker.hitAnim = MakeAnimation(Game12Gfx.SmashSplat, attacker.combatAnim.x, attacker.combatAnim.y, attacker.combatAnim.x, attacker.combatAnim.y, ANIM_SIZE, ANIM_SIZE, True, True, Game12Snd.smash)
 				attacker.Damage(level * 5)
 				superSmashes -= 1
 			EndIf
@@ -1504,21 +1573,36 @@ Class Entity
 		Local bs1:Float, bs2:Float
 		bs1 = Rnd(battleSkill)
 		bs2 = Rnd(attacker.battleSkill / 2)
-		
+
+		ran = Rnd(3) + 1
+		Local hitSnd:GameSound
+		Local missSnd:GameSound
+		Select ran
+			Case 1; missSnd = Game12Snd.miss1
+			Case 2; missSnd = Game12Snd.miss2
+			Default; missSnd = Game12Snd.miss3
+		End Select
+		ran = Rnd(4) + 1
+		Select ran
+			Case 1; hitSnd = Game12Snd.hit1
+			Case 2; hitSnd = Game12Snd.hit2
+			Case 3; hitSnd = Game12Snd.hit3
+			Default; hitSnd = Game12Snd.hit4
+		End Select
+						
 		' Match up battle skill to see if successful hit or not
 		If bs1 < bs2
-			attacker.hitAnim = MakeAnimation(Game12Gfx.Miss, attacker.combatAnim.x, attacker.combatAnim.y, attacker.combatAnim.x, attacker.combatAnim.y, ANIM_SIZE, ANIM_SIZE, True, True)
+			attacker.hitAnim = MakeAnimation(Game12Gfx.Miss, attacker.combatAnim.x, attacker.combatAnim.y, attacker.combatAnim.x, attacker.combatAnim.y, ANIM_SIZE, ANIM_SIZE, True, True, missSnd)
 			Return
 		EndIf
 		
 		amt = COMBAT_BASE_ATTACK + Rnd(level / 2) + Rnd(weaponPower) + 1 + (superSmashes / 2)
 		
 		If attacker.Damage(amt) > 0
-			attacker.hitAnim = MakeAnimation(Game12Gfx.Splat, attacker.combatAnim.x, attacker.combatAnim.y, attacker.combatAnim.x, attacker.combatAnim.y, ANIM_SIZE, ANIM_SIZE, True, True)
+			attacker.hitAnim = MakeAnimation(Game12Gfx.Splat, attacker.combatAnim.x, attacker.combatAnim.y, attacker.combatAnim.x, attacker.combatAnim.y, ANIM_SIZE, ANIM_SIZE, True, True, hitSnd)
 		Else
-			attacker.hitAnim = MakeAnimation(Game12Gfx.Miss, attacker.combatAnim.x, attacker.combatAnim.y, attacker.combatAnim.x, attacker.combatAnim.y, ANIM_SIZE, ANIM_SIZE, True, True)
+			attacker.hitAnim = MakeAnimation(Game12Gfx.Miss, attacker.combatAnim.x, attacker.combatAnim.y, attacker.combatAnim.x, attacker.combatAnim.y, ANIM_SIZE, ANIM_SIZE, True, True, missSnd)
 		EndIf
-		Return
 	End Method
 	
 	Method Damage:Int(amt:Int)
@@ -1547,7 +1631,7 @@ Class Player Extends Entity
 	Field killPoints:Float		' Tally of monster level kills
 	Field state:Int				' Player state, it drives a lot of actions in the level
 	Field nextState:Int			' If player has multiple actions, this will be the "next state" to go into
-	Field score:Int
+	Field score:Int				' Player score for the game
 	Field firstHit:Bool			' Whether player gets to have first strike or not in combat
 	Field shovels:Int			' Number of shovels player has
 	
@@ -1584,17 +1668,17 @@ Class Player Extends Entity
 			Local item:Item
 			
 			monster = currLevel.FindEntityByLocation(x, y)
-			If monster <> Null
+			If monster
 				player.BeginCombat(monster, True)
 				Return
 			EndIf
 
 			' See if we landed on something good
 			item = currLevel.FindItemByLocation(x, y)
-			If item <> Null
-				If item.unknown = True Then item.unknown = False
+			If item
+				If item.unknown Then item.unknown = False
 				' If instant action, do it now!
-				If item.instantAction = True
+				If item.instantAction
 					player.ActivateItem(item)
 				Else
 					player.ShowNewItem(item)
@@ -1709,7 +1793,7 @@ Class Player Extends Entity
 		' If not within the bounds of the playing field (actual level) return false
 		If mX >= MAPX Or mY >= MAPY Then Return False
 		
-		If MouseDown() = True Or checkMouse = False
+		If MouseDown() Or checkMouse = False
 			Select dir
 				Case DIR_NORTHEAST
 					If player.x < mX And player.y > mY Then Return True
@@ -1772,7 +1856,7 @@ Class Player Extends Entity
 
 	Method ShowNewItem:Void(item:Item)
 		If item.seenYet = False
-			QueueAnimation(item.image, item.x * TILE_SIZE + (TILE_SIZE / 2), item.y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+			QueueAnimation(item.image, item.x * TILE_SIZE + (TILE_SIZE / 2), item.y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, item.snd)
 			item.seenYet = True
 		EndIf
 	End Method
@@ -1783,6 +1867,7 @@ Class Player Extends Entity
 			If shovels > 0 And levelDepth < 19
 				nextLevelDepth += 1
 				state = STATE_DIGGING
+				Game12Snd.godown.Play(1)
 				Game12PlayScr.FadeToScreen(Game12TransScr)
 				shovels -= 1
 			EndIf
@@ -1793,7 +1878,7 @@ Class Player Extends Entity
 		Select state
 			Case STATE_ACTIVE
 				If healPotions > 0 And hitPoints < hitPointsMax
-					QueueAnimation(Game12Gfx.Heart, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+					QueueAnimation(Game12Gfx.Heart, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.heal)
 					Heal(hitPointsMax / 2)
 					healPotions -= 1
 				EndIf
@@ -1840,7 +1925,7 @@ Class Player Extends Entity
 		hitPoints = hitPointsMax
 		' Add another super smash to the player!
 		superSmashes += 1
-		QueueAnimation(Game12Gfx.Crown, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE)
+		QueueAnimation(Game12Gfx.Crown, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), 0, 0, 1.0, ANIM_SIZE,,, Game12Snd.levelup)
 	End Method
 
 	Method BeginCombat:Void(monster:Entity, firstHit:Bool)
@@ -1857,7 +1942,7 @@ Class Player Extends Entity
 		targX = Min(MAPX-(ANIM_SIZE/2), targX)
 		targY = Max(ANIM_SIZE/2, targY)
 		targY = Min(MAPY-(ANIM_SIZE/2), targY)
-		combatAnim = MakeAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), targX * TILE_SIZE + (TILE_SIZE / 2), targY * TILE_SIZE + (TILE_SIZE / 2), 1.0, ANIM_SIZE, True)
+		combatAnim = MakeAnimation(image, x * TILE_SIZE + (TILE_SIZE / 2), y * TILE_SIZE + (TILE_SIZE / 2), targX * TILE_SIZE + (TILE_SIZE / 2), targY * TILE_SIZE + (TILE_SIZE / 2), 1.0, ANIM_SIZE, True, False, Game12Snd.combat)
 		targX -= ANIM_SIZE
 		attacker.combatAnim = MakeAnimation(attacker.image, monster.x * TILE_SIZE + (TILE_SIZE / 2), monster.y * TILE_SIZE + (TILE_SIZE / 2), targX * TILE_SIZE + (TILE_SIZE / 2), targY * TILE_SIZE + (TILE_SIZE / 2), 1.0, ANIM_SIZE, True)
 	End Method
@@ -1886,7 +1971,7 @@ Class Player Extends Entity
 		
 		hitPoints -= amt
 		If hitPoints < 1
-			If attacker <> Null
+			If attacker
 				' Skull animation will display after STATE_COMBAT_END
 				state = STATE_COMBAT_END
 				nextState = STATE_DEAD
@@ -2050,14 +2135,14 @@ Function GetNextAnimation:Anim()
 	Return anim
 End Function
 
-Function QueueAnimation:Void(image:GameImage, x:Int, y:Int, tX:Int, tY:Int, sScale:Float, eScale:Float, noState:Bool=False, fadeOut:Bool = False)
-	Local anim:Anim = New Anim(image, x, y, tX, tY, sScale, eScale, fadeOut)
+Function QueueAnimation:Void(image:GameImage, x:Int, y:Int, tX:Int, tY:Int, sScale:Float, eScale:Float, noState:Bool = False, fadeOut:Bool = False, snd:GameSound = Null)
+	Local anim:Anim = New Anim(image, x, y, tX, tY, sScale, eScale, fadeOut, snd)
 	AnimList.AddLast(anim)
 	If noState = False Then player.state = STATE_ANIM
 End Function
 
-Function MakeAnimation:Anim(image:GameImage, x:Int, y:Int, tX:Int, tY:Int, sScale:Float, eScale:Float, noState:Bool=False, fadeOut:Bool = False)
-	Local anim:Anim = New Anim(image, x, y, tX, tY, sScale, eScale, fadeOut)
+Function MakeAnimation:Anim(image:GameImage, x:Int, y:Int, tX:Int, tY:Int, sScale:Float, eScale:Float, noState:Bool = False, fadeOut:Bool = False, snd:GameSound = Null)
+	Local anim:Anim = New Anim(image, x, y, tX, tY, sScale, eScale, fadeOut, snd)
 	anim.Activate()
 	If noState = False Then player.state = STATE_ANIM
 	Return anim
@@ -2078,7 +2163,9 @@ Class Anim
 	Field running:Bool		' Has animation started?
 	Field mySprite:Sprite	' Diddy Sprite object to handle scale and movement
 	
-	Method New(image:GameImage, x:Int, y:Int, tX:Int, tY:Int, sScale:Float, eScale:Float, fadeOut:Bool)
+	Field mySound:GameSound ' What sound to play when animation activates!
+	
+	Method New(image:GameImage, x:Int, y:Int, tX:Int, tY:Int, sScale:Float, eScale:Float, fadeOut:Bool, snd:GameSound)
 		Self.image = image
 		begX = x
 		begY = y
@@ -2087,6 +2174,7 @@ Class Anim
 		startScale = sScale
 		endScale = eScale
 		fade = fadeOut
+		mySound = snd
 	End Method
 
 	Method Activate:Void()
@@ -2106,16 +2194,8 @@ Class Anim
 			mySprite.scaleY = startScale
 			If targX <> 0 Then mySprite.dx = targX - x
 			If targY <> 0 Then mySprite.dy = targY - y
-			' Normalize the direction values
-			'If mySprite.dx < 0 Then mySprite.dx = -0.9
-			'If mySprite.dx > 0 Then mySprite.dx = 0.9
-			'If mySprite.dy < 0 Then mySprite.dy = -0.9
-			'If mySprite.dy > 0 Then mySprite.dy = 0.9
-			
-			
-			If fade = True Then mySprite.alpha = 1.0
-			'mySprite.maxXSpeed = 0.01
-			'mySprite.maxYSpeed = 0.01
+			If fade Then mySprite.alpha = 1.0
+			If mySound Then mySound.Play(1)
 			running = True
 		EndIf
 	End Method
