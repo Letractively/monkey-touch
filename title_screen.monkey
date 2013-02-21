@@ -58,9 +58,9 @@ Class TitleScreen Extends Screen
 		
 		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 200, 30, True, VERTICAL)
 		local b:SimpleButton = menu.AddButton("playButton.png", "playButton.png")
-		b.MoveTo(270, 390)
+		b.MoveTo(275, 394)
 		b = menu.AddButton("aboutButton.png", "aboutButton.png")
-		b.MoveTo(480, 390)
+		b.MoveTo(480, 393)
 		
 		#IF TARGET="glfw"
 			game.MusicPlay("brain_menu.wav", True)
