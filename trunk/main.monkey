@@ -85,9 +85,9 @@ Global HighlightFont:BitmapFont2
 'summary:Launch Point
 Function Main:Int()
 	
-	game = New MyGame()
-	'game.debugKeyOn = True
-	'game.drawFPSOn = True
+	diddyGame = New MyGame()
+	'diddyGame.debugKeyOn = True
+	'diddyGame.drawFPSOn = True
 	Return 1
 End
 
@@ -132,41 +132,41 @@ Class MyGame Extends DiddyApp
 		LoadSounds()
 		LoadFonts()
 	
-		game.SoundSetVolume(30)
-		game.MusicSetVolume(50)
-		game.Start(TitleScr)
+		diddyGame.SoundSetVolume(30)
+		diddyGame.MusicSetVolume(50)
+		diddyGame.Start(TitleScr)
 		Return 0
 	End Method
 	
 	#rem
 		summary: LoadImages
 		This method also loads ALL game(index).png Atlas files in each of the games folders
-		so if your using the packer, just pack and publish , then use the game.images.find()
+		so if your using the packer, just pack and publish , then use the diddyGame.images.find()
 		to actually get at your image.
 	#END
 	Method LoadImages:Void()
 	
 		'loading in the main apps atlas sheet.
-		'game.images.LoadAtlas("sheet.txt", images.LIBGDX_ATLAS, true)
+		'diddyGame.images.LoadAtlas("sheet.txt", images.LIBGDX_ATLAS, true)
 		
 		'loading in all the mini games atlas sheets.
 		For Local g:Int = 1 To 20
 			Local path:String
 			path = ("game" + g + "/game" + g + ".txt")
 			'Print "Loading " + path
-			game.images.LoadAtlas(path, images.LIBGDX_ATLAS, True)
+			diddyGame.images.LoadAtlas(path, images.LIBGDX_ATLAS, True)
 		Next
 		
 		Local tmpimg:Image
 		
-		game.images.LoadAnim("game_tile.png", 202, 58, 2, tmpimg, False)
+		diddyGame.images.LoadAnim("game_tile.png", 202, 58, 2, tmpimg, False)
 		
-		game.images.Load("about.png", "", False, False)
-		game.images.Load("title.png", "", False, False)
-		game.images.Load("title_mask.png", "", False, False)
-		game.images.Load("about_mask.png", "", False, False)
-		game.images.Load("about_buttons.png", "", False, False)
-		game.images.Load("ooo.png", "", True, False)
+		diddyGame.images.Load("about.png", "", False, False)
+		diddyGame.images.Load("title.png", "", False, False)
+		diddyGame.images.Load("title_mask.png", "", False, False)
+		diddyGame.images.Load("about_mask.png", "", False, False)
+		diddyGame.images.Load("about_buttons.png", "", False, False)
+		diddyGame.images.Load("ooo.png", "", True, False)
 		
 	End Method
 
@@ -180,29 +180,29 @@ Class MyGame Extends DiddyApp
 	
 	'summary: load sounds.
 	Method LoadSounds:Void()
-		game.sounds.Load("explode_01")
-		game.sounds.Load("explode_02")
-		game.sounds.Load("explode_03")
+		diddyGame.sounds.Load("explode_01")
+		diddyGame.sounds.Load("explode_02")
+		diddyGame.sounds.Load("explode_03")
 		
-		game.sounds.Load("powerup_01")
-		game.sounds.Load("powerup_02")
-		game.sounds.Load("powerup_03")
-		game.sounds.Load("powerup_04")
+		diddyGame.sounds.Load("powerup_01")
+		diddyGame.sounds.Load("powerup_02")
+		diddyGame.sounds.Load("powerup_03")
+		diddyGame.sounds.Load("powerup_04")
 		
-		game.sounds.Load("shot_01")
-		game.sounds.Load("shot_02")
-		game.sounds.Load("shot_03")
+		diddyGame.sounds.Load("shot_01")
+		diddyGame.sounds.Load("shot_02")
+		diddyGame.sounds.Load("shot_03")
 		
-		game.sounds.Load("spawn_01")
-		game.sounds.Load("spawn_02")
-		game.sounds.Load("spawn_03")
+		diddyGame.sounds.Load("spawn_01")
+		diddyGame.sounds.Load("spawn_02")
+		diddyGame.sounds.Load("spawn_03")
 		
-		game.sounds.Load("hit_01")
-		game.sounds.Load("hit_02")
-		game.sounds.Load("hit_03")
+		diddyGame.sounds.Load("hit_01")
+		diddyGame.sounds.Load("hit_02")
+		diddyGame.sounds.Load("hit_03")
 		
-		game.sounds.Load("highscore")
-		game.sounds.Load("lowscore")
+		diddyGame.sounds.Load("highscore")
+		diddyGame.sounds.Load("lowscore")
 	End Method
 	
 End
@@ -235,31 +235,31 @@ Class BitmapFont2 Extends BitmapFont
 	
 	Method DrawTextWidth:Void(text:String, x:Float, y:Float, align:Int, Tai_width:Int)
 		
-		Local Tai_TextLines:String[]
+	'	Local Tai_TextLines:String[]
 		
-		If Self.GetTxtWidth(text)>Tai_width
+	'	If Self.GetTxtWidth(text)>Tai_width
 		
-			Tai_TextLines = Self.SplitLines(text,Tai_width)
+			'Tai_TextLines = Self.SplitLines(text,Tai_width)
 			
 			'Render the Lines from the String Araay.
-			Local Tai_Drop:Int = Self.GetFontHeight()
+			'Local Tai_Drop:Int = Self.GetFontHeight()
 			
-			Local Tai_Count:Int =0
+			'Local Tai_Count:Int =0
 			
-			For Local Tai_CurLine:String = Eachin Tai_TextLines
-				If Tai_CurLine<>""			
-					If DrawShadow Then DrawCharsText(Tai_CurLine, x, y + (Tai_Count * Tai_Drop), 2, align)
-					If DrawBorder Then DrawCharsText(Tai_CurLine, x, y + (Tai_Count * Tai_Drop), 1, align)
-					DrawCharsText(Tai_CurLine, x, y + (Tai_Count * Tai_Drop), 0, align)
-					Tai_Count+=1
-				End If
-			Next
-			
-		Else
-			If DrawShadow Then DrawCharsText(text, x, y, 2, align)
-			If DrawBorder Then DrawCharsText(text, x, y, 1, align)
-			DrawCharsText(text, x, y, 0, align)
-		End If
+			'For Local Tai_CurLine:String = Eachin Tai_TextLines
+			'	If Tai_CurLine<>""			
+			'		If DrawShadow Then DrawCharsText(Tai_CurLine, x, y + (Tai_Count * Tai_Drop), 2, align)
+			'		If DrawBorder Then DrawCharsText(Tai_CurLine, x, y + (Tai_Count * Tai_Drop), 1, align)
+			'		DrawCharsText(Tai_CurLine, x, y + (Tai_Count * Tai_Drop), 0, align)
+			'		Tai_Count+=1
+			'	End If
+			'Next
+		'	
+	'	Else
+			'If DrawShadow Then DrawCharsText(text, x, y, 2, align)
+			'If DrawBorder Then DrawCharsText(text, x, y, 1, align)
+			'DrawCharsText(text, x, y, 0, align)
+	'	End If
 		
 		
 				

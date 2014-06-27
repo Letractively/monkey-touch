@@ -37,7 +37,7 @@ Class Game19Screen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		game.screenFade.Start(50, False)		
+		diddyGame.screenFade.Start(50, False)		
 	End
 	
 	#Rem

@@ -71,7 +71,7 @@ Class Game1PlayScreen Extends Screen
 	#End
 	Method Start:Void()
 				
-		game.screenFade.Start(50, False)
+		diddyGame.screenFade.Start(50, False)
 		background = LoadImage("graphics/game1/bg.png")
 		
 		TaiPlayer = New Tai_Player(320)
@@ -86,19 +86,19 @@ Class Game1PlayScreen Extends Screen
 		CreateWave(TaiWave)
 		GameOver = false
 		
-		shotsound = game.sounds.Find("shot_02")
-		explodesound = game.sounds.Find("explode_02")
-		hitsound = game.sounds.Find("hit_01")
-		powerupdropsound = game.sounds.Find("powerup_01")
-		poweruppicksound = game.sounds.Find("powerup_04")
-		waveinsound = game.sounds.Find("spawn_03")
-		highscoresound = game.sounds.Find("highscore")
-		lowscoresound = game.sounds.Find("lowscore")
+		shotsound = diddyGame.sounds.Find("shot_02")
+		explodesound = diddyGame.sounds.Find("explode_02")
+		hitsound = diddyGame.sounds.Find("hit_01")
+		powerupdropsound = diddyGame.sounds.Find("powerup_01")
+		poweruppicksound = diddyGame.sounds.Find("powerup_04")
+		waveinsound = diddyGame.sounds.Find("spawn_03")
+		highscoresound = diddyGame.sounds.Find("highscore")
+		lowscoresound = diddyGame.sounds.Find("lowscore")
 		
 		#IF TARGET="glfw"
-			game.MusicPlay("demon_game.wav", True)
+			diddyGame.MusicPlay("demon_diddyGame.wav", True)
 		#ELSE
-			game.MusicPlay("demon_game.mp3", True)
+			diddyGame.MusicPlay("demon_diddyGame.mp3", True)
 		#END
 		
 		OldHighScore = HighScore
@@ -432,8 +432,8 @@ Class Game1Screen Extends Screen
 	Method New()
 		name = "Game 1 Menu"
 		
-		'game.MusicPlay("brain_menu.mp3", True)
-		'game.MusicSetVolume(8)
+		'diddyGame.MusicPlay("brain_menu.mp3", True)
+		'diddyGame.MusicSetVolume(8)
 		
 		Local gameid:Int = 1
 		
@@ -454,24 +454,24 @@ Class Game1Screen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		game.screenFade.Start(50, False)
+		diddyGame.screenFade.Start(50, False)
 		background = LoadImage("graphics/game1/menu.png")
 		blockscorefont = New BitmapFont2("graphics/game1/block_score.txt", True)
 		blockfont = New BitmapFont2("graphics/game1/block.txt", True)
 		'blockfont.DrawShadow = False
 		
 		#IF TARGET="glfw"
-			game.MusicPlay("demon_menu.wav", True)
+			diddyGame.MusicPlay("demon_menu.wav", True)
 		#ELSE
-			game.MusicPlay("demon_menu.mp3", True)
+			diddyGame.MusicPlay("demon_menu.mp3", True)
 		#END
 			
 		endscoreplayed = False
 		
 		if HighScore > OldHighScore
-			Self.Save()
+			Self.mySave()
 		else
-			Self.Load()
+			Self.myLoad()
 		EndIf
 		
 		
@@ -516,7 +516,7 @@ Class Game1Screen Extends Screen
 			
 	End method
 
-	Method Load:bool()
+	Method myLoad:bool()
 		Local filein:FileStream
 		Local filehandler:FileSystem
 		filehandler = FileSystem.Create()
@@ -530,13 +530,13 @@ Class Game1Screen Extends Screen
 			End if
 			
 		Else
-			Self.Save()	
+			Self.mySave()	
 		EndIf
 		
 		
 	End Method
 	
-	Method Save:void()
+	Method mySave:Void()
 		Local fileout:FileStream
 		Local filehandler:FileSystem
 		filehandler = FileSystem.Create()
@@ -609,10 +609,10 @@ Class Tai_Player
 	#END
 	Method new(_x:Int, _life = 3, _power:Int = 1)
 	
-		self.sprite = game.images.Find("game1_player")
-		self.fullheart = game.images.Find("game1_fullheart")
-		self.diesound = game.sounds.Find("explode_01")
-		self.heart = game.images.Find("game1_emptyheart")
+		self.sprite = diddyGame.images.Find("game1_player")
+		self.fullheart = diddyGame.images.Find("game1_fullheart")
+		self.diesound = diddyGame.sounds.Find("explode_01")
+		self.heart = diddyGame.images.Find("game1_emptyheart")
 		Self.x = _x
 		Self.y = 450
 		Self.life = _life
@@ -880,17 +880,17 @@ Class Tai_Alien
 		
 		Select _color
 			Case BLUE
-				Self.sprite = game.images.Find("game1_alien" + _ship + "_blue")
-				Self.bloom = game.images.Find("game1_glow_blue")
+				Self.sprite = diddyGame.images.Find("game1_alien" + _ship + "_blue")
+				Self.bloom = diddyGame.images.Find("game1_glow_blue")
 			Case GREEN
-				Self.sprite = game.images.Find("game1_alien" + _ship + "_green")
-				Self.bloom = game.images.Find("game1_glow_green")
+				Self.sprite = diddyGame.images.Find("game1_alien" + _ship + "_green")
+				Self.bloom = diddyGame.images.Find("game1_glow_green")
 			Case ORANGE
-				Self.sprite = game.images.Find("game1_alien" + _ship + "_orange")
-				Self.bloom = game.images.Find("game1_glow_orange")
+				Self.sprite = diddyGame.images.Find("game1_alien" + _ship + "_orange")
+				Self.bloom = diddyGame.images.Find("game1_glow_orange")
 			Case PURPLE
-				Self.sprite = game.images.Find("game1_alien" + _ship + "_purple")
-				Self.bloom = game.images.Find("game1_glow_purple")
+				Self.sprite = diddyGame.images.Find("game1_alien" + _ship + "_purple")
+				Self.bloom = diddyGame.images.Find("game1_glow_purple")
 				
 		End Select
 		
@@ -1078,18 +1078,18 @@ Class Tai_Bullet
 		Select _dir
 			Case UP
 				'Player Shooting UP
-				Self.sprite = game.images.Find("game1_player_bullet")
+				Self.sprite = diddyGame.images.Find("game1_player_bullet")
 			Case DOWN
 				'Alien shooting down.
 				select _color
 					Case BLUE
-						Self.sprite = game.images.Find("game1_bullet_blue")'must rmemebr to fix this image filename.
+						Self.sprite = diddyGame.images.Find("game1_bullet_blue")'must rmemebr to fix this image filename.
 					Case GREEN
-						Self.sprite = game.images.Find("game1_bullet_green")
+						Self.sprite = diddyGame.images.Find("game1_bullet_green")
 					Case ORANGE
-						Self.sprite = game.images.Find("game1_bullet_orange")
+						Self.sprite = diddyGame.images.Find("game1_bullet_orange")
 					Case PURPLE
-						Self.sprite = game.images.Find("game1_bullet_purple")
+						Self.sprite = diddyGame.images.Find("game1_bullet_purple")
 				End Select
 			Case TARGETED
 				'get the angle from the alien to the player.
@@ -1100,13 +1100,13 @@ Class Tai_Bullet
 				
 				select _color
 					Case BLUE
-						Self.sprite = game.images.Find("game1_target_bullet")'must rmemebr to fix this image filename.
+						Self.sprite = diddyGame.images.Find("game1_target_bullet")'must rmemebr to fix this image filename.
 					Case GREEN
-						Self.sprite = game.images.Find("game1_target_bullet")
+						Self.sprite = diddyGame.images.Find("game1_target_bullet")
 					Case ORANGE
-						Self.sprite = game.images.Find("game1_target_bullet")
+						Self.sprite = diddyGame.images.Find("game1_target_bullet")
 					Case PURPLE
-						Self.sprite = game.images.Find("game1_target_bullet")
+						Self.sprite = diddyGame.images.Find("game1_target_bullet")
 				End Select
 				
 		End Select
@@ -1211,28 +1211,28 @@ Class TaiPowerUp
 		
 		select _power
 			Case TAIPOWERUP
-				Self.sprite = game.images.Find("game1_powerup")
+				Self.sprite = diddyGame.images.Find("game1_powerup")
 				Self.pts = 100
 				Self.color = RED
 			Case TAIPOWERDOWN
-				Self.sprite = game.images.Find("game1_powerdown")
+				Self.sprite = diddyGame.images.Find("game1_powerdown")
 				Self.pts = -100
 				Self.color = BLUE
 			Case TAIBOMB
 				Self.life = 4
-				Self.sprite = game.images.Find("game1_powerbomb")
+				Self.sprite = diddyGame.images.Find("game1_powerbomb")
 				Self.pts = 100
 				Self.color = RED
 			Case TAISPEED
-				Self.sprite = game.images.Find("game1_powerspeed")
+				Self.sprite = diddyGame.images.Find("game1_powerspeed")
 				Self.pts = -100
 				Self.color = BLUE
 			Case TAISLOW
-				Self.sprite = game.images.Find("game1_powerslow")
+				Self.sprite = diddyGame.images.Find("game1_powerslow")
 				Self.pts = 100
 				Self.color = RED
 			Case TAIHEART
-				Self.sprite = game.images.Find("game1_fullheart")
+				Self.sprite = diddyGame.images.Find("game1_fullheart")
 				Self.color = RED
 				Self.pts = 1000
 				Self.life = 1
@@ -1359,15 +1359,15 @@ Class cParticle
 		
 		Select _color
 			Case BLUE
-				Self.sprite = game.images.Find("game1_bluebit" + int(Rnd(1, 3)))
+				Self.sprite = diddyGame.images.Find("game1_bluebit" + int(Rnd(1, 3)))
 			Case GREEN
-				Self.sprite = game.images.Find("game1_greenbit" + int(Rnd(1, 3)))
+				Self.sprite = diddyGame.images.Find("game1_greenbit" + int(Rnd(1, 3)))
 			Case ORANGE
-				Self.sprite = game.images.Find("game1_orangebit" + int(Rnd(1, 3)))
+				Self.sprite = diddyGame.images.Find("game1_orangebit" + int(Rnd(1, 3)))
 			Case PURPLE
-				Self.sprite = game.images.Find("game1_purplebit" + int(Rnd(1, 3)))
+				Self.sprite = diddyGame.images.Find("game1_purplebit" + int(Rnd(1, 3)))
 			Case RED
-				Self.sprite = game.images.Find("game1_redbit" + int(Rnd(1, 3)))
+				Self.sprite = diddyGame.images.Find("game1_redbit" + int(Rnd(1, 3)))
 		End select
 		
 		cParticleList.AddLast(Self)

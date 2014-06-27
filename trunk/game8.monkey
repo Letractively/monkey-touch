@@ -53,8 +53,8 @@ Class Game8Screen Extends Screen
 		gameOverScreen = New GameOverScreen
 		nextLevelScreen = New NextLevelScreen
 		
-		game.images.Load("game8/titleLogo.png")
-		logo = game.images.Find("titleLogo")
+		diddyGame.images.Load("game8/titleLogo.png")
+		logo = diddyGame.images.Find("titleLogo")
 		
 		menu = New SimpleMenu("ButtonOver", "ButtonClick", 0, 290, 50, True, VERTICAL)
 		menu.AddButton("game8/playButton.png", "game8/playButtonMO.png")
@@ -67,9 +67,9 @@ Class Game8Screen Extends Screen
 		Unit.list.Comparator = New UnitComparator()
 		
 		#IF TARGET="glfw"
-			game.MusicPlay("HomeBaseGroove.wav", True)
+			diddyGame.MusicPlay("HomeBaseGroove.wav", True)
 		#ELSE
-			game.MusicPlay("HomeBaseGroove.mp3", True)
+			diddyGame.MusicPlay("HomeBaseGroove.mp3", True)
 		#END
 		
 	End
@@ -131,7 +131,7 @@ Class Unit Extends Sprite
 		Local r:Unit
 		For Local i:Int = 0 Until list.Size
 			r = list.Get(i)
-			If r <> Null Then r.Draw(game.scrollX, game.scrollY)
+			If r <> Null Then r.Draw(diddyGame.scrollX, diddyGame.scrollY)
 		Next
 	End
 		
@@ -182,7 +182,7 @@ Class Rocket Extends Unit
 			smokeDelay = 0
 			Local p:Particle
 			If slowDown > 0
-				p = Particle.Create(game.images.Find("slowBullet"), x, y, 0, 0, 0, 500)
+				p = Particle.Create(diddyGame.images.Find("slowBullet"), x, y, 0, 0, 0, 500)
 				p.rotation = rotation
 			Else
 				p = Particle.Create(gameScreen.smokeImage, x, y, -dx / 10, -dy / 10, 0, 500)
@@ -197,7 +197,7 @@ Class Rocket Extends Unit
 		
 		If Collide(target) Then
 			target.health -= Self.damage
-			target.slowDown = game.CalcAnimLength(slowDown)
+			target.slowDown = diddyGame.CalcAnimLength(slowDown)
 			New Explosion(gameScreen.explosionSmallImage, Self.x, Self.y, 6, 100)
 			Kill()
 		End
@@ -229,7 +229,7 @@ End
 
 Class TankEnemy Extends Enemy
 	Method New(name:String, x:Float, y:Float)
-		Super.New(game.images.Find(gameScreen.enemyTemplateMap.Get(name.ToUpper()).imageName), x, y, name)
+		Super.New(diddyGame.images.Find(gameScreen.enemyTemplateMap.Get(name.ToUpper()).imageName), x, y, name)
 	End
 End
 
@@ -343,7 +343,7 @@ End
 
 Class TurretTower Extends Tower
 	Method New(name:String, x:Float, y:Float)
-		Super.New(game.images.Find(gameScreen.towerTemplateMap.Get(name.ToUpper()).imageName), x, y, name)
+		Super.New(diddyGame.images.Find(gameScreen.towerTemplateMap.Get(name.ToUpper()).imageName), x, y, name)
 	End
 End
 
@@ -390,7 +390,7 @@ Class Tower Extends Unit Abstract
 		Self.firePosX = x + Self.image.w2 + t.firePosX
 		Self.firePosY = y + Self.image.h2 + t.firePosY
 		If t.gunImageName <> "" Then
-			Self.gunImage = game.images.Find(t.gunImageName)
+			Self.gunImage = diddyGame.images.Find(t.gunImageName)
 		End
 		Self.fireType = t.fireType
 		Self.slowDown = t.slowDown
@@ -405,19 +405,19 @@ Class Tower Extends Unit Abstract
 	Method Draw:Void(offsetX:Float, offsetY:Float, rounded:Bool = False)
 		If selected
 			SetAlpha 0.2
-			DrawCircle(firePosX - game.scrollX, firePosY - game.scrollY, range)
+			DrawCircle(firePosX - diddyGame.scrollX, firePosY - diddyGame.scrollY, range)
 			SetAlpha 1
 		End
-		Super.Draw(game.scrollX, game.scrollY)
+		Super.Draw(diddyGame.scrollX, diddyGame.scrollY)
 
 		If drawLine
 			SetColor 255, 0, 0
-			DrawLineThick(dx1 - game.scrollX, dy1 - game.scrollY, dx2 - game.scrollX, dy2 - game.scrollY, 4)
+			DrawLineThick(dx1 - diddyGame.scrollX, dy1 - diddyGame.scrollY, dx2 - diddyGame.scrollX, dy2 - diddyGame.scrollY, 4)
 			SetColor 255, 255, 255
-			DrawLine dx1 - game.scrollX, dy1 - game.scrollY, dx2 - game.scrollX, dy2 - game.scrollY
+			DrawLine dx1 - diddyGame.scrollX, dy1 - diddyGame.scrollY, dx2 - diddyGame.scrollX, dy2 - diddyGame.scrollY
 		End
 		If gunImage <> Null
-			gunImage.Draw(firePosX - game.scrollX, firePosY - game.scrollY, gunAngle, 1, 1, gunFrame)
+			gunImage.Draw(firePosX - diddyGame.scrollX, firePosY - diddyGame.scrollY, gunAngle, 1, 1, gunFrame)
 		End
 	End
 	
@@ -483,7 +483,7 @@ Class Tower Extends Unit Abstract
 					Case ROCKET
 						gameScreen.rocketSound.rate = Rnd(1, 2)
 						gameScreen.rocketSound.Play()
-						Local r:Rocket = New Rocket(game.images.Find("Rocket"), Self.firePosX, Self.firePosY)
+						Local r:Rocket = New Rocket(diddyGame.images.Find("Rocket"), Self.firePosX, Self.firePosY)
 						r.rotation = -angle - 90
 						r.damage = Self.damage + Rnd(0, Self.damageBonus)
 						r.range = Self.range
@@ -492,7 +492,7 @@ Class Tower Extends Unit Abstract
 					Case SLOW
 						gameScreen.slowSound.rate = Rnd(1, 2)
 						gameScreen.slowSound.Play()
-						Local r:Rocket = New Rocket(game.images.Find("slowBullet"), Self.firePosX, Self.firePosY)
+						Local r:Rocket = New Rocket(diddyGame.images.Find("slowBullet"), Self.firePosX, Self.firePosY)
 						r.rotation = -angle - 90
 						r.damage = Self.damage + Rnd(0, Self.damageBonus)
 						r.range = Self.range
@@ -579,7 +579,7 @@ Class Explosion Extends Sprite
 		Local e:Explosion
 		For Local i:Int = 0 Until list.Size
 			e = list.Get(i)
-			If e <> Null Then e.Draw(game.scrollX, game.scrollY)
+			If e <> Null Then e.Draw(diddyGame.scrollX, diddyGame.scrollY)
 		Next
 	End
 	
@@ -658,7 +658,7 @@ Class Wave
 	Method Draw:Void()		
 		If textAlpha > 0
 			SetAlpha textAlpha
-			Local countDown:Int = ( (Round(initialDelayCounter) * (1000.0 / game.FPS)) / 1000)
+			Local countDown:Int = ( (Round(initialDelayCounter) * (1000.0 / diddyGame.FPS)) / 1000)
 			Local x:Int = SCREEN_WIDTH2
 			Local oy:Int = SCREEN_HEIGHT2 - 30
 			Local y:Int = oy
@@ -793,7 +793,7 @@ Class GameScreen Extends Screen
 			t.damageBonus = Float(xml.GetFirstChildByName("damageBonus").Value)
 			t.range = Float(xml.GetFirstChildByName("range").Value)
 			t.health = Float(xml.GetFirstChildByName("health").Value)
-			t.fireRate = game.CalcAnimLength(Int(xml.GetFirstChildByName("fireRate").Value))
+			t.fireRate = diddyGame.CalcAnimLength(Int(xml.GetFirstChildByName("fireRate").Value))
 			t.cost = Int(xml.GetFirstChildByName("cost").Value)
 			t.firePosX = Float(xml.GetFirstChildByName("firePosX").Value)
 			t.firePosY = Float(xml.GetFirstChildByName("firePosY").Value)
@@ -827,7 +827,7 @@ Class GameScreen Extends Screen
 			For Local waveXml:XMLElement = Eachin xml.GetChildrenByName("wave")
 				Local wave:Wave = New Wave()
 				wave.sequence = Int(waveXml.GetFirstChildByName("sequence").Value)
-				wave.initialDelay = game.CalcAnimLength(Int(waveXml.GetFirstChildByName("initialDelay").Value))
+				wave.initialDelay = diddyGame.CalcAnimLength(Int(waveXml.GetFirstChildByName("initialDelay").Value))
 				wave.initialDelayCounter = wave.initialDelay
 				For Local enemiesXml:XMLElement = Eachin waveXml.GetChildrenByName("enemies")
 				
@@ -836,7 +836,7 @@ Class GameScreen Extends Screen
 						ew.sequence = Int(enemyXml.GetFirstChildByName("sequence").Value)
 						ew.type = enemyXml.GetFirstChildByName("type").Value
 						ew.amount = Int(enemyXml.GetFirstChildByName("amount").Value)
-						ew.delay = game.CalcAnimLength(Int(enemyXml.GetFirstChildByName("delay").Value))
+						ew.delay = diddyGame.CalcAnimLength(Int(enemyXml.GetFirstChildByName("delay").Value))
 						wave.enemyMap.Add(ew.sequence, ew)
 					Next
 					
@@ -901,7 +901,7 @@ Class GameScreen Extends Screen
 			If i > 2 Then
 				img = "flag"
 			End
-			Local flagSprite:Sprite = New Sprite(game.images.Find(img), flag.x, flag.y)
+			Local flagSprite:Sprite = New Sprite(diddyGame.images.Find(img), flag.x, flag.y)
 			flagSprite.SetFrame(0, 4, 100, True, True)
 			flagList.Add(flagSprite)
 		Next
@@ -912,41 +912,41 @@ Class GameScreen Extends Screen
 		Local tmpImage:Image
 		Local path:String = "game8/"
 		
-		enemyImage = game.images.LoadAnim(path + "tank7.png", 20, 20, 9, tmpImage)
-		game.images.LoadAnim(path + "Tank5b.png", 20, 20, 9, tmpImage)
-		game.images.LoadAnim(path + "hardtank.png", 40, 40, 9, tmpImage)
-		turretBaseImage = game.images.LoadAnim(path + "turretBase.png", 40, 28, 2, tmpImage, False)
+		enemyImage = diddyGame.images.LoadAnim(path + "tank7.png", 20, 20, 9, tmpImage)
+		diddyGame.images.LoadAnim(path + "Tank5b.png", 20, 20, 9, tmpImage)
+		diddyGame.images.LoadAnim(path + "hardtank.png", 40, 40, 9, tmpImage)
+		turretBaseImage = diddyGame.images.LoadAnim(path + "turretBase.png", 40, 28, 2, tmpImage, False)
 		
-		game.images.LoadAnim(path + "Artil3.png", 40, 40, 9, tmpImage, False)
+		diddyGame.images.LoadAnim(path + "Artil3.png", 40, 40, 9, tmpImage, False)
 		
-		game.images.LoadAnim(path + "flag.png", 20, 20, 5, tmpImage)
-		game.images.LoadAnim(path + "flaggreen.png", 20, 20, 5, tmpImage)
+		diddyGame.images.LoadAnim(path + "flag.png", 20, 20, 5, tmpImage)
+		diddyGame.images.LoadAnim(path + "flaggreen.png", 20, 20, 5, tmpImage)
 		
-		game.images.Load(path + "rocket.png")
-		game.images.Load(path + "slowBullet.png")
-		smokeImage = game.images.Load(path + "smoke.png")
-		game.images.Load(path + "empty.png")
+		diddyGame.images.Load(path + "rocket.png")
+		diddyGame.images.Load(path + "slowBullet.png")
+		smokeImage = diddyGame.images.Load(path + "smoke.png")
+		diddyGame.images.Load(path + "empty.png")
 		
-		game.images.Load(path + "ArtilBase.png", "", False)
-		game.images.LoadAnim(path + "ArtilGun.png", 40, 40, 8, tmpImage)
-		game.images.LoadAnim(path + "slowGun.png", 40, 40, 8, tmpImage)
+		diddyGame.images.Load(path + "ArtilBase.png", "", False)
+		diddyGame.images.LoadAnim(path + "ArtilGun.png", 40, 40, 8, tmpImage)
+		diddyGame.images.LoadAnim(path + "slowGun.png", 40, 40, 8, tmpImage)
 
-		turretGunImage = game.images.LoadAnim(path + "turretGun.png", 52, 45, 8, tmpImage)
-		explosionImage = game.images.LoadAnim(path + "explosn.png", 20, 20, 9, tmpImage)
-		explosionBigImage = game.images.LoadAnim(path + "exploBig.png", 40, 40, 14, tmpImage)
-		explosionSmallImage = game.images.LoadAnim(path + "expSmall.png", 20, 20, 7, tmpImage)
+		turretGunImage = diddyGame.images.LoadAnim(path + "turretGun.png", 52, 45, 8, tmpImage)
+		explosionImage = diddyGame.images.LoadAnim(path + "explosn.png", 20, 20, 9, tmpImage)
+		explosionBigImage = diddyGame.images.LoadAnim(path + "exploBig.png", 40, 40, 14, tmpImage)
+		explosionSmallImage = diddyGame.images.LoadAnim(path + "expSmall.png", 20, 20, 7, tmpImage)
 		
-		game.images.Load("game8/gui.png", "", False)
+		diddyGame.images.Load("game8/gui.png", "", False)
 	End
 	
 	Method LoadSounds:Void()
-		lazerSound = game.sounds.Load("Firelaser",,, 250)
-		rocketSound = game.sounds.Load("Firemissile",,, 250)
+		lazerSound = diddyGame.sounds.Load("Firelaser",,, 250)
+		rocketSound = diddyGame.sounds.Load("Firemissile",,, 250)
 		rocketSound.volume = 0.35
-		slowSound = game.sounds.Load("slow",,, 250)
+		slowSound = diddyGame.sounds.Load("slow",,, 250)
 		slowSound.volume = 0.25
-		vexplosion = game.sounds.Load("vexplosion",,, 250)
-		hurtSound = game.sounds.Load("Hurt",,, 250)
+		vexplosion = diddyGame.sounds.Load("vexplosion",,, 250)
+		hurtSound = diddyGame.sounds.Load("Hurt",,, 250)
 	End
 	
 	Method Start:Void()
@@ -954,8 +954,8 @@ Class GameScreen Extends Screen
 		towerTemplateMap = New StringMap<UnitTemplate>
 		waveMap = New IntMap<Wave>
 		
-		game.scrollX = TILE_SIZE
-		game.scrollY = TILE_SIZE
+		diddyGame.scrollX = TILE_SIZE
+		diddyGame.scrollY = TILE_SIZE
 		delay = maxDelay
 		LoadData()
 		LoadImages()
@@ -972,10 +972,10 @@ Class GameScreen Extends Screen
 		Unit.list.Sort() ' add a z-order order via the y coordinate
 		
 		Cls
-		tilemap.RenderMap(game.scrollX, game.scrollY, SCREEN_WIDTH, SCREEN_HEIGHT)
+		tilemap.RenderMap(diddyGame.scrollX, diddyGame.scrollY, SCREEN_WIDTH, SCREEN_HEIGHT)
 
 		For Local f:Sprite = Eachin flagList
-			f.Draw(game.scrollX, game.scrollY)
+			f.Draw(diddyGame.scrollX, diddyGame.scrollY)
 		Next
 		
 		If gridOn
@@ -983,8 +983,8 @@ Class GameScreen Extends Screen
 			SetColor 255, 255, 255
 			SetAlpha 0.3
 			For Local fx:Int = 0 To tilemap.width
-				DrawLine fx * TILE_SIZE - game.scrollX, 0 - game.scrollY, fx * TILE_SIZE - game.scrollX, tilemap.width * TILE_SIZE - game.scrollY
-				DrawLine 0 - game.scrollX, fx * TILE_SIZE - game.scrollY, tilemap.width * TILE_SIZE - game.scrollX, fx * TILE_SIZE - game.scrollY
+				DrawLine fx * TILE_SIZE - diddyGame.scrollX, 0 - diddyGame.scrollY, fx * TILE_SIZE - diddyGame.scrollX, tilemap.width * TILE_SIZE - diddyGame.scrollY
+				DrawLine 0 - diddyGame.scrollX, fx * TILE_SIZE - diddyGame.scrollY, tilemap.width * TILE_SIZE - diddyGame.scrollX, fx * TILE_SIZE - diddyGame.scrollY
 			Next
 			SetAlpha 1
 		End
@@ -997,7 +997,7 @@ Class GameScreen Extends Screen
 			For Local fx:Int = 0 Until tilemap.width
 				For Local fy:Int = 0 Until tilemap.height
 					If layer.mapData.Get(fx, fy) > 0
-						DrawRect fx * TILE_SIZE - game.scrollX, fy * TILE_SIZE - game.scrollY, TILE_SIZE, TILE_SIZE
+						DrawRect fx * TILE_SIZE - diddyGame.scrollX, fy * TILE_SIZE - diddyGame.scrollY, TILE_SIZE, TILE_SIZE
 					End
 				Next
 			Next
@@ -1007,17 +1007,17 @@ Class GameScreen Extends Screen
 		
 		Unit.DrawAll()
 		Explosion.DrawAll()
-		Particle.DrawAll(game.scrollX, game.scrollY)
+		Particle.DrawAll(diddyGame.scrollX, diddyGame.scrollY)
 		
 		If gui.mode = gui.TURRET
-			Local nx:Float = Floor( (game.mouseX + game.scrollX) / TILE_SIZE)
-			Local ny:Float = Floor( (game.mouseY + game.scrollY) / TILE_SIZE)
-			nx = nx * TILE_SIZE - game.scrollX
-			ny = ny * TILE_SIZE - game.scrollY
+			Local nx:Float = Floor( (diddyGame.mouseX + diddyGame.scrollX) / TILE_SIZE)
+			Local ny:Float = Floor( (diddyGame.mouseY + diddyGame.scrollY) / TILE_SIZE)
+			nx = nx * TILE_SIZE - diddyGame.scrollX
+			ny = ny * TILE_SIZE - diddyGame.scrollY
 
 			Local tower:UnitTemplate = towerTemplateMap.Get(gui.selectedButton.ToUpper())
-			Local img:GameImage = game.images.Find(tower.imageName)
-			Local gimg:GameImage = game.images.Find(tower.gunImageName)
+			Local img:GameImage = diddyGame.images.Find(tower.imageName)
+			Local gimg:GameImage = diddyGame.images.Find(tower.gunImageName)
 			img.Draw(nx, ny)
 			If gimg <> Null Then
 				gimg.Draw(nx + tower.firePosX + img.w2, ny + tower.firePosY + img.h2)
@@ -1110,36 +1110,36 @@ Class GameScreen Extends Screen
 			End
 			
 			If KeyDown(KEY_LEFT)
-				game.scrollX -= Floor(gameScrollSpeed * dt.delta)
+				diddyGame.scrollX -= Floor(gameScrollSpeed * dt.delta)
 			End
 			If KeyDown(KEY_RIGHT)
-				game.scrollX += Floor(gameScrollSpeed * dt.delta)
+				diddyGame.scrollX += Floor(gameScrollSpeed * dt.delta)
 			End
 			If KeyDown(KEY_UP)
-				game.scrollY -= Floor(gameScrollSpeed * dt.delta)
+				diddyGame.scrollY -= Floor(gameScrollSpeed * dt.delta)
 			End
 			If KeyDown(KEY_DOWN)
-				game.scrollY += Floor(gameScrollSpeed * dt.delta)
+				diddyGame.scrollY += Floor(gameScrollSpeed * dt.delta)
 			End
 		End
 		Local scrollGap:Int = 20
-		If game.mouseX < scrollGap
-			game.scrollX -= Floor(gameScrollSpeed * dt.delta)
+		If diddyGame.mouseX < scrollGap
+			diddyGame.scrollX -= Floor(gameScrollSpeed * dt.delta)
 		End
-		If game.mouseY < scrollGap
-			game.scrollY -= Floor(gameScrollSpeed * dt.delta)
+		If diddyGame.mouseY < scrollGap
+			diddyGame.scrollY -= Floor(gameScrollSpeed * dt.delta)
 		End
-		If game.mouseX > SCREEN_WIDTH - scrollGap
-			game.scrollX += Floor(gameScrollSpeed * dt.delta)
+		If diddyGame.mouseX > SCREEN_WIDTH - scrollGap
+			diddyGame.scrollX += Floor(gameScrollSpeed * dt.delta)
 		End
-		If game.mouseY > SCREEN_HEIGHT - scrollGap
-			game.scrollY += Floor(gameScrollSpeed * dt.delta)
+		If diddyGame.mouseY > SCREEN_HEIGHT - scrollGap
+			diddyGame.scrollY += Floor(gameScrollSpeed * dt.delta)
 		End
 		' tower defense maps have a border of TILE_SIZE around them so dont display that extra tile
-		If game.scrollX < TILE_SIZE Then game.scrollX = TILE_SIZE
-		If game.scrollY < TILE_SIZE Then game.scrollY = TILE_SIZE
-		If game.scrollX + SCREEN_WIDTH > tilemap.width * TILE_SIZE - TILE_SIZE Then game.scrollX = tilemap.width * TILE_SIZE - SCREEN_WIDTH - TILE_SIZE
-		If game.scrollY + SCREEN_HEIGHT - gui.limit > tilemap.height * TILE_SIZE - TILE_SIZE Then game.scrollY = tilemap.height * TILE_SIZE - SCREEN_HEIGHT + gui.limit - TILE_SIZE
+		If diddyGame.scrollX < TILE_SIZE Then diddyGame.scrollX = TILE_SIZE
+		If diddyGame.scrollY < TILE_SIZE Then diddyGame.scrollY = TILE_SIZE
+		If diddyGame.scrollX + SCREEN_WIDTH > tilemap.width * TILE_SIZE - TILE_SIZE Then diddyGame.scrollX = tilemap.width * TILE_SIZE - SCREEN_WIDTH - TILE_SIZE
+		If diddyGame.scrollY + SCREEN_HEIGHT - gui.limit > tilemap.height * TILE_SIZE - TILE_SIZE Then diddyGame.scrollY = tilemap.height * TILE_SIZE - SCREEN_HEIGHT + gui.limit - TILE_SIZE
 		
 		If KeyHit(KEY_DELETE)
 			If selectedTower <> Null
@@ -1175,12 +1175,12 @@ Class GameScreen Extends Screen
 			sb.selected = True
 		End
 						
-		If game.mouseHit
+		If diddyGame.mouseHit
 			Tower.UnselectTowers()
 			selectedTower = Null
-			If game.mouseY < gui.y Then
-				Local mx:Int = game.mouseX + game.scrollX
-				Local my:Int = game.mouseY + game.scrollY
+			If diddyGame.mouseY < gui.y Then
+				Local mx:Int = diddyGame.mouseX + diddyGame.scrollX
+				Local my:Int = diddyGame.mouseY + diddyGame.scrollY
 				
 				If gameScreen.tilemap.CollisionTile(mx + TILE_SIZE, my, gameScreen.tilemap.BUILD_LAYER) = 0 And
 				gameScreen.tilemap.CollisionTile(mx, my, gameScreen.tilemap.BUILD_LAYER) = 0 Then
@@ -1269,7 +1269,7 @@ Class Gui
 		b = menu.AddButton("game8/slowButton.png", "game8/slowButtonMO.png")
 		b.SetSelectedImage("game8/slowButtonSelected.png", "game8/slowButtonSelectedMO.png")
 
-		backgroundImage = game.images.Find("gui")
+		backgroundImage = diddyGame.images.Find("gui")
 		limit = 50
 		enableScroll = True
 		If Not enableScroll
@@ -1284,8 +1284,8 @@ Class Gui
 	Method ShowHideGUI:Void()
 		If enableScroll
 			If mouseControlGui
-				If game.mouseY < SCREEN_HEIGHT - limit And override = 0 showGUI = SCROLL_DOWN
-				If game.mouseY >= SCREEN_HEIGHT - lip showGUI = SCROLL_UP
+				If diddyGame.mouseY < SCREEN_HEIGHT - limit And override = 0 showGUI = SCROLL_DOWN
+				If diddyGame.mouseY >= SCREEN_HEIGHT - lip showGUI = SCROLL_UP
 			End
 			
 			If showGUI = SCROLL_UP
@@ -1554,8 +1554,8 @@ Class Star
 
 	Method Update:Void()
 		z -= 1 * dt.delta
-		x -= ( (game.mouseX - SCREEN_WIDTH2) / 200) * dt.delta
-		y -= ( (game.mouseY - SCREEN_HEIGHT2) / 200) * dt.delta
+		x -= ( (diddyGame.mouseX - SCREEN_WIDTH2) / 200) * dt.delta
+		y -= ( (diddyGame.mouseY - SCREEN_HEIGHT2) / 200) * dt.delta
 		If z <= - 100 z += 200
 		If x <= - 100 x += 200
 		If y <= - 100 y += 200
