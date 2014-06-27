@@ -48,10 +48,10 @@ Class TitleScreen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		Self.background = game.images.Find("title")
-		Self.outoforder = game.images.Find("ooo")
-		Self.mask = game.images.Find("title_mask")
-		Self.Tile = game.images.Find("game_tile")
+		Self.background = diddyGame.images.Find("title")
+		Self.outoforder = diddyGame.images.Find("ooo")
+		Self.mask = diddyGame.images.Find("title_mask")
+		Self.Tile = diddyGame.images.Find("game_tile")
 		
 		selected = 0
 		LoadGameIcons()
@@ -63,9 +63,9 @@ Class TitleScreen Extends Screen
 		b.MoveTo(480, 393)
 		
 		#IF TARGET="glfw"
-			game.MusicPlay("brain_menu.wav", True)
+			diddyGame.MusicPlay("brain_menu.wav", True)
 		#ELSE
-			game.MusicPlay("brain_menu.mp3", True)
+			diddyGame.MusicPlay("brain_menu.mp3", True)
 		#END
 	End
 	
@@ -237,8 +237,8 @@ Class TitleScreen Extends Screen
 	#END
 	Method LoadGameIcons:Void()
 		For Local count:Int = 0 To 19
-			Self.Icons[count] = game.images.Find("game" + (count + 1) + "_icon")
-			Self.Thumbs[count] = game.images.Find("game" + (count + 1) + "_thumb")
+			Self.Icons[count] = diddyGame.images.Find("game" + (count + 1) + "_icon")
+			Self.Thumbs[count] = diddyGame.images.Find("game" + (count + 1) + "_thumb")
 		Next
 	End Method
 

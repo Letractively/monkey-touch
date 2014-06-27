@@ -41,7 +41,7 @@ Class Game11Screen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		game.screenFade.Start(50, False)
+		diddyGame.screenFade.Start(50, False)
 		Self.background = LoadImage("graphics/game11/background.png")
 
 		PlayerList = New List<cPlayer>

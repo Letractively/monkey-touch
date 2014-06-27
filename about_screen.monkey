@@ -38,9 +38,9 @@ Class AboutScreen Extends Screen
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		background = game.images.Find("about")
-		background_mask = game.images.Find("about_mask")
-		buttons_image = game.images.Find("about_buttons")
+		background = diddyGame.images.Find("about")
+		background_mask = diddyGame.images.Find("about_mask")
+		buttons_image = diddyGame.images.Find("about_buttons")
 		
 		Self.y = 440
 		 abouttext = "Welcome to the MonkeyCoder.co.nz Community~n"

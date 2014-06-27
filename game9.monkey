@@ -31,7 +31,7 @@ Class Game9Screen Extends Screen
 		GameList[gameid - 1].thumbnail = "game" + gameid + "_thumb"
 		GameList[gameid - 1].author = "Shane Woolcock"
 		GameList[gameid - 1].authorurl = "????"
-		GameList[gameid - 1].info = "A bullet hell game... in Monkey ;)"
+		GameList[gameid - 1].info = "A bullet hell diddyGame... in Monkey ;)"
 	End
 	
 	#rem
@@ -41,7 +41,7 @@ Class Game9Screen Extends Screen
 	Method Start:Void()
 		If Not loaded Then LoadMedia()
 		
-		'game.images.LoadAnim("Ship1.png", 64, 64, 7, tmpImage)
+		'diddyGame.images.LoadAnim("Ship1.png", 64, 64, 7, tmpImage)
 		smhGameScreen = New Smh_GameScreen
 	End
 	
@@ -70,26 +70,26 @@ Class Game9Screen Extends Screen
 	
 	Method LoadMedia:Void()
 		loaded = True
-		game.images.LoadAtlas("game9/game9_bullets1.txt", ImageBank.LIBGDX_ATLAS, True)
-		game.images.LoadAtlas("game9/game9_bullets2.txt", ImageBank.LIBGDX_ATLAS, True)
-		game.images.LoadAtlas("game9/game9_ships.txt", ImageBank.LIBGDX_ATLAS, True)
+		diddyGame.images.LoadAtlas("game9/game9_bullets1.txt", ImageBank.LIBGDX_ATLAS, True)
+		diddyGame.images.LoadAtlas("game9/game9_bullets2.txt", ImageBank.LIBGDX_ATLAS, True)
+		diddyGame.images.LoadAtlas("game9/game9_ships.txt", ImageBank.LIBGDX_ATLAS, True)
 		Local tmpImage:GameImage = Null
-		game.images.Load("game9/game9_ship2.png",,False).image.SetHandle(9, 12)
-		game.images.Load("game9/game9_explode1.png")
-		game.images.LoadAnim("game9/game9_ship6.png", 39, 39, 3, Null)
-		game.images.LoadAnim("game9/game9_cube.png", 24, 28, 21, Null)
-		game.images.Load("game9/game9_starfield.jpg",,False)
-		game.images.Load("game9/game9_bg.png",,False)
+		diddyGame.images.Load("game9/game9_ship2.png",,False).image.SetHandle(9, 12)
+		diddyGame.images.Load("game9/game9_explode1.png")
+		diddyGame.images.LoadAnim("game9/game9_ship6.png", 39, 39, 3, Null)
+		diddyGame.images.LoadAnim("game9/game9_cube.png", 24, 28, 21, Null)
+		diddyGame.images.Load("game9/game9_starfield.jpg",,False)
+		diddyGame.images.Load("game9/game9_bg.png",,False)
 		
-		game.sounds.Load("game9_death")
-		game.sounds.Load("game9_explosion1")
-		game.sounds.Load("game9_explosion2")
-		game.sounds.Load("game9_explosion3")
-		game.sounds.Load("game9_laser1")
-		game.sounds.Load("game9_laser2")
-		game.sounds.Load("game9_laser3")
-		game.sounds.Load("game9_laser4")
-		game.sounds.Load("game9_pickup1")
+		diddyGame.sounds.Load("game9_death")
+		diddyGame.sounds.Load("game9_explosion1")
+		diddyGame.sounds.Load("game9_explosion2")
+		diddyGame.sounds.Load("game9_explosion3")
+		diddyGame.sounds.Load("game9_laser1")
+		diddyGame.sounds.Load("game9_laser2")
+		diddyGame.sounds.Load("game9_laser3")
+		diddyGame.sounds.Load("game9_laser4")
+		diddyGame.sounds.Load("game9_pickup1")
 	End
 End
 
@@ -166,7 +166,7 @@ Class Smh_GameScreen Extends Screen
 		
 		currentStage = New Smh_Stage1
 		
-		game.MusicPlay("game9_bgm.mp3")
+		diddyGame.MusicPlay("game9_bgm.mp3")
 	End
 	
 	Method Kill:Void()
@@ -207,7 +207,7 @@ Class Smh_GameScreen Extends Screen
 		Cls
 		
 		' draw the main background image
-		DrawImage(game.images.Find("game9_bg").image, 0, 0)
+		DrawImage(diddyGame.images.Find("game9_bg").image, 0, 0)
 		
 		' draw the gui
 		DrawGUI()
@@ -238,7 +238,7 @@ Class Smh_GameScreen Extends Screen
 		TitleFont.DrawText("Graze", playarea.x+playarea.width+20, 250)
 		' draw player/bomb counters
 		Local markerX:Float = playarea.x+playarea.width+100
-		Local cubes:GameImage = game.images.Find("game9_cube")
+		Local cubes:GameImage = diddyGame.images.Find("game9_cube")
 		For Local i:Int = 0 Until Smh_Player.MAX_LIVES
 			If (i+1) * Smh_Player.POWER_PER_LIFE <= player.lifePower
 				SetAlpha(1)
@@ -337,9 +337,9 @@ Class Smh_GameScreen Extends Screen
 		explosions = psys.GetGroup("explosions")
 		sparks = psys.GetGroup("sparks")
 		explode1 = psys.GetEmitter("explode1")
-		explode1.ParticleImage = game.images.Find("game9_explode1").image
+		explode1.ParticleImage = diddyGame.images.Find("game9_explode1").image
 		grazeEmitter = psys.GetEmitter("graze")
-		grazeEmitter.ParticleImage = game.images.Find("game9_bullet1").image
+		grazeEmitter.ParticleImage = diddyGame.images.Find("game9_bullet1").image
 	End
 End
 
@@ -765,7 +765,7 @@ Class Smh_AnimStrip
 	Field frameDirections:Int[]
 	
 	Method New(name:String, frameCount:Int)
-		Self.image = game.images.Find(name)
+		Self.image = diddyGame.images.Find(name)
 		Self.frameCount = frameCount
 		frameDelays = New Int[frameCount]
 		frameOffsets = New Int[frameCount]
@@ -965,7 +965,7 @@ Class Smh_PlayArea Extends Smh_Entity
 		'SetColor(128, 128, 128)
 		
 		' render starfield
-		Local starfield:GameImage = game.images.Find("game9_starfield")
+		Local starfield:GameImage = diddyGame.images.Find("game9_starfield")
 		Local y:Float = scrollY/2
 		While y > 0
 			y -= starfield.h
@@ -1095,7 +1095,7 @@ Class Smh_Player Extends Smh_Unit
 		maxHP = 1
 		
 		playerShot = New Smh_Bullet
-		playerShot.image = game.images.Find("game9_bullet5")
+		playerShot.image = diddyGame.images.Find("game9_bullet5")
 		playerShot.rotation = 0
 		playerShot.rotationSpeed = 360
 		playerShot.scaleX = 1.5
@@ -1110,7 +1110,7 @@ Class Smh_Player Extends Smh_Unit
 		bulletPowerup.scaleY = 1
 		bulletPowerup.playerInterp = True
 		
-		image = game.images.Find("game9_player")
+		image = diddyGame.images.Find("game9_player")
 		rotation = 90
 		scaleX = 1.25
 		scaleY = 1.25
@@ -1143,7 +1143,7 @@ Class Smh_Player Extends Smh_Unit
 			nextShotAvailableMillis = dt.currentticks + firingSpeed
 		End
 		If KeyDown(KEY_Z) And nextShotSoundMillis < dt.currentticks Then
-			PlaySound(game.sounds.Find("game9_laser1").sound)
+			PlaySound(diddyGame.sounds.Find("game9_laser1").sound)
 			nextShotSoundMillis = dt.currentticks + shotSoundDelayMillis
 		End
 		
@@ -1172,7 +1172,7 @@ Class Smh_Player Extends Smh_Unit
 	End
 	
 	Method Died:Void()
-		PlaySound(game.sounds.Find("game9_death").sound)
+		PlaySound(diddyGame.sounds.Find("game9_death").sound)
 		lifePower -= POWER_PER_LIFE
 		If lifePower < 0 Then
 			lifePower = 0
@@ -1581,10 +1581,10 @@ Class Smh_Stage1 Extends Smh_Stage Implements Smh_EntityLogicHandler
 		trash1.logicHandler = Self
 		trash1.logicVar1 = 1500 ' time until next fire
 		trash1.logicVar2 = 1000 ' firing frequency
-		trash1.image = game.images.Find("game9_ship2")
+		trash1.image = diddyGame.images.Find("game9_ship2")
 		
 		trash1Bullet = New Smh_Bullet
-		trash1Bullet.image = game.images.Find("game9_bullet4")
+		trash1Bullet.image = diddyGame.images.Find("game9_bullet4")
 		trash1Bullet.rotation = 0
 		trash1Bullet.scaleX = 2
 		trash1Bullet.scaleY = 2
@@ -1693,7 +1693,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		phaseCount = 3
 		
 		' phase 1
-		firstBullet.image = game.images.Find("game9_bullet1")
+		firstBullet.image = diddyGame.images.Find("game9_bullet1")
 		firstBullet.rotation = 45
 		firstBullet.scaleX = 1.5
 		firstBullet.scaleY = 1.5
@@ -1702,7 +1702,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		firstBullet.visibleWhileInactive = True
 		firstBullet.fadeInTimeMillis = 1000
 		
-		secondBullet.image = game.images.Find("game9_bullet2")
+		secondBullet.image = diddyGame.images.Find("game9_bullet2")
 		secondBullet.rotation = 90
 		secondBullet.scaleX = 2
 		secondBullet.scaleY = 2
@@ -1711,7 +1711,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		secondBullet.visibleWhileInactive = False
 		secondBullet.fadeInTimeMillis = 1000
 		
-		thirdBullet.image = game.images.Find("game9_bullet3")
+		thirdBullet.image = diddyGame.images.Find("game9_bullet3")
 		thirdBullet.rotation = 90
 		thirdBullet.scaleX = 1.5
 		thirdBullet.scaleY = 1.5
@@ -1723,7 +1723,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		thirdBullet.logicHandler = Self
 		
 		' phase 2
-		fourthBullet.image = game.images.Find("game9_bullet1")
+		fourthBullet.image = diddyGame.images.Find("game9_bullet1")
 		fourthBullet.rotation = 45
 		fourthBullet.scaleX = 1.5
 		fourthBullet.scaleY = 1.5
@@ -1734,7 +1734,7 @@ Class Smh_Stage1Boss1 Extends Smh_Boss Implements Smh_EntityLogicHandler
 		fourthBullet.entityTypeId = RIGHTANGLE_BULLET
 		fourthBullet.logicHandler = Self
 		
-		image = game.images.Find("game9_ship6")
+		image = diddyGame.images.Find("game9_ship6")
 		rotation = 90
 		'anim = New Smh_AnimStrip(images.Find("Ship1"))
 		' FIXME: first frame always skipped

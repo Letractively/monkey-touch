@@ -1,4 +1,4 @@
-#Rem
+﻿#Rem
 header:
 
 
@@ -42,7 +42,7 @@ Class Game7Screen Extends Screen
         Start the Title Screen.
         #End
         Method Start:Void()
-                game.screenFade.Start(50, False)
+                diddyGame.screenFade.Start(50, False)
                 GameState = new ERT_GameState
                 GameState.LoadGraphics()                        
         End
@@ -88,13 +88,13 @@ Class Game7Screen Extends Screen
                 
                                 
                 if TouchHit()
-                        game.nextScreen = GameState
-                        game.screenFade.Start(50, true)
+                        diddyGame.nextScreen = GameState
+                        diddyGame.screenFade.Start(50, true)
                 End
                                 
                 if KeyHit(KEY_ESCAPE) or
-                        game.nextScreen = TitleScr
-                        game.screenFade.Start(50, true)
+                        diddyGame.nextScreen = TitleScr
+                        diddyGame.screenFade.Start(50, true)
                 EndIf
                 
         End method
@@ -177,23 +177,23 @@ Class ERT_GameState Extends Screen
         
         Method LoadGraphics:Void()
 		
-                CrashImage = game.images.Find("game7_crash") 'If not using a texture packer: LoadImage("graphics/game7/crash.png")
+                CrashImage = diddyGame.images.Find("game7_crash") 'If not using a texture packer: LoadImage("graphics/game7/crash.png")
 				CrashImage.SetHandle(0, 0)
-                PauseImage = game.images.Find("game7_pause") 'LoadImage("graphics/game7/pause.png")
-                CarImage[1] = game.images.Find("game7_car") 'LoadImage("graphics/game7/car.png")
-                CarImage[2] = game.images.Find("game7_car2") 'LoadImage("graphics/game7/car2.png")
-                CarImage[3] = game.images.Find("game7_car3") 'LoadImage("graphics/game7/car3.png")
-                CarImage[4] = game.images.Find("game7_car4") 'LoadImage("graphics/game7/car4.png")
-                RoadImage = game.images.Find("game7_road") 'LoadImage("graphics/game7/road.png")
+                PauseImage = diddyGame.images.Find("game7_pause") 'LoadImage("graphics/game7/pause.png")
+                CarImage[1] = diddyGame.images.Find("game7_car") 'LoadImage("graphics/game7/car.png")
+                CarImage[2] = diddyGame.images.Find("game7_car2") 'LoadImage("graphics/game7/car2.png")
+                CarImage[3] = diddyGame.images.Find("game7_car3") 'LoadImage("graphics/game7/car3.png")
+                CarImage[4] = diddyGame.images.Find("game7_car4") 'LoadImage("graphics/game7/car4.png")
+                RoadImage = diddyGame.images.Find("game7_road") 'LoadImage("graphics/game7/road.png")
 				RoadImage.SetHandle(0, 0)
-                MineImage = game.images.Find("game7_mine") 'LoadImage("graphics/game7/mine.png", 12, 12, 2)
+                MineImage = diddyGame.images.Find("game7_mine") 'LoadImage("graphics/game7/mine.png", 12, 12, 2)
                 'ERT_WorldRecordDistance 'We could Load from file + Save at end of game
                 ERT_ExitMenu = New ERT_EndOfGameMenu()
         End
         
         'summary: Initialize Gameplay
         Method Start:Void()
-                game.screenFade.Start(1500, False)
+                diddyGame.screenFade.Start(1500, False)
                 CarPosition.Set(120, 130)
                 PlayerDead = False
                 SpawnTimer = SpawnCooldown
@@ -387,7 +387,7 @@ Class ERT_GameState Extends Screen
                 End
 		End
 		
-		'summary: Update player, and make sure player's speed is reduced if we go outside the road, update p�layer if dead
+		'summary: Update player, and make sure player's speed is reduced if we go outside the road, update pålayer if dead
 		Method PlayerLogic:Void()
 			RoadOffset += PlayerSpeed
 				
@@ -463,11 +463,11 @@ Class ERT_GameState Extends Screen
              ' Check Score - if best score then goto victory screen instead
              If Distance > ERT_WorldRecordDistance
                      ERT_WorldRecordDistance = Distance ' Save new record!
-                     game.nextScreen = VictoryGameState
-                     game.screenFade.Start(1500, true)
+                     diddyGame.nextScreen = VictoryGameState
+                     diddyGame.screenFade.Start(1500, true)
              Else
-                     game.nextScreen = LossGameState
-                     game.screenFade.Start(1500, true)
+                     diddyGame.nextScreen = LossGameState
+                     diddyGame.screenFade.Start(1500, true)
              End
 		End
 		        
@@ -560,13 +560,13 @@ Class ERT_EndOfGameMenu
                 End     
         
                 If Restart.Distance(TouchX(), TouchY()) < 100
-                        game.nextScreen = Game7Scr
-                        game.screenFade.Start(500, true)
+                        diddyGame.nextScreen = Game7Scr
+                        diddyGame.screenFade.Start(500, true)
                 End
                 
                 If Back.Distance(TouchX(), TouchY()) < 100
-                        game.nextScreen = TitleScr
-                        game.screenFade.Start(500, true)
+                        diddyGame.nextScreen = TitleScr
+                        diddyGame.screenFade.Start(500, true)
                 End
         End
 End

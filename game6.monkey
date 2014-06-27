@@ -48,7 +48,7 @@ Field SoundTimer:Int 'used to dertermin which sound should play and also what th
 	Start the Title Screen.
 	#End
 	Method Start:Void()
-		game.screenFade.Start(50, False)	
+		diddyGame.screenFade.Start(50, False)	
 
 
 		'Load up assets
@@ -113,8 +113,8 @@ Field SoundTimer:Int 'used to dertermin which sound should play and also what th
 	Method Update:Void()
 		'
 		If KeyHit(KEY_ESCAPE)
-			game.nextScreen = TitleScr
-			game.screenFade.Start(50, True)
+			diddyGame.nextScreen = TitleScr
+			diddyGame.screenFade.Start(50, True)
 		Endif
 		
 		If InGame = 0 Then
