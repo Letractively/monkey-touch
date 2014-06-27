@@ -530,7 +530,7 @@ Class Game1Screen Extends Screen
 			End if
 			
 		Else
-			Self.mySave()	
+			Self.mySave()
 		EndIf
 		
 		
